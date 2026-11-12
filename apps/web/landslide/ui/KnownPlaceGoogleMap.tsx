@@ -164,7 +164,7 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         mapTypeControl: true,
         mapTypeControlOptions: {
           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-          mapTypeIds: ['roadmap', 'terrain', 'satellite', 'hybrid'],
+          mapTypeIds: ['roadmap', 'terrain', 'satellite'],
         },
         fullscreenControl: true,
         streetViewControl: false,
@@ -303,7 +303,7 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         <div className="known-place-map-toolbar-actions">
           <button
             type="button"
-            className={`known-place-map-label-toggle${labelsVisible ? ' is-on' : ''}`}
+            className={`known-place-map-label-toggle${labelsVisible ? ' is-on' : ''}${darkMode ? ' is-dark' : ''}`}
             role="switch"
             aria-checked={labelsVisible}
             onClick={() => {
