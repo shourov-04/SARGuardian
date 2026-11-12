@@ -664,7 +664,7 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 .claude-brand-word b{font-weight:760}
 .claude-nav-links{display:flex;align-items:center;gap:7px}
 .archive-home-link{display:inline-flex;min-height:34px;padding:0 18px;align-items:center;border:0;border-radius:999px;color:#fff;background:#0071e3;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px rgba(0,80,180,.25)}
-.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}
+.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}.warn,.quick-panel,#modeCaption{display:none!important}
 </style></head><body class="claude-home"><div class="claude-background" aria-hidden="true"><i></i><i></i><i></i></div><main>
 <header class="site-header">
 <div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>
