@@ -111,7 +111,6 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
   const summary = job.result_summary && typeof job.result_summary === 'object' ? job.result_summary : {};
   const expectedProducts = typeof summary.expected_product_count === 'number' ? summary.expected_product_count : null;
   const verifiedProducts = typeof summary.verified_product_count === 'number' ? summary.verified_product_count : null;
-  const observations = typeof summary.observation_count === 'number' ? summary.observation_count : null;
   const shortJobId = job.id.length > 15 ? `${job.id.slice(0, 8)}…${job.id.slice(-4)}` : job.id;
   const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
 
@@ -150,8 +149,7 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
 
       <section className="processing-card processing-products-card" aria-label="River Shift processing counters">
         <div><span>GCOV</span><strong className={expectedProducts === null ? 'processing-count-pending' : ''}>{expectedProducts ?? (active ? <span className="processing-searching-word">Searching…</span> : '—')}</strong></div>
-        <div><span>Verified</span><strong className={verifiedProducts === null ? 'processing-count-pending' : ''}>{verifiedProducts ?? (active ? <span className="processing-searching-word">Searching…</span> : '—')}</strong></div>
-        <div><span>Dates</span><strong className={observations === null ? 'processing-count-pending' : ''}>{observations ?? (active ? <span className="processing-searching-word">Searching…</span> : '—')}</strong></div>
+        <div><span>Processed</span><strong className={verifiedProducts === null ? 'processing-count-pending' : ''}>{verifiedProducts ?? (active ? <span className="processing-searching-word">Searching…</span> : '—')}</strong></div>
       </section>
 
       <section className="processing-card processing-details-card" aria-label="River Shift task details">

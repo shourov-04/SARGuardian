@@ -5,6 +5,7 @@
 .river-shift-page .displacement-preparation.processing-page { padding: 18px 0 24px; }
 .river-shift-page .processing-hero { padding: 24px 26px 22px; color: #000; }
 .river-shift-page .processing-orbit { width: 260px; height: 260px; margin-top: 16px; margin-bottom: 20px; }
+.river-shift-page .processing-products-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .river-shift-page .processing-status-chip,
 .river-shift-page .processing-stepper,
 .river-shift-page .processing-safe-note,
