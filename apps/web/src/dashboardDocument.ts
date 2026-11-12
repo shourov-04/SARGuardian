@@ -28,6 +28,12 @@ const howItWorksShellStyle = `<style id="sarguardian-how-it-works-shell">
 .site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}
 .warn,.quick-panel,#modeCaption,.public-explainer-grid,.public-candidate-footnote,.foot{display:none!important}
 .claude-nav-shell{width:min(980px,calc(100% - 24px));top:10px;margin:10px auto 0}.claude-nav-inner{height:58px;padding:0 10px 0 16px}.archive-home-link{min-height:38px;padding:0 16px}
+.card,.panel{background:rgba(220,239,245,.34)!important;border:1px solid rgba(255,255,255,.68)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.62),0 18px 44px rgba(9,40,58,.2)!important;backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%)}
+.card h2,.panel h2,.card strong,.panel strong{color:#102d43}.card .muted,.panel .muted,.card p,.panel p{color:#294b60}
+button,.controls select,.maphead select{border-color:rgba(255,255,255,.7)!important;background:linear-gradient(180deg,#43b9ee,#0875c7)!important;color:#061e33!important;box-shadow:0 8px 20px rgba(8,104,190,.2)!important;font-weight:700}
+button:hover,.controls select:hover,.maphead select:hover{background:linear-gradient(180deg,#5bc5f4,#1689df)!important}
+.view-option,.public-family-button,.public-playback-actions button,.candidate-focus,.timeline button,.product-row{background:rgba(239,249,252,.42)!important;color:#102d43!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.64),0 8px 18px rgba(9,40,58,.12)!important}
+.view-option[aria-selected=true],.public-family-button[aria-pressed=true]{background:rgba(255,255,255,.72)!important;border-color:#1689df!important}
 </style>`;
 
 const howItWorksHeader = '<div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>';
