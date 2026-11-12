@@ -41,6 +41,7 @@ type StoredAnalysisUiState = {
   direction: 'ANY' | 'A' | 'D';
   coherenceNeighbours: '1' | '5' | '10' | '15' | '20' | '25';
   geometryHeight: string;
+  analysisSelectionKey?: string;
   catalog: StoredCatalogState | null;
 };
 
@@ -97,6 +98,10 @@ function storageKey(uid: string): string {
 
 function uiStorageKey(uid: string): string {
   return `sarguardian.knownPlaceAnalysisUi.v1:${uid}`;
+}
+
+function analysisSelectionKey(releaseId: string, preferredGranules: string, variantKey: string): string {
+  return JSON.stringify([releaseId.trim(), preferredGranules.trim(), variantKey]);
 }
 
 function geometryDraftKey(uid: string): string {
@@ -246,6 +251,10 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   const referenceWkt = geometryDraft.referenceWkt;
   const [polygonValidation, setPolygonValidation] = useState({ valid: false, message: 'Draw and close the Measurement and Reference Polygons. The Reference may enclose the Measurement; partial overlap is invalid.' });
   const [geometryHeight, setGeometryHeight] = useState(storedUiState?.geometryHeight ?? '');
+  const [completedAnalysisSelectionKey, setCompletedAnalysisSelectionKey] = useState(
+    storedUiState?.analysisSelectionKey
+      ?? analysisSelectionKey(storedUiState?.catalog?.allowedReleaseIds ?? '', storedUiState?.catalog?.preferredGranules ?? '', storedUiState?.catalog?.selectedVariantKey ?? ''),
+  );
   const [pendingAction, setPendingAction] = useState<'dry-run' | 'analysis' | 'cancel' | null>(null);
   const [run, setRun] = useState<StoredRun | null>(() => loadStoredRun(user.uid));
   const [catalogFingerprint, setCatalogFingerprint] = useState(storedUiState?.catalog?.requestFingerprint ?? '');
@@ -261,13 +270,7 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   const invalidateCatalogSelection = () => {
     setCatalogFingerprint('');
     setCatalogPreflightRun(null);
-    setCatalogReleaseIds([]);
-    setCatalogVariantOptions([]);
-    setCatalogSummary(null);
     setCatalogReleaseError('');
-    setAllowedReleaseIds('');
-    setPreferredGranules('');
-    setSelectedVariantKey('');
     setError('');
     setPollError('');
     setLookupStartedAt(null);
@@ -346,7 +349,8 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   }, [run, user.uid]);
 
   useEffect(() => {
-    const catalog: StoredCatalogState | null = catalogFingerprint ? {
+    const hasCatalogState = Boolean(catalogFingerprint || catalogReleaseIds.length > 0 || catalogVariantOptions.length > 0 || catalogSummary || allowedReleaseIds || preferredGranules);
+    const catalog: StoredCatalogState | null = hasCatalogState ? {
       requestFingerprint: catalogFingerprint,
       preflightRun: catalogPreflightRun,
       releaseIds: catalogReleaseIds,
@@ -365,10 +369,11 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
       direction,
       coherenceNeighbours,
       geometryHeight,
+      analysisSelectionKey: completedAnalysisSelectionKey,
       catalog,
     };
     try { localStorage.setItem(uiStorageKey(user.uid), JSON.stringify(uiState)); } catch { /* optional browser storage */ }
-  }, [allowedReleaseIds, analysisMode, catalogFingerprint, catalogPreflightRun, catalogReleaseIds, catalogSummary, catalogVariantOptions, coherenceNeighbours, direction, geometryHeight, hazardMode, polarization, preferredGranules, selectedVariantKey, track, user.uid]);
+  }, [allowedReleaseIds, analysisMode, catalogFingerprint, catalogPreflightRun, catalogReleaseIds, catalogSummary, catalogVariantOptions, coherenceNeighbours, completedAnalysisSelectionKey, direction, geometryHeight, hazardMode, polarization, preferredGranules, selectedVariantKey, track, user.uid]);
 
   const runRequestId = activeRun?.request_id ?? null;
   const runStatus = activeRun?.status ?? null;
@@ -543,6 +548,9 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
         execute_downloads: executeDownloads,
         request_fingerprint: requestFingerprint,
       });
+      setCompletedAnalysisSelectionKey(executeDownloads
+        ? analysisSelectionKey(allowedReleaseIds, preferredGranules, selectedVariantKey)
+        : '');
       if (!executeDownloads) {
         setCatalogFingerprint(requestFingerprint);
         setCatalogPreflightRun(null);
@@ -575,14 +583,21 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   };
 
   const runTerminal = activeRun?.status === 'completed';
-  const runSucceeded = runTerminal && activeRun?.conclusion === 'success';
+  const selectedAnalysisSelectionKey = analysisSelectionKey(allowedReleaseIds, preferredGranules, selectedVariantKey);
+  const runSucceeded = runTerminal
+    && activeRun?.execute_downloads === true
+    && activeRun.conclusion === 'success'
+    && completedAnalysisSelectionKey === selectedAnalysisSelectionKey;
   const runCancelled = runTerminal && activeRun?.conclusion === 'cancelled';
   const releaseLookupProgress = useMemo(() => getReleaseLookupProgress(pendingAction, activeRun), [pendingAction, activeRun]);
   const analysisProgress = useMemo(() => getAnalysisProgress(pendingAction, activeRun), [pendingAction, activeRun]);
-  const catalogSelectionAvailable = catalogMatchesCurrentRequest && Boolean(catalogSummary || catalogReleaseIds.length > 0);
+  const catalogSelectionAvailable = Boolean(catalogSummary || catalogReleaseIds.length > 0);
   const releaseDisplayProgress = useMemo(() => analysisProgress
     ? (catalogSelectionAvailable ? { percent: 100, stage: 'Release ready', detail: '', tone: 'complete' as const } : null)
     : releaseLookupProgress, [analysisProgress, catalogSelectionAvailable, releaseLookupProgress]);
+  const releasePanelProgress = releaseDisplayProgress ?? (catalogSelectionAvailable
+    ? { percent: 100, stage: 'Release selected', detail: '', tone: 'complete' as const }
+    : null);
   const lookupStarted = lookupStartedAt ?? (activeRun?.created_at ? Date.parse(activeRun.created_at) : null);
   const lookupFinished = runTerminal && activeRun?.updated_at ? Date.parse(activeRun.updated_at) : null;
   const elapsed = formatElapsed(lookupStarted, lookupFinished, clock);
@@ -660,12 +675,12 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
               {pendingAction === 'dry-run' ? 'Finding release ID…' : 'Find release ID'}
             </button>
           </div>
-          {releaseDisplayProgress && <section className={`known-place-release-progress is-${releaseDisplayProgress.tone}`} aria-live="polite">
+          {releasePanelProgress && <section className={`known-place-release-progress is-${releasePanelProgress.tone}`} aria-live="polite">
               <div className="known-place-status-heading">
                 <h2>Run status</h2>
                 <div className="known-place-status-actions">
                   {activeRun && activeRun.status !== 'completed' && <button type="button" className="known-place-cancel" disabled={pendingAction !== null} onClick={() => void cancelRun()}>{pendingAction === 'cancel' ? 'Cancelling…' : 'Cancel run'}</button>}
-                  <span className={`known-place-status-chip is-${releaseDisplayProgress.tone}`}><i />{releaseDisplayProgress.tone === 'complete' ? 'Complete' : activeRun ? resultLabel(activeRun) : 'Processing'}</span>
+                  <span className={`known-place-status-chip is-${releasePanelProgress.tone}`}><i />{releasePanelProgress.tone === 'complete' ? 'Complete' : activeRun ? resultLabel(activeRun) : 'Processing'}</span>
                 </div>
               </div>
               <div
@@ -674,16 +689,17 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
                 aria-label="Release ID lookup progress"
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={releaseDisplayProgress.percent}
-                aria-valuetext={releaseDisplayProgress.stage}
+                aria-valuenow={releasePanelProgress.percent}
+                aria-valuetext={releasePanelProgress.stage}
               >
-                <i style={{ width: `${releaseDisplayProgress.percent}%` }} />
+                <i style={{ width: `${releasePanelProgress.percent}%` }} />
               </div>
               <div className="known-place-progress-meta">
-                <span>{runCancelled && !analysisProgress ? 'Cancelled' : releaseDisplayProgress.tone === 'complete' ? 'Complete' : releaseDisplayProgress.tone === 'failed' ? 'Failed' : 'Processing'}</span>
-                <b>{releaseDisplayProgress.percent}% · {elapsed}</b>
+                <span>{runCancelled && !analysisProgress ? 'Cancelled' : releasePanelProgress.tone === 'complete' ? 'Complete' : releasePanelProgress.tone === 'failed' ? 'Failed' : 'Processing'}</span>
+                <b>{releasePanelProgress.percent}% · {elapsed}</b>
               </div>
-              {runCancelled && !analysisProgress ? <p className="known-place-progress-message">Run cancelled.</p> : releaseDisplayProgress.tone === 'failed' ? <p className="known-place-progress-message">Release lookup failed. Try again.</p> : releaseDisplayProgress.detail ? <p className="known-place-progress-message">{releaseDisplayProgress.detail}</p> : null}
+              {runCancelled && !analysisProgress ? <p className="known-place-progress-message">Run cancelled.</p> : releasePanelProgress.tone === 'failed' ? <p className="known-place-progress-message">Release lookup failed. Try again.</p> : releasePanelProgress.detail ? <p className="known-place-progress-message">{releasePanelProgress.detail}</p> : null}
+              {catalogSelectionAvailable && !catalogMatchesCurrentRequest && <p className="known-place-progress-message">Settings changed. Find release ID again to refresh this selection.</p>}
               {pollError && !runTerminal && <p className="action-hint" role="status">{pollError} Automatic status checks will retry.</p>}
               {catalogSummary && <div className="known-place-catalog-summary" aria-label="Catalog lookup summary">
                 <div><span>Products found</span><strong>{catalogSummary.products}</strong></div>
@@ -737,7 +753,7 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
         </section>
         {(!analysisProgress || (runTerminal && !runSucceeded)) && <div className="known-place-run-action">
           <button type="button" className="investigate-button" disabled={!canSubmitGeometry || !catalogPreflightReady || pendingAction !== null} onClick={() => void submit(true)}>
-            {pendingAction === 'analysis' ? 'Starting GOFF analysis…' : 'Run Known Place Analysis'}
+            {pendingAction === 'analysis' ? 'Starting GOFF analysis…' : runTerminal && !runSucceeded ? 'Run analysis' : 'Run Known Place Analysis'}
           </button>
         </div>}
         <button type="button" className="workspace-nav-link known-place-back" onClick={onBack}>← Back to AOI map</button>
