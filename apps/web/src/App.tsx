@@ -6,7 +6,7 @@ import { Home } from './pages/Home';
 import { HowItWorksPage } from './pages/HowItWorksPage';
 import { ArchivePage } from './pages/ArchivePage';
 import { DashboardPage } from './pages/DashboardPage';
-import { parseDashboardView } from './dashboardDocument';
+import { buildDashboardRouteUrl, parseDashboardView } from './dashboardDocument';
 import { LandslidePage } from '../landslide/ui/LandslidePage';
 import { KnownPlaceResultsPage } from '../landslide/ui/KnownPlaceResultsPage';
 import { RIVER_SHIFT_SETUP_STORAGE_KEY, RiverShiftPage, type RiverShiftSetup } from './pages/RiverShiftPage';
@@ -350,7 +350,7 @@ function App() {
         isKnownPlaceAnalysisPage={isLandslideKnownPlaceAnalysisRoute(pathname)}
           isKnownPlaceSetupPage={isLandslideKnownPlaceSetupRoute(pathname)}
         onDisplacements={() => navigateTo(FIND_DISPLACEMENT_DISPLACEMENT_PATH)}
-        onViewResults={(jobId) => navigateTo(`${FIND_DISPLACEMENT_OUTPUTS_PATH}/${encodeURIComponent(jobId)}`)}
+         onViewResults={(jobId) => { window.location.assign(buildDashboardRouteUrl(window.location.origin, jobId, 'public')); }}
         onKnownPlaceAnalysis={() => navigateTo(KNOWN_PLACE_ANALYSIS_PATH)}
         onShowKnownPlaceResults={() => navigateTo(KNOWN_PLACE_RESULTS_PATH)}
         onResults={() => navigateTo(FIND_DISPLACEMENT_RESULTS_PATH)}

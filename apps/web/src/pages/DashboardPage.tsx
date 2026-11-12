@@ -107,6 +107,9 @@ export function DashboardPage({ jobId, view, user, authState, authError, onSignI
       <p className="section-eyebrow">SARGUARDIAN · SAVED RESULT</p>
       <h1>Opening your verified dashboard</h1>
       <p role="status" aria-live="polite">{progress}</p>
+      <div className="dashboard-loading-progress" role="progressbar" aria-label="Loading saved result dashboard" aria-valuetext={progress}>
+        <span />
+      </div>
       <p>Keep this page open while the private result bundle is retrieved and its checksum is verified. This page URL is refresh-safe.</p>
       <a className="section-action secondary" href="/archive">Back to Archive</a>
     </DashboardRouteShell>

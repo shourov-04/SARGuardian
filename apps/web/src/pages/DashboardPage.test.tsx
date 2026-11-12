@@ -21,6 +21,14 @@ describe('refresh-safe saved dashboard page', () => {
     expect(html).toContain('Back to Archive');
   });
 
+  it('shows a loading progress bar while the saved result dashboard opens', () => {
+    const html = renderToStaticMarkup(
+      <DashboardPage jobId={jobId} view="public" user={{ uid: 'test-user' } as never} authState="ready" authError={null} onSignIn={vi.fn()} />,
+    );
+    expect(html).toContain('Loading saved result dashboard');
+    expect(html).toContain('Opening your verified dashboard');
+  });
+
   it('rejects an incomplete dashboard URL instead of falling back to Home', () => {
     const html = renderToStaticMarkup(
       <DashboardPage jobId="" view="public" user={null} authState="idle" authError={null} onSignIn={vi.fn()} />,

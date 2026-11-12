@@ -212,7 +212,7 @@ export function DisplacementJobStatus({ job, pendingAction, clock, granuleCounts
         {hasActiveJob && <>
           <button type="button" className="processing-ghost-button processing-cancel-button" disabled={busy} onClick={() => setCancelConfirmationOpen(true)}>Cancel task</button>
         </>}
-        {job.state === 'succeeded' && <button type="button" className="processing-primary-button" onClick={() => onViewResults(job.id)}>View results</button>}
+        {job.state === 'succeeded' && <button type="button" className="processing-primary-button" onClick={() => onViewResults(job.id)}>Show result</button>}
         {job.state === 'failed' && <><button type="button" className="processing-primary-button" disabled={busy} onClick={onRetry}>{pendingAction === 'retry' ? 'Retrying…' : 'Try again'}</button><button type="button" className="processing-ghost-button" onClick={onBack}>Back to map</button></>}
         {job.state === 'cancelled' && <button type="button" className="processing-primary-button" onClick={onBack}>Back to map</button>}
       </div>
