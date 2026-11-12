@@ -651,7 +651,7 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 @media(max-width:430px){.public-family-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.public-family-button{min-width:0;padding:9px}.public-playback-actions button{min-width:44px}}
 </style>
 <style>
-.claude-home{position:relative;isolation:isolate;min-height:100vh;overflow:hidden;color:#f7fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif}
+.claude-home{position:relative;isolation:isolate;min-height:100vh;overflow-x:hidden;overflow-y:auto;color:#f7fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif}
 .claude-background{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,rgba(5,18,28,.04),rgba(4,18,28,.34)),url('/scenery/alpine-lake.jpg') center 46% / cover fixed no-repeat}
 .claude-background::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 27%,transparent 0 23%,rgba(1,11,17,.18) 72%)}
 .claude-background i{display:none}
@@ -664,8 +664,7 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 .claude-brand-word b{font-weight:760}
 .claude-nav-links{display:flex;align-items:center;gap:7px}
 .archive-home-link{display:inline-flex;min-height:34px;padding:0 18px;align-items:center;border:0;border-radius:999px;color:#fff;background:#0071e3;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px rgba(0,80,180,.25)}
-.site-header{display:block;border:0;padding:0 0 24px;margin-bottom:18px}
-.hero-copy{max-width:920px;padding-top:34px}
+.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}
 </style></head><body class="claude-home"><div class="claude-background" aria-hidden="true"><i></i><i></i><i></i></div><main>
 <header class="site-header">
 <div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>

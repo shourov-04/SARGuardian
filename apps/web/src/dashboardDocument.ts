@@ -14,7 +14,7 @@ export function buildDashboardRouteUrl(origin: string, jobId: string, view: Dash
 }
 
 const howItWorksShellStyle = `<style id="sarguardian-how-it-works-shell">
-.claude-home{position:relative;isolation:isolate;min-height:100vh;overflow:hidden;color:#f7fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif}
+.claude-home{position:relative;isolation:isolate;min-height:100vh;overflow-x:hidden;overflow-y:auto;color:#f7fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif}
 .claude-background{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,rgba(5,18,28,.04),rgba(4,18,28,.34)),url('/scenery/alpine-lake.jpg') center 46% / cover fixed no-repeat}
 .claude-background::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 27%,transparent 0 23%,rgba(1,11,17,.18) 72%)}
 .claude-background i{display:none}
@@ -25,7 +25,7 @@ const howItWorksShellStyle = `<style id="sarguardian-how-it-works-shell">
 .brand-logo-image.claude-brand-logo{position:absolute;top:0;left:-9px;width:60px;height:60px;border-radius:0;object-fit:cover;object-position:center top;background:transparent;box-shadow:none;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55)) drop-shadow(0 4px 10px rgba(2,13,22,.15))}
 .claude-brand-word{color:#061c2d;font-size:17px;font-weight:500;letter-spacing:-.035em;text-shadow:0 1px 0 rgba(255,255,255,.58)}.claude-brand-word b{font-weight:760}
 .claude-nav-links{display:flex;align-items:center;gap:7px}.archive-home-link{display:inline-flex;min-height:34px;padding:0 18px;align-items:center;border:0;border-radius:999px;color:#fff;background:#0071e3;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px rgba(0,80,180,.25)}
-.site-header{display:block;border:0;padding:0 0 24px;margin-bottom:18px}.hero-copy{max-width:920px;padding-top:34px}
+.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}
 </style>`;
 
 const howItWorksHeader = '<div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>';
