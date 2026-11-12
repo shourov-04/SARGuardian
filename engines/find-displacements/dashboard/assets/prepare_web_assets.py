@@ -649,9 +649,26 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 .run-finding-number{font-variant-numeric:tabular-nums}
 @media(max-width:760px){.public-explainer-grid{grid-template-columns:1fr}.public-playback-controls{grid-template-columns:1fr;gap:9px}.public-pair-date{text-align:left}.public-playback-actions{justify-content:flex-start}}
 @media(max-width:430px){.public-family-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.public-family-button{min-width:0;padding:9px}.public-playback-actions button{min-width:44px}}
-</style></head><body><main>
+</style>
+<style>
+.claude-home{position:relative;isolation:isolate;min-height:100vh;overflow:hidden;color:#f7fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif}
+.claude-background{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,rgba(5,18,28,.04),rgba(4,18,28,.34)),url('/scenery/alpine-lake.jpg') center 46% / cover fixed no-repeat}
+.claude-background::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 27%,transparent 0 23%,rgba(1,11,17,.18) 72%)}
+.claude-background i{display:none}
+.claude-nav-shell{position:sticky;top:10px;z-index:50;width:min(980px,calc(100% - 24px));margin:10px auto 0;border:1px solid rgba(255,255,255,.82);border-radius:999px;background:rgba(238,248,251,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 14px 40px -18px rgba(0,8,18,.7);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%)}
+.claude-nav-inner{position:relative;height:58px;padding:0 10px 0 16px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.claude-brand{display:flex;width:auto;height:46px;align-items:center;gap:8px;text-decoration:none}
+.claude-brand-mark{position:relative;display:block;width:42px;height:42px;overflow:hidden;border-radius:50%}
+.brand-logo-image.claude-brand-logo{position:absolute;top:0;left:-9px;width:60px;height:60px;border-radius:0;object-fit:cover;object-position:center top;background:transparent;box-shadow:none;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55)) drop-shadow(0 4px 10px rgba(2,13,22,.15))}
+.claude-brand-word{color:#061c2d;font-size:17px;font-weight:500;letter-spacing:-.035em;text-shadow:0 1px 0 rgba(255,255,255,.58)}
+.claude-brand-word b{font-weight:760}
+.claude-nav-links{display:flex;align-items:center;gap:7px}
+.archive-home-link{display:inline-flex;min-height:34px;padding:0 18px;align-items:center;border:0;border-radius:999px;color:#fff;background:#0071e3;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px rgba(0,80,180,.25)}
+.site-header{display:block;border:0;padding:0 0 24px;margin-bottom:18px}
+.hero-copy{max-width:920px;padding-top:34px}
+</style></head><body class="claude-home"><div class="claude-background" aria-hidden="true"><i></i><i></i><i></i></div><main>
 <header class="site-header">
-<div class="brand-rail"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">SARGuardian</span><span class="brand-note">Earth in sight · NISAR research results</span><span class="dataset-tag">AOI observation report</span></div>
+<div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>
 <div class="hero-copy"><div class="kicker">Evidence before interpretation</div><h1>What did NISAR observe in this area?</h1><p class="hero-subtitle">See where the satellite found unusual patterns, what could be measured, and what still needs checking—without needing to know the target location first.</p></div>
 <div class="header-actions"><button id="presentation" type="button" aria-pressed="false">Enter presentation</button><a class="header-link" href="../index.html">Processing report <span aria-hidden="true">↗</span></a></div>
 </header>
