@@ -112,6 +112,7 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
   const expectedProducts = typeof summary.expected_product_count === 'number' ? summary.expected_product_count : null;
   const verifiedProducts = typeof summary.verified_product_count === 'number' ? summary.verified_product_count : null;
   const shortJobId = job.id.length > 15 ? `${job.id.slice(0, 8)}…${job.id.slice(-4)}` : job.id;
+  const retryWaveError = /delayed retry product\(s\) remained unverified/i.test(job.error_message || '');
   const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
 
   useEffect(() => {
@@ -163,6 +164,7 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
         {job.state === 'succeeded' && <button type="button" className="processing-primary-button" onClick={onViewResults}>Show result</button>}
         {active && onCancel && <button type="button" className="processing-cancel-button" disabled={cancelling} onClick={() => setCancelConfirmationOpen(true)}>{cancelling ? 'Cancelling...' : 'Cancel'}</button>}
         {onBack && <button type="button" className="processing-ghost-button" onClick={onBack}>Back</button>}
+        {job.state === 'failed' && <button type="button" className="processing-retry-button" disabled={retrying} onClick={onRetry}>{retrying ? 'Retrying…' : 'Retry'}</button>}
       </div>
       {cancelConfirmationOpen && <div className="processing-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCancelConfirmationOpen(false); }}>
         <section className="processing-confirmation" role="dialog" aria-modal="true" aria-labelledby="river-shift-cancel-title">
@@ -172,11 +174,7 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
           <button type="button" className="processing-dialog-cancel" onClick={confirmCancel}>Cancel</button>
         </section>
       </div>}
-      {job.state === 'failed' && <div className="processing-page-actions">
-        <button type="button" className="processing-primary-button" disabled={retrying} onClick={onRetry}>{retrying ? 'Retrying…' : 'Retry'}</button>
-      </div>}
-      {job.state === 'failed' && <p className="processing-safe-note">Retry starts a new attempt with this job’s saved settings.</p>}
-      {job.state === 'failed' && <p className="processing-error" role="alert">{job.error_message || 'River Shift processing failed.'}</p>}
+      {job.state === 'failed' && job.error_message && !retryWaveError && <p className="processing-error" role="alert">{job.error_message}</p>}
     </main>
   );
 }

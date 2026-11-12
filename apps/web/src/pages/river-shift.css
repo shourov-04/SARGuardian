@@ -33,6 +33,9 @@
 .processing-signature-dialog { width: min(430px, 100%); }
 .river-shift-page .processing-page-actions > button { min-width: 132px; }
 .river-shift-page .processing-page-actions .processing-ghost-button { border: 0; background: linear-gradient(135deg, #1689df, #0764bd); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .46), 0 10px 28px -12px #087bd3; color: #fff; }
+.river-shift-page .processing-retry-button { min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #f7c948, #e6a817); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 10px 28px -12px rgba(191, 137, 18, .72); color: #3d2a00; font: 750 14px/1 inherit; cursor: pointer; }
+.river-shift-page .processing-retry-button:hover:not(:disabled) { background: linear-gradient(135deg, #f3bd31, #d9980f); }
+.river-shift-page .processing-retry-button:disabled { cursor: wait; opacity: .55; }
 .river-shift-page .processing-cancel-button { min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #e45b5b, #c83f3f); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), 0 10px 28px -12px rgba(190, 48, 48, .72); color: #fff; font: 750 14px/1 inherit; cursor: pointer; }
 .river-shift-page .processing-cancel-button:hover:not(:disabled) { background: linear-gradient(135deg, #d95252, #b93838); }
 .river-shift-page .processing-cancel-button:disabled { cursor: wait; opacity: .55; }

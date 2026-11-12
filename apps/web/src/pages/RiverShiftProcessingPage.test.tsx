@@ -22,7 +22,7 @@ describe('River Shift retry controls', () => {
     expect(pending).toContain('disabled=""');
     expect(pending).toContain('Retrying…');
     expect(pending).toContain('Download failed');
-    expect(pending).toContain('saved settings');
+    expect(pending).not.toContain('saved settings');
   });
 
   it('marks the server-reported failed stage in the stepper', () => {
