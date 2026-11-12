@@ -773,6 +773,69 @@
 .known-place-public-cautions p { color: #29465a !important; }
 .known-place-public-cautions b { color: #7b4b00 !important; }
 
+.known-place-limitations,
+.known-place-limitations * {
+  text-shadow: none !important;
+}
+.known-place-limitations > .result-kicker {
+  color: #0878d1 !important;
+}
+.known-place-limitations li,
+.known-place-limitations li:nth-child(2),
+.known-place-limitations li:nth-child(3),
+.known-place-limitations li:nth-child(4),
+.known-place-limitations li:nth-child(5),
+.known-place-limitations li:nth-child(6) {
+  color: #b42318 !important;
+}
+.known-place-limitations li::before,
+.known-place-limitations li:nth-child(2)::before,
+.known-place-limitations li:nth-child(3)::before,
+.known-place-limitations li:nth-child(4)::before,
+.known-place-limitations li:nth-child(5)::before,
+.known-place-limitations li:nth-child(6)::before {
+  color: #d92d20 !important;
+}
+
+.known-place-google-map-toolbar strong,
+.known-place-google-map-toolbar span,
+.known-place-google-map-toolbar.is-dark strong,
+.known-place-google-map-toolbar.is-dark > div:first-child > span {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+.known-place-map-heading > label > span {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+.known-place-map-legend span,
+.known-place-map-legend.is-dark span {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+.known-place-map-label-toggle,
+.known-place-map-label-toggle span {
+  color: #fff !important;
+}
+.known-place-public-cautions,
+.known-place-public-cautions * {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+.known-place-map-heading > label {
+  color: #29465a !important;
+}
+.known-place-map-heading select {
+  border-color: rgba(255,255,255,.82) !important;
+  background: rgba(232,247,253,.82) !important;
+  color: #000 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px rgba(4,24,39,.12);
+}
+.known-place-map-heading select option {
+  background: #e8f5fb;
+  color: #000;
+}
+
 /* Map chrome: remove the dark frame and keep only a transparent frosted glass edge. */
 .known-place-google-map-shell {
   border-color: rgba(255,255,255,.28) !important;

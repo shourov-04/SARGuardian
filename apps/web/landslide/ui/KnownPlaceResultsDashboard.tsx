@@ -220,6 +220,37 @@ export function KnownPlaceResultsDashboard({
                 )}
               </section>}
 
+              <div className="known-place-deep-view known-place-public-map-copy">
+                <div className="known-place-section-heading known-place-map-heading">
+                  <div>
+                    <span className="result-kicker">INTERACTIVE SPATIAL EVIDENCE</span>
+                    <h3>Explore measured vectors and raster</h3>
+                  </div>
+                  <label>
+                    <span>Acquisition pair</span>
+                    <select
+                      value={selectedMapPair ? `${selectedMapPair.chain_id}|${selectedMapPair.reference_date}|${selectedMapPair.secondary_date}` : ''}
+                      onChange={(event) => setSelectedMapPairKey(event.target.value)}
+                      disabled={!mapPairs.length}
+                    >
+                      {allPairs.map((pair) => (
+                        <option
+                          value={`${pair.chain_id}|${pair.reference_date}|${pair.secondary_date}`}
+                          key={`${pair.chain_id}|${pair.reference_date}|${pair.secondary_date}`}
+                        >
+                          {pairTitle(pair)} · {trackLabel(pair)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {selectedMapPair ? (
+                  <KnownPlaceGoogleMap pair={selectedMapPair} />
+                ) : (
+                  <p className="known-place-map-unavailable-note">No georeferenced pair preview is available.</p>
+                )}
+              </div>
+
               <div className="known-place-chart-card">
                 <div className="known-place-section-heading">
                   <div>
