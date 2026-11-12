@@ -20,6 +20,7 @@ type Centroid = {
 };
 
 const DEFAULT_MARKERS_PER_CLASS = 24;
+const MAX_MARKER_RING_VERTICES = 512;
 
 function isPosition(value: unknown): value is Position {
   return Array.isArray(value)
@@ -35,7 +36,20 @@ function normalizeRings(value: unknown): PolygonRings | null {
   const rings: PolygonRings = [];
   for (const rawRing of value) {
     if (!Array.isArray(rawRing) || rawRing.length < 4 || !rawRing.every(isPosition)) return null;
-    const ring = rawRing.map(([longitude, latitude]) => [longitude, latitude] as Position);
+    // Marker placement is display-only. Bound very dense preview rings before
+    // centroid/interior-point work so a large valid GeoJSON cannot monopolize
+    // the browser main thread when the marker toggle is enabled.
+    const sourceLength = rawRing.length;
+    const step = sourceLength > MAX_MARKER_RING_VERTICES
+      ? (sourceLength - 1) / (MAX_MARKER_RING_VERTICES - 1)
+      : 1;
+    const ring: Ring = sourceLength > MAX_MARKER_RING_VERTICES
+      ? Array.from({ length: MAX_MARKER_RING_VERTICES }, (_, index) => {
+        const sourceIndex = Math.min(sourceLength - 1, Math.round(index * step));
+        const point = rawRing[sourceIndex] as Position;
+        return [point[0], point[1]] as Position;
+      })
+      : rawRing.map(([longitude, latitude]) => [longitude, latitude] as Position);
     const first = ring[0];
     const last = ring[ring.length - 1];
     if (first[0] !== last[0] || first[1] !== last[1]) ring.push([...first]);

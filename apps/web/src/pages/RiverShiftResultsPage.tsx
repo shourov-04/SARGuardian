@@ -3,7 +3,7 @@ import type { User } from 'firebase/auth';
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import { downloadRiverShiftArtifact, getRiverShiftJob, listRiverShiftJobs, type RiverShiftJob } from '../api/catalog';
 import type { RiverShiftGeoJSON, RiverShiftReport, RiverShiftTimeSeriesFrame } from '../riverShift/manifest';
-import { countRiverShiftCandidateLayers, filterRiverShiftCandidateGeoJSON, getRiverShiftOverlapAuditAvailability, isRiverShiftGeoJSONApproved, isRiverShiftReportVerified, isRiverShiftTimeSeriesGeoJSONApproved, parseRiverShiftGeoJSON, parseRiverShiftReport } from '../riverShift/manifest';
+import { countRiverShiftCandidateLayers, filterRiverShiftCandidateGeoJSON, getRiverShiftOverlapAuditAvailability, isRiverShiftGeoJSONApproved, isRiverShiftReportVerified, isRiverShiftTimeSeriesGeoJSONApproved, limitRiverShiftDisplayGeoJSON, parseRiverShiftGeoJSON, parseRiverShiftReport } from '../riverShift/manifest';
 import { parseWktPolygon, type Wgs84Point } from '../riverShift/aoi';
 import { deriveGeneralChangeMarkers } from '../riverShift/generalChangeMarkers';
 import { deriveImpactMapPoints, parseImpactExposureGeoJSON, parseOpenStreetMapImpactResponse, summarizeImpactExposure, type ImpactExposurePointCollection } from '../riverShift/impactContext';
@@ -420,10 +420,10 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const activeJobPreview = jobPreview && riverJobId && jobPreview.jobId === riverJobId ? jobPreview : null;
   const isGeneralScanJob = Boolean(riverJob?.state === 'succeeded' && riverJob.analysis_mode === 'general_scan');
   const generalChangeMarkers = useMemo(() => (
-    isGeneralScanJob && activeJobPreview?.changeLayer
+    isGeneralScanJob && showGeneralChangeMarkers && activeJobPreview?.changeLayer
       ? deriveGeneralChangeMarkers(activeJobPreview.changeLayer.data)
       : []
-  ), [isGeneralScanJob, activeJobPreview?.changeLayer]);
+  ), [isGeneralScanJob, showGeneralChangeMarkers, activeJobPreview?.changeLayer]);
 
   const hasLiveJobResult = Boolean(riverJob?.state === 'succeeded' && activeJobPreview
     && (activeJobPreview.report || activeJobPreview.changeLayer));
@@ -811,7 +811,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       : currentTimeSeriesFrame
         ? (showObservedWaterExtent ? [currentTimeSeriesFrame.data] : [])
         : verifiedGeoJSONFiles.map((file) => filterRiverShiftCandidateGeoJSON(file.data, candidateOverlayVisibility));
-    displayLayers.forEach((layer) => map.data.addGeoJson(layer as unknown as object));
+    displayLayers.forEach((layer) => map.data.addGeoJson(limitRiverShiftDisplayGeoJSON(layer) as unknown as object));
     if (isGeneralScanJob && showGeneralChangeMarkers && generalChangeMarkers.length > 0) {
       map.data.addGeoJson({
         type: 'FeatureCollection',

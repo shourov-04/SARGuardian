@@ -162,14 +162,8 @@ function App() {
   };
 
   const handleOpenWorkspace = useCallback(() => {
-    if (!user) {
-      setPendingRoute(FIND_DISPLACEMENT_PATH);
-      setAuthModalOpen(true);
-      return;
-    }
-    setAuthModalOpen(false);
-    navigateTo(FIND_DISPLACEMENT_PATH);
-  }, [navigateTo, user]);
+    document.getElementById('workflows')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const handleOpenArchive = useCallback(() => {
     navigateTo('/archive');

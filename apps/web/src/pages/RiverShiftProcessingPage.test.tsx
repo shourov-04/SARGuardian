@@ -41,6 +41,26 @@ describe('River Shift retry controls', () => {
     expect(html).not.toContain('is-failed');
   });
 
+  it('renders live verified-product progress while the run is active', () => {
+    const html = renderToStaticMarkup(
+      <RiverShiftJobStatus
+        job={{
+          ...job,
+          state: 'running',
+          stage: 'batch_01_completed',
+          result_summary: { expected_product_count: 10, verified_product_count: 7 },
+        }}
+        clock={0}
+        onViewResults={vi.fn()}
+        onRetry={vi.fn()}
+        retrying={false}
+      />,
+    );
+    expect(html).toContain('<span>Processed</span>');
+    expect(html).toContain('<strong class="">7</strong>');
+    expect(html).not.toContain('Searchingâ€¦');
+  });
+
   it('does not render the removed footer tagline', () => {
     expect(renderToStaticMarkup(
       <RiverShiftProcessingPage user={null} authState="idle" onSignIn={vi.fn()} onSignOut={vi.fn()} />,

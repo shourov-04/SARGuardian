@@ -31,6 +31,58 @@ GRANULE_ID = re.compile(
 )
 
 
+def mahalanobis_t2(
+    range_residual_m: np.ndarray,
+    azimuth_residual_m: np.ndarray,
+    range_variance_m2: np.ndarray,
+    azimuth_variance_m2: np.ndarray,
+    cross_covariance_m2: np.ndarray | float = 0.0,
+) -> np.ndarray:
+    """Pixel-level GOFF T² with fail-closed covariance validation."""
+    dr, da, vr, va, cov = np.broadcast_arrays(
+        range_residual_m, azimuth_residual_m, range_variance_m2,
+        azimuth_variance_m2, cross_covariance_m2,
+    )
+    determinant = vr * va - cov * cov
+    valid = np.isfinite(dr) & np.isfinite(da) & np.isfinite(vr) & np.isfinite(va) & np.isfinite(cov)
+    valid &= (vr > 0) & (va > 0) & (determinant > 0)
+    score = np.full(dr.shape, np.nan, dtype=np.float32)
+    score[valid] = ((va[valid] * dr[valid] ** 2 - 2 * cov[valid] * dr[valid] * da[valid]
+                     + vr[valid] * da[valid] ** 2) / determinant[valid]).astype(np.float32)
+    return score
+
+
+def cluster_chi2_score(
+    offsets: np.ndarray, range_variances: np.ndarray, azimuth_variances: np.ndarray,
+    cross_covariances: np.ndarray | float = 0.0, *, autocorrelation: float = 0.0,
+) -> tuple[np.ndarray, float, float]:
+    """Inverse-covariance weighted cluster mean, score, and effective N."""
+    values = np.asarray(offsets, dtype=float)
+    if values.ndim != 2 or values.shape[1] != 2:
+        raise ValueError("offsets must have shape (N, 2)")
+    if not 0 <= autocorrelation < 1:
+        raise ValueError("autocorrelation must be in [0, 1)")
+    vr, va, cov = np.broadcast_arrays(range_variances, azimuth_variances, cross_covariances)
+    precision = np.zeros((2, 2), dtype=float)
+    weighted = np.zeros(2, dtype=float)
+    valid = 0
+    for offset, rvar, avar, cross in zip(values, vr, va, cov):
+        matrix = np.array([[rvar, cross], [cross, avar]], dtype=float)
+        if not np.all(np.isfinite(matrix)) or np.linalg.det(matrix) <= 0:
+            continue
+        inverse = np.linalg.inv(matrix)
+        precision += inverse
+        weighted += inverse @ offset
+        valid += 1
+    if valid == 0:
+        raise ValueError("WITHHELD_INSUFFICIENT_VALID_COVARIANCE")
+    covariance = np.linalg.inv(precision)
+    mean = covariance @ weighted
+    n_effective = valid / (1 + (valid - 1) * autocorrelation)
+    score = float(mean @ np.linalg.inv(covariance * (valid / n_effective)) @ mean)
+    return mean, score, n_effective
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as stream:
@@ -140,9 +192,19 @@ def _screen_pair(
         inside_aoi = geometry_mask(
             [polygon], out_shape=shape, transform=transform, invert=True, all_touched=False
         )
-        range_mm, azimuth_mm, corr = [
-            src.read(i).astype(np.float32, copy=False) for i in (1, 2, 3)
-        ]
+        descriptions = [str(value or "").lower() for value in src.descriptions]
+        def read_named(fragment: str) -> np.ndarray | None:
+            index = next((i for i, description in enumerate(descriptions) if fragment in description), None)
+            return src.read(index + 1).astype(np.float32, copy=False) if index is not None else None
+        range_mm = read_named("slant-range offset (mm)")
+        azimuth_mm = read_named("along-track offset (mm)")
+        corr = read_named("correlation")
+        range_mm = range_mm if range_mm is not None else src.read(1).astype(np.float32, copy=False)
+        azimuth_mm = azimuth_mm if azimuth_mm is not None else src.read(2).astype(np.float32, copy=False)
+        corr = corr if corr is not None else src.read(3).astype(np.float32, copy=False)
+        range_variance_mm2 = read_named("slant-range offset variance")
+        azimuth_variance_mm2 = read_named("along-track offset variance")
+        cross_covariance_mm2 = read_named("covariance")
         nodata = src.nodata
         if nodata is not None and math.isfinite(float(nodata)):
             range_mm[range_mm == nodata] = np.nan
@@ -169,6 +231,9 @@ def _screen_pair(
         "valid_pixels": count, "aoi_pixels": aoi_pixels,
         "source_sha256": sha256_file(path), "source_bytes": path.stat().st_size,
         "correlation_min": corr_min,
+        "range_variance_mm2": range_variance_mm2,
+        "azimuth_variance_mm2": azimuth_variance_mm2,
+        "cross_covariance_mm2": cross_covariance_mm2,
     }
     if count == 0:
         result.update({
@@ -209,9 +274,26 @@ def _screen_pair(
     ux_mean, direction_count = _local_mean(ux, vector_valid, direction_window)
     uy_mean, _ = _local_mean(uy, vector_valid, direction_window)
     direction_coherence = np.hypot(ux_mean, uy_mean)
+    covariance_available = range_variance_mm2 is not None and azimuth_variance_mm2 is not None
+    if covariance_available:
+        t2 = mahalanobis_t2(
+            range_residual, azimuth_residual,
+            range_variance_mm2.astype(np.float32) / 1_000_000.0,
+            azimuth_variance_mm2.astype(np.float32) / 1_000_000.0,
+            (cross_covariance_mm2.astype(np.float32) / 1_000_000.0)
+            if cross_covariance_mm2 is not None else 0.0,
+        )
+        # chi-square(2) survival function is exp(-T²/2).
+        anomaly_probability = np.exp(-t2 / 2.0).astype(np.float32)
+        anomaly_gate = np.isfinite(t2) & (t2 >= 5.991464547)
+    else:
+        t2 = np.full(magnitude.shape, np.nan, dtype=np.float32)
+        anomaly_probability = np.full(magnitude.shape, np.nan, dtype=np.float32)
+        anomaly_gate = np.isfinite(magnitude) & (magnitude >= min_offset_m)
     candidate = (
         enough
-        & np.isfinite(magnitude) & (magnitude >= min_offset_m)
+        & anomaly_gate
+        & (np.isfinite(magnitude) & (magnitude >= min_offset_m))
         & np.isfinite(robust_z) & (robust_z >= min_robust_z)
         & (direction_count >= max(5, int(direction_window * direction_window * 0.35)))
         & np.isfinite(direction_coherence)
@@ -226,6 +308,10 @@ def _screen_pair(
         "candidate_pixels": int(candidate.sum()),
         "max_offset_anomaly_m": float(np.nanmax(magnitude[candidate])) if candidate.any() else None,
         "robust_background_scale_m": float(robust_scale_m),
+        "mahalanobis_t2": t2,
+        "mahalanobis_p_value": anomaly_probability,
+        "anomaly_statistic": "GOFF_COVARIANCE_WEIGHTED_CHI2_2" if covariance_available else "SCALAR_FALLBACK_COVARIANCE_UNAVAILABLE",
+        "covariance_status": "USED" if covariance_available else "FALLBACK_SCALAR_NO_COMPLETE_VARIANCE_LAYERS",
         "status": "SCREENED_NOT_DETECTION",
     })
     return result

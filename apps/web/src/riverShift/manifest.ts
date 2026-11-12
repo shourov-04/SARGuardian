@@ -178,6 +178,27 @@ export function filterRiverShiftCandidateGeoJSON(
   };
 }
 
+/**
+ * Bound the browser-only map representation. The retained GeoJSON remains the
+ * authoritative result; this helper only prevents Google Maps from receiving
+ * an unbounded number of preview geometries at once.
+ */
+export function limitRiverShiftDisplayGeoJSON(
+  data: RiverShiftGeoJSON,
+  maxPerClass = 100,
+): RiverShiftGeoJSON {
+  if (!Number.isInteger(maxPerClass) || maxPerClass < 1) return { ...data, features: [] };
+  const counts = { erosion: 0, deposition: 0, newWater: 0, observedWater: 0, unclassified: 0 };
+  const features = data.features.filter((feature) => {
+    const type = riverShiftCandidateType(feature.properties);
+    const bucket = type || (isObservedOpenWaterFeature(feature.properties) ? 'observedWater' : 'unclassified');
+    if (counts[bucket] >= maxPerClass) return false;
+    counts[bucket] += 1;
+    return true;
+  });
+  return features.length === data.features.length ? data : { ...data, features };
+}
+
 export function parseRiverShiftReport(value: unknown): RiverShiftReport {
   if (!value || typeof value !== 'object') {
     throw new Error('Result JSON must be an object.');

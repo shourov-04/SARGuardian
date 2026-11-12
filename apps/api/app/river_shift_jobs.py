@@ -39,9 +39,11 @@ logger = logging.getLogger(__name__)
 MAX_GITHUB_INPUT_BYTES = 60_000
 MAX_CALLBACK_BYTES = 2_000_000
 MAX_ARTIFACT_BYTES = 250 * 1024 * 1024
+RIVERSHIFT_PROGRESS_POLL_SECONDS = 5
 JOB_ID_PATTERN = re.compile(r"^[0-9a-fA-F-]{36}$")
 SAFE_ERROR_CODE = re.compile(r"^[A-Z][A-Z0-9_:-]{0,79}$")
 SAFE_STAGE = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
+RIVERSHIFT_PRODUCT_JOB_NAME = re.compile(r"(?:batch\s+\d+|delayed\s+retry\s+wave\s+\d+).*product\s+\d+/\d+", re.IGNORECASE)
 
 
 class CreateRiverShiftJobRequest(BaseModel):
@@ -561,10 +563,105 @@ def _find_workflow_run(settings: Any, job_id: UUID) -> dict[str, Any] | None:
     return None
 
 
+def _github_verified_product_count(settings: Any, run_id: str, expected: int) -> int | None:
+    """Count completed successful RiverShift product runners for a live run.
+
+    Product workers run concurrently and intentionally publish their durable
+    receipts at the batch barrier.  The GitHub job list is the only safe shared
+    live signal before that barrier, so use it only for a monotonic UI progress
+    count.  The signed worker callback remains authoritative for final results.
+    """
+    if not run_id.isdigit() or expected <= 0:
+        return None
+
+    successful = 0
+    for page in range(1, 11):
+        payload = _github_get_json(
+            settings,
+            f"{settings.github_api_url}/repos/{settings.river_shift_github_actions_repository}"
+            f"/actions/runs/{quote(run_id, safe='')}/jobs?per_page=100&page={page}",
+        )
+        jobs = payload.get("jobs") if isinstance(payload, dict) else None
+        if not isinstance(jobs, list):
+            return None
+        for job in jobs:
+            if not isinstance(job, dict):
+                continue
+            name = job.get("name")
+            if (
+                isinstance(name, str)
+                and RIVERSHIFT_PRODUCT_JOB_NAME.search(name)
+                and job.get("status") == "completed"
+                and job.get("conclusion") == "success"
+            ):
+                successful += 1
+        if len(jobs) < 100:
+            break
+    return min(successful, expected)
+
+
+def _refresh_river_shift_product_progress(store: Any, record: dict[str, Any], settings: Any) -> dict[str, Any]:
+    """Persist monotonic live product progress while the worker is running."""
+    if str(record.get("state")) not in {JobState.DISPATCHING.value, JobState.RUNNING.value}:
+        return record
+    run_id = record.get("github_run_id")
+    summary = record.get("result_summary")
+    if not isinstance(run_id, str) or not isinstance(summary, dict):
+        return record
+    expected = summary.get("expected_product_count")
+    current = summary.get("verified_product_count")
+    if (
+        not isinstance(expected, int) or isinstance(expected, bool) or expected <= 0
+        or not isinstance(current, int) or isinstance(current, bool)
+        or current >= expected
+    ):
+        return record
+
+    updated_raw = record.get("updated_at")
+    try:
+        updated_at = datetime.fromisoformat(str(updated_raw).replace("Z", "+00:00"))
+        if updated_at.tzinfo is None:
+            updated_at = updated_at.replace(tzinfo=UTC)
+        if (datetime.now(UTC) - updated_at.astimezone(UTC)).total_seconds() < RIVERSHIFT_PROGRESS_POLL_SECONDS:
+            return record
+    except (TypeError, ValueError):
+        pass
+
+    count = _github_verified_product_count(settings, run_id, expected)
+    if count is None or count <= current:
+        return record
+
+    merged_summary = dict(summary)
+    merged_summary["verified_product_count"] = count
+    try:
+        return store.update_river_shift_job(
+            UUID(str(record["id"])),
+            {"result_summary": merged_summary},
+            expected_state=str(record["state"]),
+            expected_sequence=int(record.get("callback_sequence") or 0),
+        )
+    except (PersistenceConflictError, PersistenceError):
+        return record
+
+
 def _refresh_workflow_state(store: Any, record: dict[str, Any]) -> dict[str, Any]:
     state = str(record.get("state"))
     if state not in {JobState.DISPATCHING.value, JobState.RUNNING.value}:
         return record
+
+    # Batch reconciliation intentionally waits for every concurrent product
+    # runner.  Refresh the live completed-product count independently so the
+    # processing screen does not remain at zero while successful runners are
+    # already visible in GitHub Actions.
+    settings = None
+    try:
+        settings = get_settings()
+        record = _refresh_river_shift_product_progress(store, record, settings)
+    except Exception:
+        # Progress is advisory; a transient GitHub/API failure must never hide
+        # the last durable callback state or turn a running job into an error.
+        settings = None
+
     # A signed worker callback updates updated_at at each lifecycle transition.
     # Once a run is correlated, GitHub is only a fallback for a missing callback;
     # checking it on every browser poll is unnecessary.
@@ -574,12 +671,16 @@ def _refresh_workflow_state(store: Any, record: dict[str, Any]) -> dict[str, Any
             updated_at = datetime.fromisoformat(str(updated_raw).replace("Z", "+00:00"))
             if updated_at.tzinfo is None:
                 updated_at = updated_at.replace(tzinfo=UTC)
-            if (datetime.now(UTC) - updated_at.astimezone(UTC)).total_seconds() < 60:
+            progress_available = isinstance(record.get("result_summary"), dict) and isinstance(
+                record.get("result_summary", {}).get("expected_product_count"), int
+            )
+            refresh_window = RIVERSHIFT_PROGRESS_POLL_SECONDS if progress_available else 60
+            if (datetime.now(UTC) - updated_at.astimezone(UTC)).total_seconds() < refresh_window:
                 return record
         except (TypeError, ValueError):
             pass
     try:
-        settings = get_settings()
+        settings = settings or get_settings()
         if not settings.river_shift_actions_enabled:
             return record
         run = None

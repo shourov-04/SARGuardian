@@ -11,6 +11,7 @@ from rasterio.transform import Affine
 from tools.aoi_wide_displacement_screen import (
     _box_sum,
     _pair_offset_threshold_m,
+    mahalanobis_t2,
     run_aoi_wide_screen,
 )
 
@@ -225,3 +226,19 @@ def test_pair_threshold_uses_reader_floor_and_elapsed_days() -> None:
     )
     assert fallback_threshold == 0.25
     assert fallback_floor is None
+
+
+def test_mahalanobis_statistic_matches_chi_square_two_formula() -> None:
+    result = mahalanobis_t2(
+        np.array([2.0]), np.array([0.0]),
+        np.array([1.0]), np.array([1.0]), np.array([0.0]),
+    )
+    np.testing.assert_allclose(result, [4.0])
+
+
+def test_mahalanobis_withholds_invalid_covariance() -> None:
+    result = mahalanobis_t2(
+        np.array([2.0]), np.array([0.0]),
+        np.array([1.0]), np.array([0.5]), np.array([1.0]),
+    )
+    assert np.isnan(result[0])

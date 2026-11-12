@@ -74,6 +74,66 @@ DEFAULT_SNR = 3.0
 MAD_SIGMA = 1.4826          # MAD -> Gaussian sigma
 
 
+def mahalanobis_t2(
+    range_offset: np.ndarray | float,
+    azimuth_offset: np.ndarray | float,
+    range_variance: np.ndarray | float,
+    azimuth_variance: np.ndarray | float,
+    cross_covariance: np.ndarray | float = 0.0,
+    *,
+    minimum_variance: float = 1e-12,
+) -> np.ndarray:
+    """Compute GOFF's bivariate covariance-weighted chi-square statistic.
+
+    Invalid or non-positive-definite covariance cells are returned as NaN;
+    callers must withhold those cells rather than treating them as zero noise.
+    """
+    dr, da, vr, va, cov = np.broadcast_arrays(
+        np.asarray(range_offset, dtype=float), np.asarray(azimuth_offset, dtype=float),
+        np.asarray(range_variance, dtype=float), np.asarray(azimuth_variance, dtype=float),
+        np.asarray(cross_covariance, dtype=float),
+    )
+    determinant = vr * va - cov * cov
+    valid = np.isfinite(dr) & np.isfinite(da) & np.isfinite(vr) & np.isfinite(va) & np.isfinite(cov)
+    valid &= (vr >= minimum_variance) & (va >= minimum_variance) & (determinant > minimum_variance**2)
+    result = np.full(dr.shape, np.nan, dtype=float)
+    result[valid] = (va[valid] * dr[valid] ** 2 - 2 * cov[valid] * dr[valid] * da[valid] + vr[valid] * da[valid] ** 2) / determinant[valid]
+    return result
+
+
+def covariance_weighted_mean(
+    offsets: np.ndarray, range_variances: np.ndarray, azimuth_variances: np.ndarray,
+    cross_covariances: np.ndarray | float = 0.0, *, autocorrelation: float = 0.0,
+) -> tuple[np.ndarray, float, int]:
+    """Return the inverse-covariance weighted cluster mean and chi-square score."""
+    values = np.asarray(offsets, dtype=float)
+    if values.ndim != 2 or values.shape[1] != 2:
+        raise ValueError("offsets must have shape (N, 2)")
+    if not 0 <= autocorrelation < 1:
+        raise ValueError("autocorrelation must be in [0, 1)")
+    vr, va, cov = np.broadcast_arrays(range_variances, azimuth_variances, cross_covariances)
+    if len(vr) != len(values):
+        raise ValueError("one covariance row is required per offset")
+    weights = []
+    vectors = []
+    for value, rvar, avar, cross in zip(values, vr, va, cov):
+        matrix = np.array([[rvar, cross], [cross, avar]], dtype=float)
+        if not np.all(np.isfinite(matrix)) or np.linalg.det(matrix) <= 0:
+            continue
+        inverse = np.linalg.inv(matrix)
+        weights.append(inverse)
+        vectors.append((inverse @ value).reshape(2))
+    if not weights:
+        raise ValueError("WITHHELD_INSUFFICIENT_VALID_COVARIANCE")
+    precision = np.sum(weights, axis=0)
+    covariance = np.linalg.inv(precision)
+    mean = covariance @ np.sum(vectors, axis=0)
+    n = len(weights)
+    n_effective = n / (1 + (n - 1) * autocorrelation)
+    score = float(mean @ np.linalg.inv(covariance * (n / n_effective)) @ mean)
+    return mean, score, int(round(n_effective))
+
+
 # ---------------------------------------------------------------------------
 def layer_groups(datasets: dict) -> list[str]:
     """Every .../pixelOffsets/<pol>/<layerN> group present, in order."""
@@ -128,6 +188,12 @@ def read_goff(
             corr = ds("correlationSurfacePeak")
             snr = ds("snr")
             rng_var = ds("slantRangeOffsetVariance")
+            azi_var = ds("alongTrackOffsetVariance")
+            cross_cov = next((ds(name) for name in (
+                "slantRangeOffsetAlongTrackOffsetCovariance",
+                "slantRangeAlongTrackOffsetCovariance",
+                "crossOffsetCovariance",
+            ) if f"{grp}/{name}" in datasets), None)
             if rng is None:
                 continue
 
@@ -146,6 +212,7 @@ def read_goff(
             pol_name = grp.split("/")[-2]
             results[f"{pol_name}/{grp.rsplit('/', 1)[-1]}"] = dict(
                 rng=rng, azi=azi, corr=corr, snr=snr, rng_var=rng_var,
+                azi_var=azi_var, cross_cov=cross_cov,
                 xs=xs, ys=ys, epsg=epsg, group=grp,
             )
 
@@ -276,6 +343,8 @@ def read_goff(
             "correlation": L["corr"],
             "snr": L["snr"],
             "range_var": L["rng_var"],
+            "azimuth_var": L["azi_var"],
+            "cross_cov": L["cross_cov"],
             "valid": valid,
             "xs": L["xs"], "ys": L["ys"], "epsg": L["epsg"],
             # Cells the AOI covers, so coverage has a denominator that means
@@ -346,6 +415,13 @@ def export_clipped(res: dict, outdir: Path) -> list[dict]:
         bands = [(band("range_m", 1000.0), "slant-range offset (mm)"),
                  (band("azimuth_m", 1000.0), "along-track offset (mm)"),
                  (band("correlation"), "correlation")]
+        if L.get("range_var") is not None and L.get("azimuth_var") is not None:
+            bands.extend([
+                (band("range_var", 1_000_000.0), "slant-range offset variance (mm^2)"),
+                (band("azimuth_var", 1_000_000.0), "along-track offset variance (mm^2)"),
+            ])
+        if L.get("cross_cov") is not None:
+            bands.append((band("cross_cov", 1_000_000.0), "slant-range/along-track offset covariance (mm^2)"))
         bands = [(a, d) for a, d in bands if a is not None]
         if not bands:
             continue

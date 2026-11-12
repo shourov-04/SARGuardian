@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { isRiverShiftGeoJSONApproved, isRiverShiftReportVerified, isRiverShiftTimeSeriesGeoJSONApproved, parseRiverShiftReport } from './manifest';
+import { isRiverShiftGeoJSONApproved, isRiverShiftReportVerified, isRiverShiftTimeSeriesGeoJSONApproved, limitRiverShiftDisplayGeoJSON, parseRiverShiftReport } from './manifest';
 
 describe('RiverShift result manifest', () => {
+  it('bounds only the browser map representation by class', () => {
+    const features = Array.from({ length: 5 }, (_, index) => ({
+      type: 'Feature' as const,
+      properties: { class: index % 2 ? 'deposition' : 'erosion' },
+      geometry: { type: 'Point', coordinates: [index, index] },
+    }));
+    const source = { type: 'FeatureCollection' as const, features };
+    expect(limitRiverShiftDisplayGeoJSON(source, 1).features).toHaveLength(2);
+    expect(source.features).toHaveLength(5);
+  });
+
   it('accepts a signed bankline migration result with provenance and QA status', () => {
     const result = parseRiverShiftReport({
       schema_version: 1,

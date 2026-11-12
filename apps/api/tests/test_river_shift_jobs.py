@@ -223,6 +223,39 @@ def test_refresh_workflow_state_does_not_patch_identical_run_metadata(monkeypatc
     assert store.update_calls == updates_before_refresh
 
 
+def test_refresh_workflow_state_persists_completed_product_progress_before_batch_barrier(monkeypatch) -> None:
+    store = RiverShiftStore()
+    api = configure(monkeypatch, store)
+    created = api.post("/api/river-shift/jobs", json=payload()).json()
+    row = store.rows[created["id"]]
+    row.update({
+        "state": river_module.JobState.RUNNING.value,
+        "stage": "hdf5_inspection_and_aoi_extraction",
+        "callback_sequence": 3,
+        "github_run_id": "123456789",
+        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "result_summary": {"expected_product_count": 10, "verified_product_count": 0},
+        "updated_at": datetime(2026, 1, 1, tzinfo=UTC),
+    })
+
+    def github_json(_settings, url):
+        if "/jobs?" in url:
+            return {"jobs": [
+                {"name": "Batch 1 · product 1/10", "status": "completed", "conclusion": "success"},
+                {"name": "Batch 1 · product 2/10", "status": "completed", "conclusion": "success"},
+                {"name": "Batch 1 · product 3/10", "status": "completed", "conclusion": "success"},
+                {"name": "Batch 1 · product 4/10", "status": "in_progress", "conclusion": None},
+            ]}
+        return {"id": 123456789, "html_url": row["github_run_url"], "status": "in_progress", "conclusion": None}
+
+    monkeypatch.setattr(river_module, "_github_get_json", github_json)
+    updates_before_refresh = store.update_calls
+    refreshed = river_module._refresh_workflow_state(store, row)
+
+    assert refreshed["result_summary"]["verified_product_count"] == 3
+    assert store.update_calls == updates_before_refresh + 1
+
+
 def test_compact_iso_and_filename_acquisition_times_normalize_to_utc_dates() -> None:
     assert river_module._acquisition_date("20260627T124243") == "2026-06-27"
     assert river_module._acquisition_date("2026-06-27T12:42:43.000Z") == "2026-06-27"

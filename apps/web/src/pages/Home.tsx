@@ -108,7 +108,7 @@ export function Home({
                 comingSoon
               />
               <WorkflowCard
-                title="Known place"
+                title="Known place analysis"
                 description="Draw a measurement area and a reference area for focused analysis."
                 action="Select an area"
                 image="/scenery/night-ridge.jpg"
