@@ -27,6 +27,7 @@ const howItWorksShellStyle = `<style id="sarguardian-how-it-works-shell">
 .claude-nav-links{display:flex;align-items:center;gap:7px}.claude-nav-shell.is-archive .claude-nav-links{margin-left:auto}.archive-home-link{display:inline-flex;min-height:38px;padding:0 16px;align-items:center;border:1px solid rgba(255,255,255,.72);border-radius:999px;color:#fff;background:linear-gradient(135deg,#1689df,#075fb4);font-size:13px;font-weight:700;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 24px rgba(8,104,190,.24)}
 .site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}
 .warn,.quick-panel,#modeCaption,.public-explainer-grid,.public-candidate-footnote,.foot{display:none!important}
+.claude-nav-shell{width:min(980px,calc(100% - 24px));top:10px;margin:10px auto 0}.claude-nav-inner{height:58px;padding:0 10px 0 16px}.archive-home-link{min-height:38px;padding:0 16px}
 </style>`;
 
 const howItWorksHeader = '<div class="claude-nav-shell is-archive"><div class="claude-nav-inner"><a class="claude-brand" href="/" aria-label="SARGuardian home"><span class="claude-brand-mark"><img class="brand-logo-image claude-brand-logo" src="/sarguardian-logo.png" alt="SARGuardian" decoding="async"></span><span class="claude-brand-word"><b>SAR</b>Guardian</span></a><nav class="claude-nav-links" aria-label="Main navigation"><a class="archive-home-link" href="/">Home</a></nav></div></div>';
