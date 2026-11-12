@@ -179,9 +179,18 @@ function App() {
 
   if (isDashboardRoute(pathname)) {
     const searchParams = new URLSearchParams(window.location.search);
+    const queryJobId = searchParams.get('jobId') || '';
+    const storedJobId = window.sessionStorage.getItem('sarguardian.find-displacement.result-job-id') || '';
+    const jobId = queryJobId || storedJobId;
+    if (queryJobId) {
+      window.sessionStorage.setItem('sarguardian.find-displacement.result-job-id', queryJobId);
+      if (pathname === FIND_DISPLACEMENT_PROCESSING_RESULT_PATH) {
+        window.history.replaceState({}, '', FIND_DISPLACEMENT_PROCESSING_RESULT_PATH);
+      }
+    }
     return (
       <DashboardPage
-        jobId={searchParams.get('jobId') || ''}
+        jobId={jobId}
         view={parseDashboardView(searchParams.get('view'))}
         user={user}
         authState={authState}
@@ -352,10 +361,8 @@ function App() {
           isKnownPlaceSetupPage={isLandslideKnownPlaceSetupRoute(pathname)}
         onDisplacements={() => navigateTo(FIND_DISPLACEMENT_DISPLACEMENT_PATH)}
          onViewResults={(jobId) => {
-           const resultUrl = new URL(FIND_DISPLACEMENT_PROCESSING_RESULT_PATH, window.location.origin);
-           resultUrl.searchParams.set('jobId', jobId);
-           resultUrl.searchParams.set('view', 'public');
-           window.location.assign(resultUrl.toString());
+           window.sessionStorage.setItem('sarguardian.find-displacement.result-job-id', jobId);
+           window.location.assign(FIND_DISPLACEMENT_PROCESSING_RESULT_PATH);
          }}
         onKnownPlaceAnalysis={() => navigateTo(KNOWN_PLACE_ANALYSIS_PATH)}
         onShowKnownPlaceResults={() => navigateTo(KNOWN_PLACE_RESULTS_PATH)}
