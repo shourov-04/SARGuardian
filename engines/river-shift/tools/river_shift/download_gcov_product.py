@@ -44,13 +44,16 @@ def _normal_granule_name(value: Any) -> str | None:
 
 
 def _earthaccess_granule_name(granule: Any) -> str | None:
-    """Read the exact public granule identity from a CMR DataGranule result."""
+    """Read the exact granule identity from UMM or raw CMR JSON."""
     if not hasattr(granule, "get"):
         return None
     umm = granule.get("umm", {})
     if isinstance(umm, dict):
-        return _normal_granule_name(umm.get("GranuleUR"))
-    return None
+        umm_name = _normal_granule_name(umm.get("GranuleUR"))
+        if umm_name is not None:
+            return umm_name
+    # CMR application/json feed entries expose producer_granule_id at top level.
+    return _normal_granule_name(granule.get("producer_granule_id"))
 
 
 def _http_status_code(error: BaseException) -> int | None:
@@ -625,6 +628,7 @@ def download_product(product: dict, output_dir: Path) -> dict:
         "status": "START",
         "collection": collection,
     }), flush=True)
+    fallback_used = False
     try:
         candidates = earthaccess.search_data(
             short_name=collection,
@@ -633,22 +637,77 @@ def download_product(product: dict, output_dir: Path) -> dict:
             count=2,
         )
     except Exception as exc:
+        fallback_used = True
         print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
             "stage": "exact_cmr_granule_lookup",
             "status": "FAIL",
             "error_type": type(exc).__name__,
             "fallback": "direct_cmr_producer_granule_id",
         }), flush=True)
-        candidates = _search_exact_cmr_granule(
+        raw_candidates = _search_exact_cmr_granule(
             collection=collection,
             expected_name=expected_name,
         )
+        raw_exact_matches = [
+            row for row in raw_candidates
+            if _earthaccess_granule_name(row) == expected_name
+        ]
         print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
             "stage": "exact_cmr_granule_lookup_fallback",
-            "status": "PASS",
+            "status": "PASS" if len(raw_exact_matches) == 1 else "FAIL",
             "backend": "cmr_producer_granule_id",
-            "candidate_count": len(candidates),
+            "candidate_count": len(raw_candidates),
+            "exact_match_count": len(raw_exact_matches),
         }), flush=True)
+        if len(raw_exact_matches) != 1:
+            raise RuntimeError(
+                f"NASA CMR direct fallback did not return exactly one {maturity} GCOV match."
+            ) from None
+
+        cmr_concept_id = raw_exact_matches[0].get("id")
+        if not isinstance(cmr_concept_id, str) or not cmr_concept_id.strip():
+            raise RuntimeError(
+                "NASA CMR exact fallback result did not contain a valid granule concept ID."
+            ) from None
+
+        # Raw application/json entries are metadata dictionaries, not DataGranules.
+        # Re-resolve the exact concept ID to obtain the UMM-backed object expected
+        # by earthaccess.download(), and fail closed on any unresolved or ambiguous result.
+        print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
+            "stage": "cmr_concept_id_resolution",
+            "status": "START",
+        }), flush=True)
+        try:
+            candidates = earthaccess.search_data(
+                concept_id=[cmr_concept_id],
+                downloadable=True,
+                count=2,
+            )
+        except Exception as resolve_exc:
+            print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
+                "stage": "cmr_concept_id_resolution",
+                "status": "FAIL",
+                "error_type": type(resolve_exc).__name__,
+            }), flush=True)
+            raise RuntimeError(
+                "NASA CMR exact result could not be resolved to an earthaccess DataGranule."
+            ) from None
+
+        resolved_exact_matches = [
+            row for row in (candidates or [])
+            if _earthaccess_granule_name(row) == expected_name
+            and isinstance(row.get("umm"), dict)
+            and isinstance(row.get("meta"), dict)
+            and callable(getattr(row, "data_links", None))
+            and hasattr(row, "cloud_hosted")
+        ]
+        print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
+            "stage": "cmr_concept_id_resolution",
+            "status": "PASS" if len(resolved_exact_matches) == 1 else "FAIL",
+            "candidate_count": len(candidates or []),
+            "exact_downloadable_granule_count": len(resolved_exact_matches),
+        }), flush=True)
+        candidates = resolved_exact_matches
 
     exact_matches = [
         row for row in (candidates or [])
