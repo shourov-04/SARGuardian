@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import re
+import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,11 @@ import numpy as np
 import rasterio
 from rasterio.features import geometry_mask, shapes
 from rasterio.warp import transform_geom
+
+SCIENCE_ROOT = Path(__file__).resolve().parents[3] / "science" / "nisar-core"
+if str(SCIENCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCIENCE_ROOT))
+from validation.gls_persistence import evaluate_cluster_persistence  # noqa: E402
 
 SCHEMA = "sarguardian-find-displacements-aoi-screen/1.0"
 GRANULE_ID = re.compile(
@@ -336,6 +342,7 @@ def _component_features(
     pair_count: int,
     persistence: int,
     minimum_pixels: int,
+    pair_series: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     pixel_area = abs(float(transform.a * transform.e))
     result: list[dict[str, Any]] = []
@@ -372,6 +379,22 @@ def _component_features(
         persistence_min = int(persistence_values.min()) if persistence_values.size else int(persistence)
         persistence_median = float(np.median(persistence_values)) if persistence_values.size else float(persistence)
         persistence_max = int(persistence_values.max()) if persistence_values.size else int(persistence)
+        gls = {"status": "WITHHELD_INSUFFICIENT_PERSISTENCE_SUPPORT", "velocity_mm_yr": None, "z_score": None, "chi2_reduced": None}
+        if pair_series:
+            elapsed: list[float] = []
+            displacement: list[float] = []
+            variances: list[float] = []
+            for pair in pair_series:
+                values = pair["displacement_m"][component_mask]
+                values = values[np.isfinite(values)]
+                if values.size:
+                    elapsed.append(float(pair["elapsed_days"]))
+                    displacement.append(float(np.median(values)))
+                    variances.append(float(pair["variance_m2"]))
+            if len(elapsed) >= 3:
+                gls = evaluate_cluster_persistence(
+                    np.asarray(elapsed), np.asarray(displacement), np.diag(np.maximum(variances, 1e-12)),
+                )
         result.append({
             "type": "Feature",
             "properties": {
@@ -390,6 +413,10 @@ def _component_features(
                 "mean_cross_pair_directional_coherence": round(
                     float(np.nanmean(pair_direction_coherence[component_mask])), 4
                 ) if np.isfinite(pair_direction_coherence[component_mask]).any() else None,
+                "gls_persistence_status": gls["status"],
+                "gls_velocity_mm_yr": round(float(gls["velocity_mm_yr"]), 2) if gls["velocity_mm_yr"] is not None else None,
+                "gls_wald_z": round(float(gls["z_score"]), 3) if gls["z_score"] is not None else None,
+                "gls_reduced_chi2": round(float(gls["chi2_reduced"]), 3) if gls["chi2_reduced"] is not None else None,
                 "pixels_approx": pixels,
                 "area_km2_approx": round(area_m2 / 1e6, 6),
                 "centroid_lon": round(float(center_wgs[0]), 6),
@@ -584,6 +611,7 @@ def run_aoi_wide_screen(
         direction_azimuth_sum = None
         good_pair_count = 0
         grid_error = None
+        pair_series: list[dict[str, Any]] = []
 
         # Stream a single export's arrays at a time. Only compact accumulators
         # are retained, so large AOIs do not hold every pair raster in memory.
@@ -639,6 +667,16 @@ def run_aoi_wide_screen(
                 direction_range_sum += range_direction
                 direction_azimuth_sum += azimuth_direction
                 good_pair_count += 1
+                try:
+                    elapsed_days = (date.fromisoformat(item["identity"]["secondary_date"][:10])
+                                    - date.fromisoformat(item["identity"]["reference_date"][:10])).days
+                except (TypeError, ValueError):
+                    elapsed_days = 0
+                pair_series.append({
+                    "elapsed_days": elapsed_days,
+                    "displacement_m": pair["range_residual_m"].copy(),
+                    "variance_m2": max(float(pair.get("robust_background_scale_m") or 0.03) ** 2, 1e-8),
+                })
 
             pair_results.append({
                 "product_id": item["row"].get("id"), "granule_name": item["row"].get("granule_name"),
@@ -686,7 +724,7 @@ def run_aoi_wide_screen(
         components = _component_features(
             persistent, hit_count, cross_pair_coherence,
             series_grid["transform"], series_grid["crs"], series_id,
-            identity, good_pair_count, int(minimum_pairs), minimum_component_pixels,
+            identity, good_pair_count, int(minimum_pairs), minimum_component_pixels, pair_series,
         )
         all_features.extend(components)
 
