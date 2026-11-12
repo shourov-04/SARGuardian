@@ -159,12 +159,6 @@ export function KnownPlaceResultsDashboard({
                 aria-pressed={view === item.id}
                 onClick={() => setView(item.id)}
               >
-                <span className="known-place-audience-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false">
-                    <path d="M4 19V5M4 19h16" />
-                    <path d="m7 15 4-4 3 2 5-6" />
-                  </svg>
-                </span>
                 <span className="known-place-audience-copy">
                   <strong>{item.title}</strong>
                   <small>{item.audience}</small>
@@ -294,7 +288,7 @@ export function KnownPlaceResultsDashboard({
                   <p>Google Maps uses the pair's EPSG-referenced GOFF preview, with separate measurement/reference outlines and independently selectable orbit chains.</p>
                 </div>
                 <label>
-                  <span>Map observation pair</span>
+                  <span>Acquisition pair</span>
                   <select
                     value={selectedMapPair ? `${selectedMapPair.chain_id}|${selectedMapPair.reference_date}|${selectedMapPair.secondary_date}` : ''}
                     onChange={(event) => setSelectedMapPairKey(event.target.value)}

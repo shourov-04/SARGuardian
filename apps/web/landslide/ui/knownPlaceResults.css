@@ -433,6 +433,7 @@
   display: grid;
   gap: 5px;
   min-width: min(310px, 100%);
+  margin-left: auto;
   color: #fff !important;
   font-size: 9px;
   letter-spacing: .08em;
@@ -463,15 +464,58 @@
   flex-wrap: wrap;
   gap: 8px 14px;
   padding: 11px 13px;
-  background: rgba(255,255,255,.20);
+  background: rgba(255,255,255,.10) !important;
   border-bottom: 1px solid rgba(255,255,255,.58);
-  box-shadow: inset 0 -1px 0 rgba(15,34,54,.12);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.42);
   backdrop-filter: blur(18px) saturate(135%);
   -webkit-backdrop-filter: blur(18px) saturate(135%);
 }
 .known-place-google-map-toolbar > div:first-child { display: grid; gap: 4px; }
 .known-place-google-map-toolbar strong { color: #0f2236; font: 750 12px 'Manrope', sans-serif; }
 .known-place-google-map-toolbar span { color: #29465a; font-size: 9px; }
+.known-place-google-map-toolbar.is-dark strong { color: #fff; }
+.known-place-google-map-toolbar.is-dark > div:first-child > span { color: rgba(255,255,255,.86); }
+.known-place-map-toolbar-actions { display: inline-flex; align-items: center; gap: 8px; }
+.known-place-map-label-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 4px 8px 4px 11px;
+  border: 1px solid rgba(15,34,54,.28);
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+  color: #0f2236;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.66), 0 6px 14px rgba(4,24,39,.14);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.known-place-mini-switch {
+  display: inline-flex;
+  width: 30px;
+  height: 18px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(15,34,54,.3);
+  box-shadow: inset 0 1px 2px rgba(15,34,54,.2);
+}
+.known-place-mini-switch i {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(4,24,39,.3);
+  transform: translateX(0);
+  transition: transform .2s ease, background .2s ease;
+}
+.known-place-map-label-toggle.is-on .known-place-mini-switch { background: #0875c7; }
+.known-place-map-label-toggle.is-on .known-place-mini-switch i {
+  background: #eaf9ff;
+  transform: translateX(12px);
+}
 .known-place-map-theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -565,7 +609,7 @@
   align-items: center;
   gap: 8px 16px;
   padding: 9px 12px;
-  background: rgba(255,255,255,.20);
+  background: rgba(255,255,255,.20) !important;
   border-top: 1px solid rgba(255,255,255,.58);
   box-shadow: inset 0 1px 0 rgba(15,34,54,.12);
   backdrop-filter: blur(18px) saturate(135%);
@@ -578,6 +622,7 @@
   color: #0f2236;
   font-size: 9px;
 }
+.known-place-map-legend.is-dark span { color: #fff; }
 .known-place-map-legend i {
   display: inline-block;
   width: 11px;
@@ -620,30 +665,28 @@
 
 /* Three audience surfaces: subtle 10% glass with crisp, readable labels. */
 .known-place-audience-tabs button {
-  border-color: rgba(15,34,54,.28) !important;
-  background: rgba(255,255,255,.10) !important;
-  color: #000 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 10px 24px rgba(4,24,39,.16) !important;
-  backdrop-filter: blur(16px) saturate(145%);
-  -webkit-backdrop-filter: blur(16px) saturate(145%);
+  border-color: rgba(255,255,255,.72) !important;
+  background: linear-gradient(180deg, #43b9ee, #0875c7) !important;
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 10px 24px rgba(8,104,190,.24) !important;
 }
 .known-place-audience-tabs button:hover {
-  background: rgba(255,255,255,.18) !important;
-  border-color: rgba(8,117,199,.58) !important;
+  background: linear-gradient(180deg, #5bc5f4, #1689df) !important;
+  border-color: rgba(255,255,255,.9) !important;
 }
 .known-place-audience-tabs button.is-active {
-  border-color: rgba(8,117,199,.9) !important;
-  background: rgba(8,117,199,.10) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 0 0 2px rgba(8,117,199,.22), 0 12px 28px rgba(8,104,190,.2) !important;
+  border-color: rgba(255,255,255,.88) !important;
+  background: linear-gradient(135deg, #45cf9c, #129b67) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 0 0 2px rgba(18,155,103,.26), 0 12px 28px rgba(13,107,75,.24) !important;
 }
 .known-place-audience-tabs button strong,
-.known-place-audience-tabs button small,
-.known-place-audience-icon { color: #000 !important; }
+.known-place-audience-tabs button small { color: #fff !important; }
 
 @media (max-width: 760px) {
   .known-place-map-heading { align-items: stretch; flex-direction: column; }
-  .known-place-map-heading > label { min-width: 0; }
+  .known-place-map-heading > label { min-width: 0; margin-left: 0; }
   .known-place-google-map { height: 540px; min-height: 420px; }
   .known-place-google-map-toolbar { align-items: flex-start; flex-direction: column; }
+  .known-place-map-toolbar-actions { width: 100%; justify-content: flex-end; }
   .known-place-map-legend { gap: 8px 10px; }
 }

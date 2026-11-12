@@ -125,12 +125,19 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
 ];
 
+function mapStyles(darkMode: boolean, labelsVisible: boolean): google.maps.MapTypeStyle[] | null {
+  const styles = darkMode ? [...DARK_MAP_STYLES] : [];
+  if (!labelsVisible) styles.push({ elementType: 'labels', stylers: [{ visibility: 'off' }] });
+  return styles.length ? styles : null;
+}
+
 export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
   const mapElement = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [mapType, setMapType] = useState('terrain');
+  const [labelsVisible, setLabelsVisible] = useState(true);
   const preview = pair.map_preview;
 
   useEffect(() => {
@@ -157,7 +164,7 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         mapTypeControl: true,
         mapTypeControlOptions: {
           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-          mapTypeIds: ['terrain', 'satellite'],
+          mapTypeIds: ['roadmap', 'terrain', 'satellite', 'hybrid'],
         },
         fullscreenControl: true,
         streetViewControl: false,
@@ -175,7 +182,12 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
 
   useEffect(() => {
     if (!map) return;
-    const syncMapType = () => setMapType(String(map.getMapTypeId() || 'terrain'));
+    const syncMapType = () => {
+      const nextType = String(map.getMapTypeId() || 'terrain');
+      setMapType(nextType);
+      if (nextType === 'satellite') setLabelsVisible(false);
+      if (nextType === 'hybrid') setLabelsVisible(true);
+    };
     syncMapType();
     const listener = map.addListener('maptypeid_changed', syncMapType);
     return () => listener.remove();
@@ -183,8 +195,9 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
 
   useEffect(() => {
     if (!map) return;
-    map.setOptions({ styles: darkMode ? DARK_MAP_STYLES : null });
-  }, [map, darkMode]);
+    const isImagery = mapType === 'satellite' || mapType === 'hybrid';
+    map.setOptions({ styles: isImagery ? null : mapStyles(darkMode, labelsVisible) });
+  }, [map, darkMode, labelsVisible, mapType]);
 
   useEffect(() => {
     if (!map || !preview) return;
@@ -282,24 +295,39 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
 
   return (
     <div className="known-place-google-map-shell">
-      <div className="known-place-google-map-toolbar">
+      <div className={`known-place-google-map-toolbar${darkMode ? ' is-dark' : ''}`}>
         <div>
           <strong>{pair.reference_date} → {pair.secondary_date}</strong>
           <span>Track {pair.track ?? 'unknown'} · {pair.direction === 'A' ? 'Ascending' : pair.direction === 'D' ? 'Descending' : 'Unknown direction'} · {pair.polarization ?? '—'} · {pair.release_id ?? 'Release not reported'}</span>
         </div>
-        <button
-          type="button"
-          className={`known-place-map-theme-toggle${darkMode ? ' is-dark' : ''}`}
-          role="switch"
-          aria-pressed={darkMode}
-          aria-checked={darkMode}
-          onClick={() => setDarkMode((value) => !value)}
-        >
-          <span className="known-place-map-theme-label">{darkMode ? 'Dark' : 'Light'}</span>
-          <span className="known-place-map-theme-track" aria-hidden="true">
-            <span className="known-place-map-theme-thumb">{darkMode ? '☾' : '☀'}</span>
-          </span>
-        </button>
+        <div className="known-place-map-toolbar-actions">
+          <button
+            type="button"
+            className={`known-place-map-label-toggle${labelsVisible ? ' is-on' : ''}`}
+            role="switch"
+            aria-checked={labelsVisible}
+            onClick={() => {
+              if (mapType === 'satellite') map?.setMapTypeId('hybrid');
+              else if (mapType === 'hybrid') map?.setMapTypeId('satellite');
+              else setLabelsVisible((value) => !value);
+            }}
+          >
+            <span>Labels</span>
+            <span className="known-place-map-mini-switch" aria-hidden="true"><i /></span>
+          </button>
+          <button
+            type="button"
+            className={`known-place-map-theme-toggle${darkMode ? ' is-dark' : ''}`}
+            role="switch"
+            aria-checked={darkMode}
+            onClick={() => setDarkMode((value) => !value)}
+          >
+            <span className="known-place-map-theme-label">{darkMode ? 'Dark' : 'Light'}</span>
+            <span className="known-place-map-theme-track" aria-hidden="true">
+              <span className="known-place-map-theme-thumb">{darkMode ? '☾' : '☀'}</span>
+            </span>
+          </button>
+        </div>
       </div>
       <div
         className={`known-place-google-map${darkMode ? ' is-dark' : ''}${darkMode && (mapType === 'satellite' || mapType === 'hybrid') ? ' is-imagery-dark' : ''}`}
@@ -311,7 +339,7 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         <div className="known-place-google-map-message is-error" role="alert">{mapError}</div>
       ) : preview ? (
         <>
-          <div className="known-place-map-legend" aria-label="Map legend">
+          <div className={`known-place-map-legend${darkMode ? ' is-dark' : ''}`} aria-label="Map legend">
             <span><i className="is-magnitude" /> Horizontal displacement magnitude</span>
             <span><i className="is-arrow" /> Mean direction arrow</span>
             <span><i className="is-reference" /> Reference polygon</span>
