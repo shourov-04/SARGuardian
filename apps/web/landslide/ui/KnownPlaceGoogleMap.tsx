@@ -303,7 +303,7 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         <div className="known-place-map-toolbar-actions">
           <button
             type="button"
-            className={`known-place-map-label-toggle${labelsVisible ? ' is-on' : ''}${darkMode ? ' is-dark' : ''}`}
+            className={`known-place-map-label-toggle${labelsVisible ? ' is-on' : ''}`}
             role="switch"
             aria-checked={labelsVisible}
             onClick={() => {

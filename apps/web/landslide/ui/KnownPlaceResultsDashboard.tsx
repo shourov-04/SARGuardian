@@ -201,7 +201,7 @@ export function KnownPlaceResultsDashboard({
                 </article>
               </div>
 
-              <section className="known-place-public-map-card" aria-label="Public displacement map">
+              {false && <section className="known-place-public-map-card" aria-label="Public displacement map">
                 <div className="known-place-section-heading known-place-map-heading">
                   <label>
                     <span>Acquisition pair</span>
@@ -226,7 +226,7 @@ export function KnownPlaceResultsDashboard({
                 ) : (
                   <p className="known-place-map-unavailable-note">No pair measurements are available to plot for this request.</p>
                 )}
-              </section>
+              </section>}
 
               <div className="known-place-chart-card">
                 <div className="known-place-section-heading">
