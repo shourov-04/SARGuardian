@@ -7,13 +7,15 @@ export const RIVER_SHIFT_RESULTS_PATH = '/river-shift/results';
 export const FIND_DISPLACEMENT_PATH = '/find-displacement';
 export const FIND_DISPLACEMENT_RESULTS_PATH = '/find-displacement/results';
 export const FIND_DISPLACEMENT_OUTPUTS_PATH = '/find-displacement/view-results';
+export const FIND_DISPLACEMENT_PROCESSING_RESULT_PATH = '/find-displacement/processing/result';
 export const FIND_DISPLACEMENT_DISPLACEMENT_PATH = '/find-displacement/displacements';
 export const KNOWN_PLACE_SETUP_PATH = '/known-place-analysis';
 export const KNOWN_PLACE_ANALYSIS_PATH = '/known-place-analysis/analysis';
 export const KNOWN_PLACE_RESULTS_PATH = '/known-place-analysis/analysis/result';
 
 export function isDashboardRoute(pathname: string): boolean {
-  return normalizePathname(pathname) === DASHBOARD_PATH;
+  const normalized = normalizePathname(pathname);
+  return normalized === DASHBOARD_PATH || normalized === FIND_DISPLACEMENT_PROCESSING_RESULT_PATH;
 }
 
 export function isRiverShiftRoute(pathname: string): boolean {

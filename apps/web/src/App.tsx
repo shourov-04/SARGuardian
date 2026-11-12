@@ -6,14 +6,14 @@ import { Home } from './pages/Home';
 import { HowItWorksPage } from './pages/HowItWorksPage';
 import { ArchivePage } from './pages/ArchivePage';
 import { DashboardPage } from './pages/DashboardPage';
-import { buildDashboardRouteUrl, parseDashboardView } from './dashboardDocument';
+import { parseDashboardView } from './dashboardDocument';
 import { LandslidePage } from '../landslide/ui/LandslidePage';
 import { KnownPlaceResultsPage } from '../landslide/ui/KnownPlaceResultsPage';
 import { RIVER_SHIFT_SETUP_STORAGE_KEY, RiverShiftPage, type RiverShiftSetup } from './pages/RiverShiftPage';
 import { RiverShiftProcessingPage } from './pages/RiverShiftProcessingPage';
 import { RiverShiftResultsPage } from './pages/RiverShiftResultsPage';
 import { auth, firebaseConfigured, googleProvider, missingFirebaseConfig } from './firebase';
-import { isArchiveRoute, isDashboardRoute, isHowItWorksRoute, isRiverShiftProcessingRoute, isRiverShiftResultsRoute, isRiverShiftRoute, RIVER_SHIFT_PATH, RIVER_SHIFT_PROCESSING_PATH, RIVER_SHIFT_RESULTS_PATH, FIND_DISPLACEMENT_PATH, FIND_DISPLACEMENT_DISPLACEMENT_PATH, FIND_DISPLACEMENT_OUTPUTS_PATH, FIND_DISPLACEMENT_RESULTS_PATH, KNOWN_PLACE_ANALYSIS_PATH, KNOWN_PLACE_RESULTS_PATH, KNOWN_PLACE_SETUP_PATH, isKnownPlaceResultsRoute, isLandslideDisplacementRoute, isLandslideKnownPlaceAnalysisRoute, isLandslideKnownPlaceSetupAnalysisRoute, isLandslideKnownPlaceSetupRoute, isLandslideResultViewsRoute, isLandslideResultsRoute, isLandslideRoute, navigatePath, normalizePathname } from './routing';
+import { isArchiveRoute, isDashboardRoute, isHowItWorksRoute, isRiverShiftProcessingRoute, isRiverShiftResultsRoute, isRiverShiftRoute, RIVER_SHIFT_PATH, RIVER_SHIFT_PROCESSING_PATH, RIVER_SHIFT_RESULTS_PATH, FIND_DISPLACEMENT_PATH, FIND_DISPLACEMENT_DISPLACEMENT_PATH, FIND_DISPLACEMENT_OUTPUTS_PATH, FIND_DISPLACEMENT_RESULTS_PATH, FIND_DISPLACEMENT_PROCESSING_RESULT_PATH, KNOWN_PLACE_ANALYSIS_PATH, KNOWN_PLACE_RESULTS_PATH, KNOWN_PLACE_SETUP_PATH, isKnownPlaceResultsRoute, isLandslideDisplacementRoute, isLandslideKnownPlaceAnalysisRoute, isLandslideKnownPlaceSetupAnalysisRoute, isLandslideKnownPlaceSetupRoute, isLandslideResultViewsRoute, isLandslideResultsRoute, isLandslideRoute, navigatePath, normalizePathname } from './routing';
 
 function App() {
   const [pathname, setPathname] = useState(() => normalizePathname(window.location.pathname));
@@ -350,7 +350,12 @@ function App() {
         isKnownPlaceAnalysisPage={isLandslideKnownPlaceAnalysisRoute(pathname)}
           isKnownPlaceSetupPage={isLandslideKnownPlaceSetupRoute(pathname)}
         onDisplacements={() => navigateTo(FIND_DISPLACEMENT_DISPLACEMENT_PATH)}
-         onViewResults={(jobId) => { window.location.assign(buildDashboardRouteUrl(window.location.origin, jobId, 'public')); }}
+         onViewResults={(jobId) => {
+           const resultUrl = new URL(FIND_DISPLACEMENT_PROCESSING_RESULT_PATH, window.location.origin);
+           resultUrl.searchParams.set('jobId', jobId);
+           resultUrl.searchParams.set('view', 'public');
+           window.location.assign(resultUrl.toString());
+         }}
         onKnownPlaceAnalysis={() => navigateTo(KNOWN_PLACE_ANALYSIS_PATH)}
         onShowKnownPlaceResults={() => navigateTo(KNOWN_PLACE_RESULTS_PATH)}
         onResults={() => navigateTo(FIND_DISPLACEMENT_RESULTS_PATH)}

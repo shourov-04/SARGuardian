@@ -570,6 +570,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 112px; }
   background: linear-gradient(90deg, transparent, #7edbcd, #55b9ef, transparent);
   animation: dashboard-loading-progress 1.35s ease-in-out infinite;
 }
+.dashboard-result-loader { display: grid; justify-items: center; gap: 18px; color: #f1fbff; font-size: 18px; }
 @keyframes dashboard-loading-progress { from { transform: translateX(0); } to { transform: translateX(385%); } }
 
 .site-footer-v2 {

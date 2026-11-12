@@ -26,7 +26,8 @@ describe('refresh-safe saved dashboard page', () => {
       <DashboardPage jobId={jobId} view="public" user={{ uid: 'test-user' } as never} authState="ready" authError={null} onSignIn={vi.fn()} />,
     );
     expect(html).toContain('Loading saved result dashboard');
-    expect(html).toContain('Opening your verified dashboard');
+    expect(html).toContain('Loading result');
+    expect(html).not.toContain('Back to Archive');
   });
 
   it('rejects an incomplete dashboard URL instead of falling back to Home', () => {

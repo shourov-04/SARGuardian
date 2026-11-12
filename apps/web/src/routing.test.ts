@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ARCHIVE_PATH, FIND_DISPLACEMENT_DISPLACEMENT_PATH, FIND_DISPLACEMENT_PATH, FIND_DISPLACEMENT_RESULTS_PATH, HOW_IT_WORKS_PATH, KNOWN_PLACE_ANALYSIS_PATH, KNOWN_PLACE_RESULTS_PATH, KNOWN_PLACE_SETUP_PATH, RIVER_SHIFT_PATH, RIVER_SHIFT_PROCESSING_PATH, RIVER_SHIFT_RESULTS_PATH, isArchiveRoute, isHowItWorksRoute, isKnownPlaceResultsRoute, isLandslideDisplacementRoute, isLandslideKnownPlaceAnalysisRoute, isLandslideKnownPlaceSetupAnalysisRoute, isLandslideKnownPlaceSetupRoute, isLandslideResultsRoute, isLandslideRoute, isRiverShiftProcessingRoute, isRiverShiftResultsRoute, isRiverShiftRoute, navigatePath, normalizePathname } from './routing';
+import { ARCHIVE_PATH, FIND_DISPLACEMENT_DISPLACEMENT_PATH, FIND_DISPLACEMENT_PATH, FIND_DISPLACEMENT_PROCESSING_RESULT_PATH, FIND_DISPLACEMENT_RESULTS_PATH, HOW_IT_WORKS_PATH, KNOWN_PLACE_ANALYSIS_PATH, KNOWN_PLACE_RESULTS_PATH, KNOWN_PLACE_SETUP_PATH, RIVER_SHIFT_PATH, RIVER_SHIFT_PROCESSING_PATH, RIVER_SHIFT_RESULTS_PATH, isArchiveRoute, isDashboardRoute, isHowItWorksRoute, isKnownPlaceResultsRoute, isLandslideDisplacementRoute, isLandslideKnownPlaceAnalysisRoute, isLandslideKnownPlaceSetupAnalysisRoute, isLandslideKnownPlaceSetupRoute, isLandslideResultsRoute, isLandslideRoute, isRiverShiftProcessingRoute, isRiverShiftResultsRoute, isRiverShiftRoute, navigatePath, normalizePathname } from './routing';
 
 describe('client-side route recognition', () => {
   it('recognizes Archive as its own page route, not a Home anchor', () => {
@@ -29,6 +29,11 @@ describe('client-side route recognition', () => {
     expect(isRiverShiftProcessingRoute(RIVER_SHIFT_PATH)).toBe(false);
     expect(isRiverShiftResultsRoute(RIVER_SHIFT_RESULTS_PATH)).toBe(true);
     expect(isRiverShiftResultsRoute(RIVER_SHIFT_PROCESSING_PATH)).toBe(false);
+  });
+
+  it('recognizes the refresh-safe Find Displacements result route', () => {
+    expect(FIND_DISPLACEMENT_PROCESSING_RESULT_PATH).toBe('/find-displacement/processing/result');
+    expect(isDashboardRoute(FIND_DISPLACEMENT_PROCESSING_RESULT_PATH)).toBe(true);
   });
 
   it('normalizes query strings and hashes without changing the route', () => {
