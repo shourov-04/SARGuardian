@@ -561,8 +561,8 @@ html { scroll-behavior: smooth; scroll-padding-top: 112px; }
 .archive-empty p { margin: 7px 0 12px; color: rgba(219,236,239,.76); }
 .section-status { margin: 0; }
 .dashboard-loading-progress {
-  position: relative; width: min(100%, 900px); height: 8px; overflow: hidden; margin: 16px auto;
-  border: 1px solid rgba(141,219,209,.28); border-radius: 999px;
+  position: relative; width: min(100%, 900px); height: 14px; overflow: hidden; margin: 20px auto;
+  border: 2px solid #000; border-radius: 999px;
   background: rgba(141,219,209,.12);
 }
 .dashboard-loading-progress span {
@@ -570,7 +570,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 112px; }
   background: linear-gradient(90deg, transparent, #7edbcd, #55b9ef, transparent);
   animation: dashboard-loading-progress 1.35s ease-in-out infinite;
 }
-.dashboard-result-loader { display: grid; justify-items: center; gap: 18px; color: #f1fbff; font-size: 18px; }
+.dashboard-result-loader { display: grid; justify-items: center; gap: 18px; color: #f1fbff; font-size: 32px; font-weight: 850; letter-spacing: .01em; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
 @keyframes dashboard-loading-progress { from { transform: translateX(0); } to { transform: translateX(385%); } }
 .claude-how-page .dashboard-route-status { width: min(100%, 960px); margin: 0 auto; padding: clamp(4rem, 12vh, 8rem) 0; text-align: center; }
 

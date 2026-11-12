@@ -32,6 +32,19 @@ function DashboardRouteShell({ children, user, authState, onSignIn, onSignOut }:
   );
 }
 
+function DashboardLoadingState({ progress, user, authState, onSignIn, onSignOut }: { progress: string; user: User | null; authState: AuthState; onSignIn: () => void; onSignOut?: () => void }) {
+  return (
+    <DashboardRouteShell user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut}>
+      <div className="dashboard-result-loader" role="status" aria-live="polite" aria-label="Loading result">
+        <strong>Loading result…</strong>
+      </div>
+      <div className="dashboard-loading-progress" role="progressbar" aria-label="Loading saved result dashboard" aria-valuetext={progress}>
+        <span />
+      </div>
+    </DashboardRouteShell>
+  );
+}
+
 export function DashboardPage({ jobId, view, user, authState, authError, onSignIn, onSignOut }: DashboardPageProps) {
   const [progress, setProgress] = useState('Connecting to your saved result…');
   const [error, setError] = useState('');
@@ -72,13 +85,7 @@ export function DashboardPage({ jobId, view, user, authState, authError, onSignI
 
   if (!user) {
     if (authState === 'loading') {
-      return (
-        <DashboardRouteShell user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut}>
-          <p className="section-eyebrow">SAVED RESULT</p>
-          <h1>Restoring your account session</h1>
-          <p role="status">Checking your existing SARGuardian sign-in before opening this private result…</p>
-        </DashboardRouteShell>
-      );
+      return <DashboardLoadingState progress="Loading result…" user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut} />;
     }
     return (
       <DashboardRouteShell user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut}>
@@ -104,14 +111,5 @@ export function DashboardPage({ jobId, view, user, authState, authError, onSignI
     );
   }
 
-  return (
-    <DashboardRouteShell user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut}>
-      <div className="dashboard-result-loader" role="status" aria-live="polite" aria-label="Loading result">
-        <strong>Loading result…</strong>
-      </div>
-      <div className="dashboard-loading-progress" role="progressbar" aria-label="Loading saved result dashboard" aria-valuetext={progress}>
-        <span />
-      </div>
-    </DashboardRouteShell>
-  );
+  return <DashboardLoadingState progress={progress} user={user} authState={authState} onSignIn={onSignIn} onSignOut={onSignOut} />;
 }

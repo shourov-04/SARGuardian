@@ -9,8 +9,8 @@ describe('refresh-safe saved dashboard page', () => {
     const html = renderToStaticMarkup(
       <DashboardPage jobId={jobId} view="public" user={null} authState="loading" authError={null} onSignIn={vi.fn()} />,
     );
-    expect(html).toContain('Restoring your account session');
-    expect(html).toContain('Checking your existing SARGuardian sign-in');
+    expect(html).toContain('Loading result');
+    expect(html).not.toContain('Checking your existing SARGuardian sign-in');
   });
 
   it('offers sign-in without discarding the dashboard route when no session exists', () => {
