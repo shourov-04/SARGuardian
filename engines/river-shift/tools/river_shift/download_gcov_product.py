@@ -642,6 +642,9 @@ def download_product(product: dict, output_dir: Path) -> dict:
             "stage": "exact_cmr_granule_lookup",
             "status": "FAIL",
             "error_type": type(exc).__name__,
+            "http_status": _http_status_code(exc),
+            "transient_network_error": _transient_network_error(exc),
+            "error_message": _safe_error_message(exc),
             "fallback": "direct_cmr_producer_granule_id",
         }), flush=True)
         raw_candidates = _search_exact_cmr_granule(
@@ -677,21 +680,44 @@ def download_product(product: dict, output_dir: Path) -> dict:
             "stage": "cmr_concept_id_resolution",
             "status": "START",
         }), flush=True)
-        try:
-            candidates = earthaccess.search_data(
-                concept_id=[cmr_concept_id],
-                downloadable=True,
-                count=2,
-            )
-        except Exception as resolve_exc:
-            print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
-                "stage": "cmr_concept_id_resolution",
-                "status": "FAIL",
-                "error_type": type(resolve_exc).__name__,
-            }), flush=True)
-            raise RuntimeError(
-                "NASA CMR exact result could not be resolved to an earthaccess DataGranule."
-            ) from None
+        # Do not reuse earthaccess.search_data() here: when earthaccess has an
+        # authenticated Auth object, search_data() binds its CMR query to that
+        # authenticated session. DataGranules() without an Auth object creates a
+        # fresh unauthenticated public CMR session and returns UMM-backed objects.
+        data_granules_factory = getattr(earthaccess, "DataGranules", None)
+        candidates = None
+        for resolve_attempt in range(1, CMR_LOOKUP_MAX_ATTEMPTS + 1):
+            try:
+                if not callable(data_granules_factory):
+                    raise RuntimeError("earthaccess.DataGranules is unavailable.")
+                public_query = data_granules_factory().parameters(
+                    concept_id=[cmr_concept_id],
+                    downloadable=True,
+                )
+                candidates = public_query.get(2)
+                break
+            except Exception as resolve_exc:
+                transient = _transient_network_error(resolve_exc)
+                retrying = transient and resolve_attempt < CMR_LOOKUP_MAX_ATTEMPTS
+                retry_delay_seconds = min(2 ** resolve_attempt, 8) if retrying else 0
+                print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
+                    "stage": "cmr_concept_id_resolution",
+                    "status": "RETRY" if retrying else "FAIL",
+                    "query_session": "unauthenticated_public_cmr",
+                    "attempt_number": resolve_attempt,
+                    "max_attempts": CMR_LOOKUP_MAX_ATTEMPTS,
+                    "retry_delay_seconds": retry_delay_seconds,
+                    "http_status": _http_status_code(resolve_exc),
+                    "transient_network_error": transient,
+                    "error_type": type(resolve_exc).__name__,
+                    "error_message": _safe_error_message(resolve_exc),
+                }), flush=True)
+                if not retrying:
+                    raise RuntimeError(
+                        "NASA CMR exact result could not be resolved to an earthaccess DataGranule; "
+                        "see the sanitized cmr_concept_id_resolution diagnostic above."
+                    ) from None
+                time.sleep(retry_delay_seconds)
 
         resolved_exact_matches = [
             row for row in (candidates or [])

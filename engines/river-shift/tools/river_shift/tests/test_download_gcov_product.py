@@ -262,21 +262,44 @@ def test_direct_cmr_fallback_uses_application_json_producer_granule_id(monkeypat
     }
 
 
+class FakePublicGranuleQuery:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def parameters(self, **kwargs):
+        self.owner.public_query_parameters.append(kwargs)
+        return self
+
+    def get(self, limit):
+        self.owner.public_query_limits.append(limit)
+        if self.owner.public_query_errors:
+            raise self.owner.public_query_errors.pop(0)
+        return self.owner.resolved_results
+
+
 class EarthaccessSearchUnavailable(FakeEarthaccess):
-    def __init__(self, resolved_results=None):
+    def __init__(self, resolved_results=None, public_query_errors=None):
         super().__init__(results=[])
         self.resolved_results = (
             [_downloadable_granule()]
             if resolved_results is None else list(resolved_results)
         )
+        self.public_query_parameters = []
+        self.public_query_limits = []
+        self.public_query_factory_calls = 0
+        self.public_query_errors = list(public_query_errors or [])
 
     def search_data(self, **kwargs):
         self.search_calls.append(kwargs)
         if "granule_name" in kwargs:
             raise RuntimeError("earthaccess rejected granule_name query serialization")
-        if "concept_id" in kwargs:
-            return self.resolved_results
-        raise AssertionError(f"Unexpected earthaccess search arguments: {kwargs}")
+        raise AssertionError(
+            "Fallback concept-ID resolution must use a fresh unauthenticated DataGranules query."
+        )
+
+    def DataGranules(self):
+        self.public_query_factory_calls += 1
+        return FakePublicGranuleQuery(self)
 
 
 def test_download_resolves_exact_raw_cmr_hit_to_data_granule_before_download(monkeypatch, tmp_path):
@@ -289,6 +312,9 @@ def test_download_resolves_exact_raw_cmr_hit_to_data_granule_before_download(mon
     result = download_product(_catalogue_row(), tmp_path)
 
     assert result["downloaded"] is True
+    # The authenticated search_data() lookup is attempted first and may fail
+    # for password-authenticated fork users; exact UMM resolution must then use
+    # a separate public CMR session rather than the same authenticated session.
     assert fake.search_calls == [
         {
             "short_name": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -296,16 +322,46 @@ def test_download_resolves_exact_raw_cmr_hit_to_data_granule_before_download(mon
             "downloadable": True,
             "count": 2,
         },
+    ]
+    assert fake.public_query_factory_calls == 1
+    assert fake.public_query_parameters == [
         {
             "concept_id": ["G1234567890-ASF"],
             "downloadable": True,
-            "count": 2,
         },
     ]
+    assert fake.public_query_limits == [2]
     assert fake.download_calls[0]["granules"] == [fake.resolved_results[0]]
     assert fake.download_calls[0]["granules"][0] is not raw_entry
     assert callable(getattr(fake.download_calls[0]["granules"][0], "data_links", None))
     assert (tmp_path / f"{GRANULE}.h5").read_bytes() == fake.payload
+
+
+def test_download_retries_transient_public_cmr_umm_resolution_with_fresh_sessions(monkeypatch, tmp_path):
+    raw_entry = _cmr_json_result()
+    response = _cmr_json_response([raw_entry])
+    fake = EarthaccessSearchUnavailable(
+        public_query_errors=[
+            requests.exceptions.ConnectionError("temporary CMR connection reset"),
+            requests.exceptions.Timeout("temporary CMR timeout"),
+        ],
+    )
+    monkeypatch.setattr(download_module.requests, "get", lambda *_args, **_kwargs: response)
+    monkeypatch.setattr("download_gcov_product._load_earthaccess", lambda: fake)
+    monkeypatch.setattr(download_module.time, "sleep", lambda _seconds: None)
+
+    result = download_product(_catalogue_row(), tmp_path)
+
+    assert result["downloaded"] is True
+    assert fake.public_query_factory_calls == 3
+    assert fake.public_query_limits == [2, 2, 2]
+    assert fake.public_query_parameters == [
+        {
+            "concept_id": ["G1234567890-ASF"],
+            "downloadable": True,
+        },
+    ] * 3
+    assert fake.download_calls[0]["granules"] == [fake.resolved_results[0]]
 
 
 @pytest.mark.parametrize(
