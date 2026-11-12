@@ -155,6 +155,10 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         zoom: 12,
         mapTypeId: 'terrain',
         mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          mapTypeIds: ['terrain', 'satellite'],
+        },
         fullscreenControl: true,
         streetViewControl: false,
         clickableIcons: false,
@@ -285,12 +289,16 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
         </div>
         <button
           type="button"
-          className="known-place-map-theme-toggle"
+          className={`known-place-map-theme-toggle${darkMode ? ' is-dark' : ''}`}
+          role="switch"
           aria-pressed={darkMode}
+          aria-checked={darkMode}
           onClick={() => setDarkMode((value) => !value)}
         >
-          <span aria-hidden="true">{darkMode ? '☀' : '☾'}</span>
-          {darkMode ? 'Light mode' : 'Dark mode'}
+          <span className="known-place-map-theme-label">{darkMode ? 'Dark' : 'Light'}</span>
+          <span className="known-place-map-theme-track" aria-hidden="true">
+            <span className="known-place-map-theme-thumb">{darkMode ? '☾' : '☀'}</span>
+          </span>
         </button>
       </div>
       <div

@@ -147,13 +147,9 @@ export function KnownPlaceResultsDashboard({
       )}
       {results && result && !loading && (
         <>
-          <div className="known-place-results-meta">
-            <span><b>{result.pair_measurement_counts.metrics_computed}/{result.pair_measurement_counts.requested}</b> pair metrics computed</span>
-            <span><b>{result.pairwise_series_plan.chain_count}</b> independent observation chains</span>
+          {/*
             <span><b>{result.request.date_range.start} – {result.request.date_range.end}</b> acquisition window</span>
-            <span><b>{result.request.polarization}</b> polarization</span>
-          </div>
-
+          */}
           <nav className="known-place-audience-tabs" aria-label="Choose result detail level">
             {views.map((item) => (
               <button
