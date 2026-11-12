@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from 'firebase/auth';
 import {
-  downloadKnownPlaceAnalysisBundle,
   getKnownPlaceAnalysisResults,
   type KnownPlaceAnalysisResults,
   type KnownPlacePairResult,
@@ -65,18 +64,6 @@ function flaggedCount(pairs: KnownPlacePairResult[]): number {
   return pairs.reduce((total, pair) => total + (pair.high_magnitude_flagged_pixels || 0), 0);
 }
 
-function downloadBlob(blob: Blob, filename: string): void {
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = filename;
-  anchor.hidden = true;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-}
-
 export function KnownPlaceResultsDashboard({
   requestId,
   user,
@@ -91,8 +78,6 @@ export function KnownPlaceResultsDashboard({
   const [view, setView] = useState<AudienceView>('public');
   const [trackFilter, setTrackFilter] = useState<TrackFilter>('all');
   const [selectedMapPairKey, setSelectedMapPairKey] = useState('');
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -144,39 +129,8 @@ export function KnownPlaceResultsDashboard({
       ?? null,
     [allPairs, mapPairs, selectedMapPairKey],
   );
-  const rawRunUrl = results?.run.html_url;
-
-  async function handleDownload(): Promise<void> {
-    setDownloading(true);
-    setDownloadError('');
-    try {
-      const blob = await downloadKnownPlaceAnalysisBundle(requestId, user);
-      downloadBlob(blob, `SARGuardian-known-place-${requestId}.zip`);
-    } catch (reason) {
-      setDownloadError(reason instanceof Error ? reason.message : 'Could not download the Known Place result package.');
-    } finally {
-      setDownloading(false);
-    }
-  }
-
   return (
     <section className={`known-place-results${loading ? ' is-loading' : ''}`} aria-label="Known Place scientific results dashboard">
-      <div className="known-place-results-heading">
-        <div>
-          <span className="result-kicker">MEASURED RESULT · GENERIC TWO-POLYGON ANALYSIS</span>
-          <h2>What did the NISAR observations measure?</h2>
-          <p>Three reading levels, one underlying result bundle. These views do not change or rerun the science workflow.</p>
-        </div>
-        {results && (
-          <div className="known-place-result-actions">
-            <a href={rawRunUrl} target="_blank" rel="noreferrer">Open GitHub run ↗</a>
-            <button type="button" onClick={() => void handleDownload()} disabled={downloading}>
-              {downloading ? 'Preparing package…' : 'Download result package'}
-            </button>
-          </div>
-        )}
-      </div>
-
       {loading && (
         <div className="known-place-results-loading" role="status" aria-live="polite">
           <div className="known-place-results-loading-track" role="progressbar" aria-label="Loading result dashboard">
@@ -191,8 +145,6 @@ export function KnownPlaceResultsDashboard({
           <button type="button" onClick={() => setAttempt((value) => value + 1)}>Retry result retrieval</button>
         </div>
       )}
-      {downloadError && <p className="known-place-results-error" role="alert">{downloadError}</p>}
-
       {results && result && !loading && (
         <>
           <div className="known-place-results-meta">
@@ -220,25 +172,6 @@ export function KnownPlaceResultsDashboard({
 
           {view === 'public' && (
             <div className="known-place-public-view">
-              <div className="known-place-answer">
-                <div>
-                  <span className="result-kicker">DIRECT ANSWER</span>
-                  <h3>Measurements were computed, but this run does not yet establish a reliable site-wide movement rate.</h3>
-                  <p>
-                    All {allPairs.length} intervals have pairwise GOFF metrics, but none has enough spatially independent
-                    blocks for a valid bootstrap uncertainty interval. The largest reported pair rate is shown below
-                    with its valid-pixel coverage and outlier flags so it is not mistaken for a confirmed site velocity.
-                    There are {result.pairwise_series_plan.chain_count} separate observation chain(s):
-                    {' '}{chainLabels.map((chain) => chain.label).join('; ')}. They are not combined into one cumulative series.
-                  </p>
-                </div>
-                <div className="known-place-answer-status">
-                  <span>Hazard determination</span>
-                  <strong>Not evaluated</strong>
-                  <small>This analysis measures offsets; it does not confirm a landslide or issue an alert.</small>
-                </div>
-              </div>
-
               <div className="known-place-public-stats">
                 <article>
                   <span>Pairs with computed metrics</span>

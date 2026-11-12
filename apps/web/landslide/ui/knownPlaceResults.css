@@ -283,6 +283,41 @@
 .known-place-science-chain,
 .known-place-provenance details { border: 1px solid rgba(255,255,255,.24); background: rgba(220,239,246,.1); backdrop-filter: blur(14px); }
 
+/* Reference palette from the supplied Known Place design. */
+.known-place-results-shell .claude-background {
+  background:
+    radial-gradient(900px 600px at 15% 20%, #cfdce6 0, transparent 60%),
+    radial-gradient(900px 700px at 85% 70%, #7f9c9a 0, transparent 60%),
+    linear-gradient(160deg, #9fb4c3, #3f5a55) !important;
+}
+.known-place-results-shell .claude-background::after { background: none; }
+.known-place-results { color: #0f2236; background: rgba(255,255,255,.28); }
+.known-place-results h2,
+.known-place-results h3,
+.known-place-results h4,
+.known-place-results strong,
+.known-place-results b { color: #0f2236; }
+.known-place-results p,
+.known-place-results .muted,
+.known-place-results small,
+.known-place-results span { color: #3d5368; }
+.known-place-results .result-kicker { color: #0a84e0; }
+.known-place-results-meta span,
+.known-place-audience-tabs button,
+.known-place-results-message,
+.known-place-answer,
+.known-place-public-stats article,
+.known-place-chart-card,
+.known-place-public-map-card,
+.known-place-chain-grid article,
+.known-place-pair-table-wrap,
+.known-place-gate-grid article,
+.known-place-science-columns > section,
+.known-place-provenance,
+.known-place-limitations,
+.known-place-storage-receipt,
+.known-place-generated-report { background: rgba(255,255,255,.42); }
+
 
 /* Public + Deep Dive: a single native Google Maps surface for every Known Place audience. */
 .known-place-public-map-card {
