@@ -187,6 +187,7 @@ function App() {
         authState={authState}
         authError={authError}
         onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
       />
     );
   }
