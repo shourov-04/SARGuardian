@@ -208,6 +208,81 @@
   .known-place-generated-report iframe { height: 600px; min-height: 450px; }
 }
 
+/* Liquid-glass result surfaces: keep the shared page background and header unchanged. */
+.known-place-results {
+  border-color: rgba(255,255,255,.42);
+  border-radius: 28px;
+  background: rgba(7,27,42,.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 24px 70px rgba(4,24,39,.28);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+}
+.known-place-results-heading,
+.known-place-results-meta span,
+.known-place-audience-tabs button,
+.known-place-results-message,
+.known-place-answer,
+.known-place-public-stats article,
+.known-place-chart-card,
+.known-place-public-map-card,
+.known-place-chain-grid article,
+.known-place-pair-table-wrap,
+.known-place-gate-grid article,
+.known-place-science-columns > section,
+.known-place-provenance,
+.known-place-limitations,
+.known-place-storage-receipt,
+.known-place-generated-report {
+  border-color: rgba(255,255,255,.3);
+  background: rgba(218,238,246,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 14px 34px rgba(4,24,39,.14);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+.known-place-results-meta span,
+.known-place-public-stats article,
+.known-place-gate-grid article { border-radius: 16px; }
+.known-place-audience-tabs button { border-radius: 18px; }
+.known-place-audience-tabs button:hover { background: rgba(255,255,255,.24); }
+.known-place-audience-tabs button.is-active {
+  background: rgba(255,255,255,.34);
+  border-color: rgba(118,205,241,.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 0 2px rgba(10,132,224,.32);
+}
+.known-place-results-meta span b,
+.known-place-public-stats strong,
+.known-place-gate-grid strong,
+.known-place-answer h3,
+.known-place-section-heading h3 { text-shadow: 0 1px 10px rgba(0,18,35,.3); }
+.known-place-result-actions a,
+.known-place-result-actions button,
+.known-place-results-message button {
+  min-height: 40px;
+  border-radius: 999px;
+  border-color: rgba(255,255,255,.55);
+  background: linear-gradient(180deg,#43b9ee,#0875c7);
+  color: #061e33;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.48), 0 8px 20px rgba(8,104,190,.24);
+}
+.known-place-result-actions a:hover,
+.known-place-result-actions button:hover,
+.known-place-results-message button:hover { background: linear-gradient(180deg,#5bc5f4,#1689df); }
+.known-place-chart-card,
+.known-place-public-map-card,
+.known-place-chain-grid article,
+.known-place-pair-table-wrap,
+.known-place-science-columns > section,
+.known-place-provenance,
+.known-place-limitations,
+.known-place-storage-receipt,
+.known-place-generated-report { border-radius: 20px; }
+.known-place-public-cautions { background: rgba(224,180,111,.14); border-radius: 0 16px 16px 0; }
+.known-place-pair-table-wrap select,
+.known-place-map-heading select { border-radius: 999px; background: rgba(225,242,248,.2); backdrop-filter: blur(12px); }
+.known-place-results details,
+.known-place-science-chain,
+.known-place-provenance details { border: 1px solid rgba(255,255,255,.24); background: rgba(220,239,246,.1); backdrop-filter: blur(14px); }
+
 
 /* Public + Deep Dive: a single native Google Maps surface for every Known Place audience. */
 .known-place-public-map-card {
