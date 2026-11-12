@@ -162,7 +162,7 @@ function App() {
   };
 
   const handleOpenWorkspace = useCallback(() => {
-    document.getElementById('workflows')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('workflows')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
   const handleOpenArchive = useCallback(() => {
