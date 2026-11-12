@@ -129,14 +129,6 @@ export function KnownPlaceResultsDashboard({
       ?? null,
     [allPairs, mapPairs, selectedMapPairKey],
   );
-  const dashboardHtml = results?.dashboard_html ?? '';
-  const reportUrl = useMemo(() => {
-    if (!dashboardHtml) return '';
-    return URL.createObjectURL(new Blob([dashboardHtml], { type: 'text/html' }));
-  }, [dashboardHtml]);
-  useEffect(() => () => {
-    if (reportUrl) URL.revokeObjectURL(reportUrl);
-  }, [reportUrl]);
   return (
     <section className={`known-place-results${loading ? ' is-loading' : ''}`} aria-label="Known Place scientific results dashboard">
       {loading && (
@@ -442,13 +434,16 @@ export function KnownPlaceResultsDashboard({
                 <ul>{result.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
               </div>
 
-              <div className="known-place-storage-receipt">
+              {/*
+              {false && <div className="known-place-storage-receipt">
                 <span className="result-kicker">DERIVED-ONLY RETENTION</span>
                 <strong>{results.storage.status} · {results.storage.remote_bytes_verified && results.storage.hash_verified ? 'Remote byte/hash verification passed' : 'Remote verification not confirmed'}</strong>
                 <p>{results.storage.bundle_bytes ? `${(results.storage.bundle_bytes / 1024).toFixed(0)} KB archived` : 'Bundle size not reported'} · {results.storage.bundled_file_count ?? '—'} files · raw HDF5 included: {String(results.storage.raw_h5_included === true)}</p>
-              </div>
+              </div>}
+              */}
 
-              <div className="known-place-generated-report">
+              {/*
+              {false && <div className="known-place-generated-report">
                 <span className="result-kicker">GENERATED REPORT</span>
                 <a
                   className="known-place-science-report-button"
@@ -459,7 +454,8 @@ export function KnownPlaceResultsDashboard({
                 >
                   Open generated science report ↗
                 </a>
-              </div>
+              </div>}
+              */}
             </div>
           )}
         </>
