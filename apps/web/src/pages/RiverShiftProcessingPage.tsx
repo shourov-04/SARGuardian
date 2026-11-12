@@ -112,7 +112,7 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
   const expectedProducts = typeof summary.expected_product_count === 'number' ? summary.expected_product_count : null;
   const verifiedProducts = typeof summary.verified_product_count === 'number' ? summary.verified_product_count : null;
   const shortJobId = job.id.length > 15 ? `${job.id.slice(0, 8)}…${job.id.slice(-4)}` : job.id;
-  const retryWaveError = /delayed retry product\(s\) remained unverified/i.test(job.error_message || '');
+  const retryWaveError = /delayed retry product\(s\) remained unverif/i.test(job.error_message || '');
   const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
 
   useEffect(() => {
