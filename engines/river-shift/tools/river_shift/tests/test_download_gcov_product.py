@@ -257,7 +257,7 @@ def test_direct_cmr_fallback_uses_application_json_producer_granule_id(monkeypat
     assert calls[0][1]["headers"] == {"Accept": "application/json"}
     assert calls[0][1]["params"] == {
         "short_name": "NISAR_L2_GCOV_PROVISIONAL_V1",
-        "producer_granule_id": GRANULE,
+        "producer_granule_id[]": GRANULE,
         "page_size": 2,
     }
 

@@ -171,7 +171,7 @@ def _search_exact_cmr_granule(*, collection: str, expected_name: str) -> list[di
     """
     params = {
         "short_name": collection,
-        "producer_granule_id": expected_name,
+        "producer_granule_id[]": expected_name,
         "page_size": 2,
     }
     for attempt in range(1, CMR_LOOKUP_MAX_ATTEMPTS + 1):
