@@ -310,6 +310,39 @@
 .known-place-storage-receipt,
 .known-place-generated-report { background: rgba(255,255,255,.42); }
 
+/* Audience tabs use the same blue family as the shared Home button. */
+.known-place-audience-tabs button,
+.known-place-audience-tabs button strong,
+.known-place-audience-tabs button small {
+  color: #000 !important;
+}
+.known-place-audience-tabs button {
+  border: 1px solid rgba(255,255,255,.78);
+  background: linear-gradient(180deg, #bfeafa, #83cce9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 8px 20px rgba(8,104,190,.18);
+}
+.known-place-audience-tabs button:hover {
+  background: linear-gradient(180deg, #d4f3ff, #99d9f0);
+}
+.known-place-audience-tabs button.is-active {
+  border-color: #64c2f0;
+  background: linear-gradient(135deg, #1689df, #075fb4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 0 2px rgba(10,132,224,.42), 0 10px 24px rgba(8,104,190,.28);
+}
+
+.known-place-chart-card,
+.known-place-chart-card * {
+  color: #000 !important;
+}
+.known-place-chart-card {
+  background: rgba(255,255,255,.20) !important;
+}
+.known-place-public-cautions,
+.known-place-public-cautions * {
+  color: #000 !important;
+}
+.known-place-back { display: none !important; }
+
 
 /* Public + Deep Dive: a single native Google Maps surface for every Known Place audience. */
 .known-place-public-map-card {
