@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { validatePolygonPair } from './KnownPlacePolygonEditor';
 import { parsePolygonWkt } from '../engine/investigation';
 import type { User } from 'firebase/auth';
@@ -586,6 +586,11 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   const lookupStarted = lookupStartedAt ?? (activeRun?.created_at ? Date.parse(activeRun.created_at) : null);
   const lookupFinished = runTerminal && activeRun?.updated_at ? Date.parse(activeRun.updated_at) : null;
   const elapsed = formatElapsed(lookupStarted, lookupFinished, clock);
+  const analysisProcessingState = analysisProgress?.tone === 'complete'
+    ? 'succeeded'
+    : analysisProgress?.tone === 'failed'
+      ? 'failed'
+      : 'running';
 
   useEffect(() => {
     if (!releaseDisplayProgress && !analysisProgress) return undefined;
@@ -702,23 +707,27 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
           {error && <p className="catalog-error" role="alert">{error}</p>}
         </section>
 
-        {analysisProgress && <section className={`known-place-analysis-progress is-${analysisProgress.tone}`} aria-live="polite">
-          <div className="known-place-status-heading">
-            <h2>Run status</h2>
+        {analysisProgress && <section className={`processing-card processing-hero processing-page--${analysisProcessingState}`} aria-live="polite">
+          <div className="processing-status-chip-wrap">
+            <span className={`processing-status-chip ${analysisProcessingState === 'running' ? 'is-running' : ''}`}>
+              <i aria-hidden="true" />
+              {analysisProcessingState === 'succeeded' ? 'Complete' : analysisProcessingState === 'failed' ? (runCancelled ? 'Cancelled' : 'Failed') : 'Running'}
+            </span>
             <div className="known-place-status-actions">
               {activeRun && !runTerminal && <button type="button" className="known-place-cancel" disabled={pendingAction !== null} onClick={() => void cancelRun()}>{pendingAction === 'cancel' ? 'Cancelling…' : 'Cancel run'}</button>}
               <span className={`known-place-status-chip is-${analysisProgress.tone}`}><i />{analysisProgress.tone === 'complete' ? 'Complete' : analysisProgress.tone === 'failed' ? (runCancelled ? 'Cancelled' : 'Failed') : 'Running'}</span>
             </div>
           </div>
-          <div className="known-place-analysis-progress-body">
-            <div className="known-place-analysis-timer" style={{ '--known-place-progress': `${analysisProgress.percent}%` } as CSSProperties}>
-              <i className="known-place-analysis-orbit" aria-hidden="true"><b /></i>
-              <strong>{analysisProgress.stage}</strong><span>{elapsed}</span>
-            </div>
-            <div className="known-place-analysis-stepper" aria-label="Known Place analysis progress">
-              {['Initializing', 'Processing', 'Screening', 'Complete'].map((label, index) => <div className={index <= analysisProgress.step ? 'is-active' : ''} key={label}><i /><span>{label}</span></div>)}
+          <div className={`processing-orbit ${analysisProcessingState === 'running' ? 'is-active' : ''}`} aria-label={`${analysisProgress.stage}, elapsed ${elapsed}`}>
+            <div className="processing-orbit-inner">
+              {analysisProcessingState === 'succeeded' ? <span className="processing-orbit-symbol processing-orbit-label" aria-hidden="true">Success</span> : analysisProcessingState === 'failed' ? <span className="processing-orbit-symbol processing-orbit-label" aria-hidden="true">Failed</span> : <><strong>{analysisProgress.stage}</strong><time>{elapsed}</time></>}
             </div>
           </div>
+          <ol className="processing-stepper" aria-label="Known Place analysis stages">
+            {['Initializing', 'Processing', 'Screening', 'Complete'].map((label, index) => <li key={label} className={analysisProcessingState === 'failed' && index === analysisProgress.step ? 'is-failed' : index < analysisProgress.step ? 'is-complete' : index === analysisProgress.step ? 'is-current' : ''}><i aria-hidden="true" /><span>{label}</span></li>)}
+          </ol>
+          <p className="processing-safe-note">{analysisProcessingState === 'running' ? 'Safe to close this page. Your task keeps running.' : analysisProcessingState === 'succeeded' ? 'The processing job has ended. Review the Known Place outputs.' : 'The processing workflow stopped before successful completion.'}</p>
+          <p className="processing-duration-note">It may take up to 5 to 20 minutes depending on AOI and time window.</p>
           <div className="known-place-progress-meta"><span>{analysisProgress.stage}</span><b>{analysisProgress.percent}% · {elapsed}</b></div>
         </section>}
 

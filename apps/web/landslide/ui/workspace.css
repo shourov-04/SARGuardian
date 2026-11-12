@@ -879,6 +879,10 @@
 .known-place-release-progress.is-failed { border-color: rgba(194, 65, 45, .62); }
 .known-place-status-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .known-place-status-actions { display: inline-flex; align-items: center; gap: 10px; }
+.processing-status-chip-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.processing-status-chip-wrap .known-place-status-actions { display: contents; }
+.processing-status-chip-wrap .known-place-status-actions .known-place-status-chip { display: none; }
+.processing-duration-note + .known-place-progress-meta { display: none; }
 .known-place-cancel {
   min-height: 36px;
   padding: 0 14px;
