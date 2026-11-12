@@ -285,7 +285,6 @@ export function KnownPlaceResultsDashboard({
                 <div>
                   <span className="result-kicker">INTERACTIVE SPATIAL EVIDENCE</span>
                   <h3>Explore measured vectors and raster</h3>
-                  <p>Google Maps uses the pair's EPSG-referenced GOFF preview, with separate measurement/reference outlines and independently selectable orbit chains.</p>
                 </div>
                 <label>
                   <span>Acquisition pair</span>

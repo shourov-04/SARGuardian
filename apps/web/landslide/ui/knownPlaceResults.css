@@ -663,6 +663,19 @@
 }
 .known-place-deep-view .known-place-google-map { height: min(72vh, 720px); }
 
+/* Public Discovery and Explore the Evidence share one map presentation. */
+.known-place-public-map-card .known-place-google-map-shell,
+.known-place-deep-view .known-place-google-map-shell {
+  border: 1px solid rgba(159, 210, 231, .22);
+  border-radius: 9px;
+  background: #0b1e2d;
+}
+.known-place-public-map-card .known-place-google-map,
+.known-place-deep-view .known-place-google-map {
+  height: min(66vh, 640px);
+  min-height: 390px;
+}
+
 /* Three audience surfaces: subtle 10% glass with crisp, readable labels. */
 .known-place-audience-tabs button {
   border-color: rgba(255,255,255,.72) !important;
