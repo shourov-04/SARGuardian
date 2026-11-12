@@ -42,6 +42,7 @@ type StoredAnalysisUiState = {
   coherenceNeighbours: '1' | '5' | '10' | '15' | '20' | '25';
   geometryHeight: string;
   analysisSelectionKey?: string;
+  completedAnalysisRunIds?: Record<string, string>;
   catalog: StoredCatalogState | null;
 };
 
@@ -98,6 +99,10 @@ function storageKey(uid: string): string {
 
 function uiStorageKey(uid: string): string {
   return `sarguardian.knownPlaceAnalysisUi.v1:${uid}`;
+}
+
+function resultRequestStorageKey(uid: string): string {
+  return `sarguardian.knownPlaceResultRequest.v1:${uid}`;
 }
 
 function analysisSelectionKey(releaseId: string, preferredGranules: string, variantKey: string): string {
@@ -157,6 +162,10 @@ export function loadStoredRun(uid: string): StoredRun | null {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function loadKnownPlaceRunRequestId(uid: string): string | null {
+  try {
+    const selected = localStorage.getItem(resultRequestStorageKey(uid));
+    if (selected && /^[0-9a-f-]{36}$/i.test(selected)) return selected;
+  } catch { /* local storage is optional */ }
   const run = loadStoredRun(uid);
   return run?.execute_downloads === true && run.conclusion === 'success' ? run.request_id : null;
 }
@@ -255,6 +264,7 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
     storedUiState?.analysisSelectionKey
       ?? analysisSelectionKey(storedUiState?.catalog?.allowedReleaseIds ?? '', storedUiState?.catalog?.preferredGranules ?? '', storedUiState?.catalog?.selectedVariantKey ?? ''),
   );
+  const [completedAnalysisRunIds, setCompletedAnalysisRunIds] = useState<Record<string, string>>(storedUiState?.completedAnalysisRunIds ?? {});
   const [pendingAction, setPendingAction] = useState<'dry-run' | 'analysis' | 'cancel' | null>(null);
   const [run, setRun] = useState<StoredRun | null>(() => loadStoredRun(user.uid));
   const [catalogFingerprint, setCatalogFingerprint] = useState(storedUiState?.catalog?.requestFingerprint ?? '');
@@ -270,6 +280,8 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
   const invalidateCatalogSelection = () => {
     setCatalogFingerprint('');
     setCatalogPreflightRun(null);
+    setCompletedAnalysisSelectionKey('');
+    setCompletedAnalysisRunIds({});
     setCatalogReleaseError('');
     setError('');
     setPollError('');
@@ -370,10 +382,11 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
       coherenceNeighbours,
       geometryHeight,
       analysisSelectionKey: completedAnalysisSelectionKey,
+      completedAnalysisRunIds,
       catalog,
     };
     try { localStorage.setItem(uiStorageKey(user.uid), JSON.stringify(uiState)); } catch { /* optional browser storage */ }
-  }, [allowedReleaseIds, analysisMode, catalogFingerprint, catalogPreflightRun, catalogReleaseIds, catalogSummary, catalogVariantOptions, coherenceNeighbours, completedAnalysisSelectionKey, direction, geometryHeight, hazardMode, polarization, preferredGranules, selectedVariantKey, track, user.uid]);
+  }, [allowedReleaseIds, analysisMode, catalogFingerprint, catalogPreflightRun, catalogReleaseIds, catalogSummary, catalogVariantOptions, coherenceNeighbours, completedAnalysisRunIds, completedAnalysisSelectionKey, direction, geometryHeight, hazardMode, polarization, preferredGranules, selectedVariantKey, track, user.uid]);
 
   const runRequestId = activeRun?.request_id ?? null;
   const runStatus = activeRun?.status ?? null;
@@ -491,6 +504,13 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
     return () => { active = false; };
   }, [activeRun, currentRequestFingerprint, user]);
 
+  useEffect(() => {
+    if (!activeRun || activeRun.execute_downloads !== true || activeRun.status !== 'completed' || activeRun.conclusion !== 'success' || !completedAnalysisSelectionKey) return;
+    setCompletedAnalysisRunIds((current) => current[completedAnalysisSelectionKey] === activeRun.request_id
+      ? current
+      : { ...current, [completedAnalysisSelectionKey]: activeRun.request_id });
+  }, [activeRun, completedAnalysisSelectionKey]);
+
   const submit = async (executeDownloads: boolean) => {
     if (!startDate || !endDate) {
       setError('Return to the setup page and choose a valid date window first.');
@@ -551,6 +571,7 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
       setCompletedAnalysisSelectionKey(executeDownloads
         ? analysisSelectionKey(allowedReleaseIds, preferredGranules, selectedVariantKey)
         : '');
+      if (!executeDownloads) setCompletedAnalysisRunIds({});
       if (!executeDownloads) {
         setCatalogFingerprint(requestFingerprint);
         setCatalogPreflightRun(null);
@@ -584,10 +605,13 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
 
   const runTerminal = activeRun?.status === 'completed';
   const selectedAnalysisSelectionKey = analysisSelectionKey(allowedReleaseIds, preferredGranules, selectedVariantKey);
-  const runSucceeded = runTerminal
+  const historicalAnalysisRequestId = catalogMatchesCurrentRequest ? completedAnalysisRunIds[selectedAnalysisSelectionKey] ?? null : null;
+  const runSucceeded = (runTerminal
     && activeRun?.execute_downloads === true
     && activeRun.conclusion === 'success'
-    && completedAnalysisSelectionKey === selectedAnalysisSelectionKey;
+    && completedAnalysisSelectionKey === selectedAnalysisSelectionKey)
+    || Boolean(historicalAnalysisRequestId);
+  const selectedResultRequestId = historicalAnalysisRequestId ?? (runSucceeded && activeRun?.request_id ? activeRun.request_id : null);
   const runCancelled = runTerminal && activeRun?.conclusion === 'cancelled';
   const releaseLookupProgress = useMemo(() => getReleaseLookupProgress(pendingAction, activeRun), [pendingAction, activeRun]);
   const analysisProgress = useMemo(() => getAnalysisProgress(pendingAction, activeRun), [pendingAction, activeRun]);
@@ -747,8 +771,11 @@ export function KnownPlaceAnalysisPanel({ user, aoiWkt, startDate, endDate, onBa
           <div className="known-place-progress-meta"><span>{analysisProgress.stage}</span><b>{analysisProgress.percent}% · {elapsed}</b></div>
         </section>}
 
-        {runSucceeded && activeRun?.execute_downloads && (
-          <button type="button" className="investigate-button known-place-show-results" onClick={onShowResults}>Show result</button>
+        {runSucceeded && selectedResultRequestId && (
+          <button type="button" className="investigate-button known-place-show-results" onClick={() => {
+            try { localStorage.setItem(resultRequestStorageKey(user.uid), selectedResultRequestId); } catch { /* optional local storage */ }
+            onShowResults();
+          }}>Show result</button>
         )}
         </section>
         {(!analysisProgress || (runTerminal && !runSucceeded)) && <div className="known-place-run-action">
