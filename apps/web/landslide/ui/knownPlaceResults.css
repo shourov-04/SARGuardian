@@ -283,14 +283,6 @@
 .known-place-science-chain,
 .known-place-provenance details { border: 1px solid rgba(255,255,255,.24); background: rgba(220,239,246,.1); backdrop-filter: blur(14px); }
 
-/* Reference palette from the supplied Known Place design. */
-.known-place-results-shell .claude-background {
-  background:
-    radial-gradient(900px 600px at 15% 20%, #cfdce6 0, transparent 60%),
-    radial-gradient(900px 700px at 85% 70%, #7f9c9a 0, transparent 60%),
-    linear-gradient(160deg, #9fb4c3, #3f5a55) !important;
-}
-.known-place-results-shell .claude-background::after { background: none; }
 .known-place-results { color: #0f2236; background: rgba(255,255,255,.28); }
 .known-place-results h2,
 .known-place-results h3,
