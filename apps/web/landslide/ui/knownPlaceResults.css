@@ -329,19 +329,95 @@
   background: linear-gradient(135deg, #1689df, #075fb4);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 0 2px rgba(10,132,224,.42), 0 10px 24px rgba(8,104,190,.28);
 }
+.known-place-audience-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  text-align: left;
+}
+.known-place-audience-icon {
+  display: inline-flex;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  color: #000 !important;
+}
+.known-place-audience-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.known-place-audience-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.known-place-audience-copy strong,
+.known-place-audience-copy small { color: #000 !important; }
 
 .known-place-chart-card,
 .known-place-chart-card * {
   color: #000 !important;
 }
 .known-place-chart-card {
-  background: rgba(255,255,255,.20) !important;
+  background: rgba(255,255,255,.04) !important;
 }
 .known-place-public-cautions,
 .known-place-public-cautions * {
   color: #000 !important;
 }
 .known-place-back { display: none !important; }
+
+.known-place-pair-table-wrap,
+.known-place-pair-table-wrap * {
+  color: #000 !important;
+}
+.known-place-pair-table-wrap {
+  background: rgba(255,255,255,.20) !important;
+  border-color: rgba(15,34,54,.42) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.66), 0 16px 36px rgba(4,24,39,.18) !important;
+}
+.known-place-pair-table-wrap th {
+  border-bottom-color: rgba(15,34,54,.34) !important;
+  font-weight: 800;
+}
+.known-place-pair-table-wrap td {
+  border-bottom-color: rgba(15,34,54,.22) !important;
+  font-weight: 600;
+}
+.known-place-pair-table-wrap tbody tr:hover,
+.known-place-pair-table-wrap tbody tr.sel {
+  background: rgba(10,132,224,.16) !important;
+}
+.known-place-pair-table-wrap select {
+  color: #000 !important;
+  background: rgba(255,255,255,.48) !important;
+  border-color: rgba(15,34,54,.4) !important;
+}
+.known-place-chart-card .known-place-rate-track {
+  background: rgba(15,34,54,.28) !important;
+  border: 1px solid rgba(15,34,54,.34);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.22);
+}
+.known-place-chart-card .known-place-rate-track span {
+  background: linear-gradient(90deg, #0878d1, #45c8e8) !important;
+  box-shadow: 0 1px 4px rgba(8,104,190,.42);
+}
+.known-place-chart-card .known-place-rate-track span.is-caution {
+  background: linear-gradient(90deg, #b9770e, #ff765d) !important;
+  box-shadow: 0 1px 4px rgba(185,119,14,.42);
+}
 
 
 /* Public + Deep Dive: a single native Google Maps surface for every Known Place audience. */
@@ -393,21 +469,33 @@
 .known-place-google-map-toolbar > div:first-child { display: grid; gap: 4px; }
 .known-place-google-map-toolbar strong { color: #f2fbff; font: 750 12px 'Manrope', sans-serif; }
 .known-place-google-map-toolbar span { color: rgba(204, 230, 241, .62); font-size: 9px; }
-.known-place-map-basemap-status {
-  padding: 5px 8px;
-  border: 1px solid rgba(111, 211, 202, .25);
-  border-radius: 20px;
-  color: #a4e8dc;
-  font-size: 8px;
+.known-place-map-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.62);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #43b9ee, #0875c7);
+  color: #061e33;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 6px 14px rgba(8,104,190,.24);
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  cursor: pointer;
 }
+.known-place-map-theme-toggle:hover {
+  background: linear-gradient(180deg, #5bc5f4, #1689df);
+}
+.known-place-map-theme-toggle span { color: inherit; font-size: 15px; line-height: 1; }
 .known-place-google-map {
   width: 100%;
   height: min(66vh, 640px);
   min-height: 390px;
   background: #1b3443;
+}
+.known-place-google-map.is-imagery-dark {
+  filter: brightness(.58) contrast(1.16) saturate(.76);
 }
 .known-place-google-map-message {
   padding: 8px 12px;

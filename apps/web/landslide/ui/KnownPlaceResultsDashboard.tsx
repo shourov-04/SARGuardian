@@ -163,8 +163,16 @@ export function KnownPlaceResultsDashboard({
                 aria-pressed={view === item.id}
                 onClick={() => setView(item.id)}
               >
-                <strong>{item.title}</strong>
-                <small>{item.audience}</small>
+                <span className="known-place-audience-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 19V5M4 19h16" />
+                    <path d="m7 15 4-4 3 2 5-6" />
+                  </svg>
+                </span>
+                <span className="known-place-audience-copy">
+                  <strong>{item.title}</strong>
+                  <small>{item.audience}</small>
+                </span>
               </button>
             ))}
           </nav>
@@ -197,11 +205,6 @@ export function KnownPlaceResultsDashboard({
 
               <section className="known-place-public-map-card" aria-label="Public displacement map">
                 <div className="known-place-section-heading known-place-map-heading">
-                  <div>
-                    <span className="result-kicker">SPATIAL MOVEMENT EVIDENCE</span>
-                    <h3>Where is displacement measured?</h3>
-                    <p>Select an acquisition pair to view its georeferenced magnitude raster and local movement vectors on Google Maps. Ascending and descending observations remain separate.</p>
-                  </div>
                   <label>
                     <span>Acquisition pair</span>
                     <select

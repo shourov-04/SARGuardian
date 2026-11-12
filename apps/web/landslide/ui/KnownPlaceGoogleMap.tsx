@@ -113,11 +113,24 @@ function markerLabel(sample: KnownPlaceVectorSample): string {
   return sample.displacement_m.toFixed(1) + ' m · ' + sample.rate_m_per_day.toFixed(2) + ' m/day';
 }
 
+const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: 'geometry', stylers: [{ color: '#182b38' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#b9d4df' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#182b38' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#3b5a68' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#203944' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304957' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#192c38' }] },
+  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#243e4b' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
+];
+
 export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
   const mapElement = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState('');
-  const [layerStatus, setLayerStatus] = useState('Preparing the selected pair layer…');
+  const [darkMode, setDarkMode] = useState(false);
+  const [mapType, setMapType] = useState('terrain');
   const preview = pair.map_preview;
 
   useEffect(() => {
@@ -157,10 +170,20 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
   }, []);
 
   useEffect(() => {
-    if (!map || !preview) {
-      setLayerStatus('This pair has no georeferenced raster preview; inspect its native-grid GeoTIFF in the result package.');
-      return;
-    }
+    if (!map) return;
+    const syncMapType = () => setMapType(String(map.getMapTypeId() || 'terrain'));
+    syncMapType();
+    const listener = map.addListener('maptypeid_changed', syncMapType);
+    return () => listener.remove();
+  }, [map]);
+
+  useEffect(() => {
+    if (!map) return;
+    map.setOptions({ styles: darkMode ? DARK_MAP_STYLES : null });
+  }, [map, darkMode]);
+
+  useEffect(() => {
+    if (!map || !preview) return;
     const measurementRing = projectedRingToLatLng(preview, preview.aoi_ring_xy);
     const referenceRing = preview.reference_ring_xy?.length
       ? projectedRingToLatLng(preview, preview.reference_ring_xy)
@@ -243,11 +266,6 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
     [...measurementRing, ...referenceRing, ...samples.map((sample) => sample.position)].forEach((point) => bounds.extend(point));
     if (!bounds.isEmpty()) map.fitBounds(bounds, 48);
     else map.setCenter(ringCenter(measurementRing));
-    setLayerStatus(
-      preview.width + ' × ' + preview.height + ' georeferenced preview cells · ' +
-      samples.length + ' vector labels · arrows show mean east/north direction',
-    );
-
     return () => {
       info.close();
       listeners.forEach((listener) => listener.remove());
@@ -265,14 +283,25 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
           <strong>{pair.reference_date} → {pair.secondary_date}</strong>
           <span>Track {pair.track ?? 'unknown'} · {pair.direction === 'A' ? 'Ascending' : pair.direction === 'D' ? 'Descending' : 'Unknown direction'} · {pair.polarization ?? '—'} · {pair.release_id ?? 'Release not reported'}</span>
         </div>
-        <div className="known-place-map-basemap-status">Google Maps · georeferenced GOFF layer</div>
+        <button
+          type="button"
+          className="known-place-map-theme-toggle"
+          aria-pressed={darkMode}
+          onClick={() => setDarkMode((value) => !value)}
+        >
+          <span aria-hidden="true">{darkMode ? '☀' : '☾'}</span>
+          {darkMode ? 'Light mode' : 'Dark mode'}
+        </button>
       </div>
-      <div className="known-place-google-map" ref={mapElement} role="application" aria-label="Google Map with GOFF displacement raster and vector annotations" />
+      <div
+        className={`known-place-google-map${darkMode ? ' is-dark' : ''}${darkMode && (mapType === 'satellite' || mapType === 'hybrid') ? ' is-imagery-dark' : ''}`}
+        ref={mapElement}
+        role="application"
+        aria-label="Google Map with GOFF displacement raster and vector annotations"
+      />
       {mapError ? (
         <div className="known-place-google-map-message is-error" role="alert">{mapError}</div>
-      ) : !preview ? (
-        <div className="known-place-google-map-message" role="status">{layerStatus}</div>
-      ) : (
+      ) : preview ? (
         <>
           <div className="known-place-map-legend" aria-label="Map legend">
             <span><i className="is-magnitude" /> Horizontal displacement magnitude</span>
@@ -280,12 +309,8 @@ export function KnownPlaceGoogleMap({ pair }: { pair: KnownPlacePairResult }) {
             <span><i className="is-reference" /> Reference polygon</span>
             <span><i className="is-flag" /> Preview median above threshold</span>
           </div>
-          <div className="known-place-google-map-message" role="status">{layerStatus}</div>
         </>
-      )}
-      <p className="known-place-map-science-note">
-        Raster colours show median horizontal displacement magnitude per preview cell; arrows show the mean east/north direction per block and are symbolic in length. Labels show interval-average displacement-derived rates, not instantaneous or forecast velocity. The downsampled map preview is for orientation; original native-grid GeoTIFFs are authoritative. Reference-ground stability is not independently verified.
-      </p>
+      ) : null}
     </div>
   );
 }
