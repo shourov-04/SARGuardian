@@ -180,14 +180,8 @@ function App() {
   }, [navigateTo]);
 
   const handleStartFromHowItWorks = useCallback(() => {
-    if (!user) {
-      setPendingRoute(FIND_DISPLACEMENT_PATH);
-      setAuthModalOpen(true);
-      navigateTo('/');
-      return;
-    }
-    navigateTo(FIND_DISPLACEMENT_PATH);
-  }, [navigateTo, user]);
+    navigateTo('/');
+  }, [navigateTo]);
 
   if (isDashboardRoute(pathname)) {
     const searchParams = new URLSearchParams(window.location.search);
@@ -210,7 +204,6 @@ function App() {
         authState={authState}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
-        onOpenWorkspace={handleOpenWorkspace}
       />
     );
   }

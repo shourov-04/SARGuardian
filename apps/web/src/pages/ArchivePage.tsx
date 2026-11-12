@@ -1,17 +1,15 @@
 import type { User } from 'firebase/auth';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
-import { ArchiveSection } from '../components/ArchiveSection';
 
 type ArchivePageProps = {
   user: User | null;
   authState: 'idle' | 'loading' | 'ready' | 'error';
   onSignIn: () => void;
   onSignOut: () => void;
-  onOpenWorkspace: () => void;
 };
 
-export function ArchivePage({ user, authState, onSignIn, onSignOut, onOpenWorkspace }: ArchivePageProps) {
+export function ArchivePage({ user, authState, onSignIn, onSignOut }: ArchivePageProps) {
   return (
     <div className="home-page archive-page">
       <div className="environment-layer" aria-hidden="true" />
@@ -26,19 +24,9 @@ export function ArchivePage({ user, authState, onSignIn, onSignOut, onOpenWorksp
         hideSignIn
       />
       <main className="home-main archive-main">
-        <div className="archive-page-heading">
-          <div className="archive-page-heading-copy">
-            <p className="section-eyebrow">YOUR WORKSPACE</p>
-            <h1>Analysis archive</h1>
-            <p>Review your saved AOI analyses, processing history and verified result bundles.</p>
-          </div>
-          {user && (
-            <button className="text-link-button archive-page-workspace-button" type="button" onClick={onOpenWorkspace}>
-              Open analysis workspace
-            </button>
-          )}
-        </div>
-        <ArchiveSection user={user} onOpenWorkspace={onOpenWorkspace} />
+        <section className="archive-coming-soon" aria-label="Archive">
+          <h1>Coming Soon...</h1>
+        </section>
       </main>
       <Footer />
     </div>

@@ -654,6 +654,18 @@ html { scroll-behavior: smooth; scroll-padding-top: 112px; }
 .archive-page-heading-copy > p:last-child { max-width: 650px; margin-bottom: 0; color: rgba(239,249,251,.86); font-size: 13px; line-height: 1.7; }
 .archive-page-workspace-button { flex: 0 0 auto; margin-bottom: 3px; }
 .archive-main .archive-section { margin-top: 0; }
+.archive-coming-soon {
+  min-height: calc(100vh - 190px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.archive-coming-soon h1 {
+  margin: 0;
+  color: #fff;
+  font: 800 clamp(48px, 9vw, 104px)/1 'Manrope', sans-serif;
+  letter-spacing: -.07em;
+}
 
 
 /* 2026 local homepage concept: Apple-inspired clarity, spatial glass and restrained motion. */
