@@ -113,7 +113,21 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
   const verifiedProducts = typeof summary.verified_product_count === 'number' ? summary.verified_product_count : null;
   const observations = typeof summary.observation_count === 'number' ? summary.observation_count : null;
   const shortJobId = job.id.length > 15 ? `${job.id.slice(0, 8)}…${job.id.slice(-4)}` : job.id;
-  const dateWindow = `${new Date(`${job.start_date}T00:00:00`).toLocaleDateString()} – ${new Date(`${job.end_date}T00:00:00`).toLocaleDateString()}`;
+  const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
+
+  useEffect(() => {
+    if (!cancelConfirmationOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCancelConfirmationOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [cancelConfirmationOpen]);
+
+  const confirmCancel = () => {
+    setCancelConfirmationOpen(false);
+    onCancel?.();
+  };
 
   return (
     <main className="displacement-preparation processing-page" aria-live="polite">
@@ -143,17 +157,23 @@ export function RiverShiftJobStatus({ job, clock, onViewResults, onRetry, retryi
       <section className="processing-card processing-details-card" aria-label="River Shift task details">
         <dl>
           <div><dt>Area</dt><dd>Submitted AOI</dd></div>
-          <div><dt>Dates</dt><dd>{dateWindow}</dd></div>
-          <div><dt>Scope</dt><dd>River-wide GCOV screening</dd></div>
           <div><dt>Job</dt><dd><code title={job.id}>{shortJobId}</code><button type="button" className="processing-copy-button" onClick={() => void navigator.clipboard?.writeText(job.id)}>Copy</button></dd></div>
         </dl>
       </section>
 
       <div className="processing-page-actions">
         {job.state === 'succeeded' && <button type="button" className="processing-primary-button" onClick={onViewResults}>Show result</button>}
-        {active && onCancel && <button type="button" className="processing-cancel-button" disabled={cancelling} onClick={onCancel}>{cancelling ? 'Cancelling...' : 'Cancel processing'}</button>}
-        {onBack && <button type="button" className="processing-ghost-button" onClick={onBack}>Back to AOI</button>}
+        {active && onCancel && <button type="button" className="processing-cancel-button" disabled={cancelling} onClick={() => setCancelConfirmationOpen(true)}>{cancelling ? 'Cancelling...' : 'Cancel'}</button>}
+        {onBack && <button type="button" className="processing-ghost-button" onClick={onBack}>Back</button>}
       </div>
+      {cancelConfirmationOpen && <div className="processing-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCancelConfirmationOpen(false); }}>
+        <section className="processing-confirmation" role="dialog" aria-modal="true" aria-labelledby="river-shift-cancel-title">
+          <h2 id="river-shift-cancel-title">Cancel this processing?</h2>
+          <p>Processing will stop.</p>
+          <button type="button" className="processing-primary-button" onClick={() => setCancelConfirmationOpen(false)}>Keep running</button>
+          <button type="button" className="processing-dialog-cancel" onClick={confirmCancel}>Cancel</button>
+        </section>
+      </div>}
       {job.state === 'failed' && <div className="processing-page-actions">
         <button type="button" className="processing-primary-button" disabled={retrying} onClick={onRetry}>{retrying ? 'Retrying…' : 'Retry'}</button>
       </div>}
@@ -202,11 +222,9 @@ function RiverShiftSettingsPanel({
             {settings.thresholdMethod === 'manual' && <label><span>Common threshold (dB)</span><input type="number" min="-60" max="0" step="0.1" value={settings.thresholdDb} onChange={(event) => onChange({ thresholdDb: event.target.value })} /></label>}
           </div>
         </details>
-        <div className="processing-config-summary"><span>Dates</span><strong>{startDate} – {endDate}</strong><small>River-wide GCOV screening</small></div>
         {error && <p className="processing-error" role="alert">{error}</p>}
-        {runDisabled && <p className="processing-config-note">This polygon and date window are already processing below.</p>}
         <div className="processing-page-actions processing-config-actions">
-          <button type="button" className="processing-ghost-button" onClick={onBack}>Back to AOI</button>
+          <button type="button" className="processing-ghost-button" onClick={onBack}>Back</button>
           <button type="button" className="processing-primary-button" disabled={busy || runDisabled} onClick={onRun}>{busy ? 'Starting River Shift...' : 'Run River Shift'}</button>
         </div>
       </section>
@@ -488,7 +506,7 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
           {!setup && !riverJob && <main className="displacement-preparation" style={{ width: 'min(720px, calc(100% - 32px))', margin: '40px auto' }}>
             <section className="processing-card processing-load-error" role="alert">
               <p>{riverJobError || 'No River Shift AOI is ready. Return to the map to choose a study area.'}</p>
-              <button type="button" className="processing-ghost-button" onClick={handleBackToMap}>Back to AOI</button>
+              <button type="button" className="processing-ghost-button" onClick={handleBackToMap}>Back</button>
             </section>
           </main>}
         </>
