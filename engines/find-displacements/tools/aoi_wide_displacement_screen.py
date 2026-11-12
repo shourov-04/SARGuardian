@@ -25,6 +25,7 @@ SCIENCE_ROOT = Path(__file__).resolve().parents[3] / "science" / "nisar-core"
 if str(SCIENCE_ROOT) not in sys.path:
     sys.path.insert(0, str(SCIENCE_ROOT))
 from validation.gls_persistence import evaluate_cluster_persistence  # noqa: E402
+from validation.stable_datum import apply_ensemble_datum, compute_hclv_support_mask  # noqa: E402
 
 SCHEMA = "sarguardian-find-displacements-aoi-screen/1.0"
 GRANULE_ID = re.compile(
@@ -178,6 +179,8 @@ def _screen_pair(
     min_offset_m: float,
     min_robust_z: float,
     min_directional_coherence: float,
+    dem_raster: np.ndarray | None = None,
+    support_mask: np.ndarray | None = None,
 ) -> dict[str, Any]:
     with rasterio.open(path) as src:
         if src.crs is None or src.count < 3:
@@ -222,6 +225,24 @@ def _screen_pair(
             & np.isfinite(range_mm) & np.isfinite(azimuth_mm) & np.isfinite(corr)
             & (corr >= corr_min)
         )
+        datum_status = "NOT_AVAILABLE_NO_COMPLETE_VARIANCE_LAYERS"
+        datum_shift_range_m = datum_shift_azimuth_m = None
+        if range_variance_mm2 is not None and azimuth_variance_mm2 is not None:
+            try:
+                hclv = support_mask
+                if hclv is None:
+                    hclv = compute_hclv_support_mask(
+                        corr[None, ...],
+                        (((range_variance_mm2 + azimuth_variance_mm2) / 2.0)[None, ...]),
+                    )
+                referenced_range, datum_shift_range_m = apply_ensemble_datum(range_mm / 1000.0, hclv)
+                referenced_azimuth, datum_shift_azimuth_m = apply_ensemble_datum(azimuth_mm / 1000.0, hclv)
+                range_mm = referenced_range * 1000.0
+                azimuth_mm = referenced_azimuth * 1000.0
+                datum_status = "HCLV_ENSEMBLE_APPLIED"
+            except ValueError as exc:
+                valid[:] = False
+                datum_status = str(exc)
         range_m = range_mm / 1000.0
         azimuth_m = azimuth_mm / 1000.0
         count = int(valid.sum())
@@ -240,6 +261,9 @@ def _screen_pair(
         "range_variance_mm2": range_variance_mm2,
         "azimuth_variance_mm2": azimuth_variance_mm2,
         "cross_covariance_mm2": cross_covariance_mm2,
+        "datum_status": datum_status,
+        "datum_shift_range_m": datum_shift_range_m,
+        "datum_shift_azimuth_m": datum_shift_azimuth_m,
     }
     if count == 0:
         result.update({
@@ -691,6 +715,7 @@ def run_aoi_wide_screen(
                 "reader_detect_floor_mm_day": item["reader_detect_floor_mm_day"],
                 "max_offset_anomaly_m": pair.get("max_offset_anomaly_m"),
                 "robust_background_scale_m": pair.get("robust_background_scale_m"),
+                 "datum_status": pair.get("datum_status"),
                 "correlation_min": pair["correlation_min"], "status": pair["status"],
             })
             del pair
