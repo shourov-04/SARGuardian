@@ -182,8 +182,26 @@
 .known-place-limitations li { color: rgba(216, 233, 242, .67); font-size: 9px; line-height: 1.5; }
 .known-place-storage-receipt strong { display: block; margin-top: 6px; color: #b2ead1; font-size: 12px; }
 .known-place-storage-receipt p { margin: 6px 0 0; color: rgba(206, 228, 239, .56); font-size: 9px; }
-.known-place-generated-report summary { color: #dff2fc; cursor: pointer; font-size: 10px; font-weight: 700; }
-.known-place-generated-report iframe { display: block; width: 100%; height: min(76vh, 720px); min-height: 500px; margin-top: 12px; border: 1px solid rgba(166, 210, 229, .15); border-radius: 6px; background: #0b1220; }
+.known-place-science-report-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 10px;
+  padding: 9px 15px;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #43b9ee, #0875c7);
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 8px 18px rgba(8,104,190,.22);
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.known-place-science-report-button:hover {
+  background: linear-gradient(180deg, #5bc5f4, #1689df);
+  transform: translateY(-1px);
+}
 @media (max-width: 900px) {
   .known-place-results-heading { flex-direction: column; }
   .known-place-result-actions { justify-content: flex-start; }
@@ -623,6 +641,66 @@
   font-size: 9px;
 }
 .known-place-map-legend.is-dark span { color: #fff; }
+
+/* Source filenames: readable long-form provenance without the washed-out blue. */
+.known-place-provenance details {
+  border: 1px solid rgba(15,34,54,.22) !important;
+  background: rgba(255,255,255,.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 8px 18px rgba(4,24,39,.1);
+}
+.known-place-provenance details:hover { border-color: rgba(8,117,199,.55) !important; }
+.known-place-provenance summary {
+  color: #0f2236 !important;
+  font: 700 10px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.known-place-provenance details p,
+.known-place-provenance details small { color: #29465a !important; }
+.known-place-provenance details code {
+  color: #075fb4 !important;
+  font: 700 8px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Scientific limitations: six distinct review cues with stronger visual contrast. */
+.known-place-limitations ul {
+  gap: 8px;
+  padding-left: 0;
+  list-style: none;
+}
+.known-place-limitations li {
+  position: relative;
+  padding: 10px 12px 10px 17px;
+  border: 1px solid rgba(15,34,54,.18);
+  border-left: 4px solid #0878d1;
+  border-radius: 12px;
+  background: rgba(255,255,255,.10);
+  color: #18354b !important;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.6;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 7px 16px rgba(4,24,39,.08);
+}
+.known-place-limitations li::before {
+  content: '•';
+  position: absolute;
+  left: 7px;
+  color: #0878d1;
+  font-size: 14px;
+  line-height: 1.1;
+}
+.known-place-limitations li:nth-child(2) { border-left-color: #00a896; color: #155248 !important; }
+.known-place-limitations li:nth-child(2)::before { color: #00a896; }
+.known-place-limitations li:nth-child(3) { border-left-color: #d48a19; color: #654817 !important; }
+.known-place-limitations li:nth-child(3)::before { color: #d48a19; }
+.known-place-limitations li:nth-child(4) { border-left-color: #7856c8; color: #3f2e70 !important; }
+.known-place-limitations li:nth-child(4)::before { color: #7856c8; }
+.known-place-limitations li:nth-child(5) { border-left-color: #1689df; color: #17496d !important; }
+.known-place-limitations li:nth-child(5)::before { color: #1689df; }
+.known-place-limitations li:nth-child(6) { border-left-color: #d15b4f; color: #6f2f2a !important; }
+.known-place-limitations li:nth-child(6)::before { color: #d15b4f; }
 .known-place-map-legend i {
   display: inline-block;
   width: 11px;

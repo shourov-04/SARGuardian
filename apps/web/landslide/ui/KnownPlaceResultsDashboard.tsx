@@ -129,6 +129,14 @@ export function KnownPlaceResultsDashboard({
       ?? null,
     [allPairs, mapPairs, selectedMapPairKey],
   );
+  const dashboardHtml = results?.dashboard_html ?? '';
+  const reportUrl = useMemo(() => {
+    if (!dashboardHtml) return '';
+    return URL.createObjectURL(new Blob([dashboardHtml], { type: 'text/html' }));
+  }, [dashboardHtml]);
+  useEffect(() => () => {
+    if (reportUrl) URL.revokeObjectURL(reportUrl);
+  }, [reportUrl]);
   return (
     <section className={`known-place-results${loading ? ' is-loading' : ''}`} aria-label="Known Place scientific results dashboard">
       {loading && (
@@ -440,10 +448,18 @@ export function KnownPlaceResultsDashboard({
                 <p>{results.storage.bundle_bytes ? `${(results.storage.bundle_bytes / 1024).toFixed(0)} KB archived` : 'Bundle size not reported'} · {results.storage.bundled_file_count ?? '—'} files · raw HDF5 included: {String(results.storage.raw_h5_included === true)}</p>
               </div>
 
-              <details className="known-place-generated-report">
-                <summary>Open generated science report (original workflow output)</summary>
-                <iframe title="Generated Known Place science report" srcDoc={results.dashboard_html} sandbox="" loading="lazy" />
-              </details>
+              <div className="known-place-generated-report">
+                <span className="result-kicker">GENERATED REPORT</span>
+                <a
+                  className="known-place-science-report-button"
+                  href={reportUrl || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!reportUrl}
+                >
+                  Open generated science report ↗
+                </a>
+              </div>
             </div>
           )}
         </>
