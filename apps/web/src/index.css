@@ -675,7 +675,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 112px; }
 }
 .archive-coming-soon h1 {
   margin: 0;
-  color: #fff;
+  color: #000;
   font: 800 clamp(48px, 9vw, 104px)/1 'Manrope', sans-serif;
   letter-spacing: -.07em;
 }

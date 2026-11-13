@@ -203,6 +203,11 @@
   transform: translateY(-1px);
 }
 .known-place-generated-report {
+  margin-top: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;

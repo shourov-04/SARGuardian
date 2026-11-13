@@ -152,7 +152,7 @@
 .processing-details-card code { color: inherit; font: 700 13px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .processing-copy-button { min-width: 48px; min-height: 32px; padding: 0 10px; border: 1px solid rgba(37, 113, 160, .2); border-radius: 999px; background: rgba(255, 255, 255, .48); color: #276d9c; font: 700 11px/1 inherit; cursor: pointer; }
 
-.processing-page-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.processing-page-actions { display: flex; justify-content: center; gap: 10px; }
 .processing-primary-button, .processing-ghost-button, .processing-dialog-cancel { min-height: 48px; padding: 0 20px; border-radius: 999px; font: 750 14px/1 inherit; cursor: pointer; transition: transform .12s ease-out, opacity .2s, background .2s; }
 .processing-primary-button { border: 0; background: linear-gradient(135deg, #1689df, #0764bd); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .46), 0 10px 28px -12px #087bd3; color: #fff; }
 .processing-ghost-button { border: 1px solid rgba(42, 108, 144, .22); background: rgba(255, 255, 255, .4); color: #245777; }

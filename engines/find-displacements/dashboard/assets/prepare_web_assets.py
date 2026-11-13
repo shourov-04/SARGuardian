@@ -674,7 +674,6 @@ button,.controls select,.maphead select{border-color:rgba(255,255,255,.7)!import
 <div class="header-actions"><button id="presentation" type="button" aria-pressed="false">Enter presentation</button><a class="header-link" href="../index.html">Processing report <span aria-hidden="true">↗</span></a></div>
 </header>
 <section class="view-switcher-wrap" aria-label="Choose dashboard audience view">
-<div class="view-switcher-label"><div class="kicker">Choose your view</div><strong>One evidence set. Three levels of detail.</strong></div>
 <div class="view-switcher" role="group" aria-label="Dashboard audience view">
 <button type="button" class="view-option" data-sg-mode="public" aria-selected="true" aria-pressed="true"><span class="view-number">01</span><span><strong>Public Discovery</strong><small>What was observed in this area</small></span></button>
 <button type="button" class="view-option" data-sg-mode="evidence" aria-selected="false" aria-pressed="false"><span class="view-number">02</span><span><strong>Explore the Evidence</strong><small>Maps, pairs and candidate patterns</small></span></button>

@@ -416,18 +416,6 @@ export function KnownPlaceResultsDashboard({
               </div>
               */}
 
-              <div className="known-place-generated-report">
-                <a
-                  className="known-place-science-report-button"
-                  href={reportUrl || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-disabled={!reportUrl}
-                >
-                  Advanced Science Report
-                </a>
-              </div>
-
               <div className="known-place-science-columns">
                 <section>
                   <span className="result-kicker">REQUEST AND METHOD</span>
@@ -487,6 +475,18 @@ export function KnownPlaceResultsDashboard({
               <div className="known-place-limitations">
                 <span className="result-kicker">SCIENTIFIC LIMITATIONS</span>
                 <ul>{result.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+
+              <div className="known-place-generated-report">
+                <a
+                  className="known-place-science-report-button"
+                  href={reportUrl || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!reportUrl}
+                >
+                  Advanced Science Report
+                </a>
               </div>
 
               {/*
