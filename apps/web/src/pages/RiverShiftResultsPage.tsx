@@ -9,7 +9,7 @@ import { Header } from '../components/Header';
 import '../../landslide/ui/knownPlaceResults.css';
 import './river-shift.css';
 
-type AudienceView = 'map' | 'qa' | 'context';
+type AudienceView = 'map' | 'qa';
 
 const views: Array<{ id: AudienceView; title: string; audience: string; summary: string }> = [
   {
@@ -23,12 +23,6 @@ const views: Array<{ id: AudienceView; title: string; audience: string; summary:
     title: 'Spatial QA & Overlap Audit',
     audience: 'Quality Assurance',
     summary: 'Authoritative full-resolution source masks compared against majority-occupancy preview polygons. Diagnostic checks, not geophysical validation.',
-  },
-  {
-    id: 'context',
-    title: 'Validation Readiness & Context',
-    audience: 'Reviewers & Planners',
-    summary: 'Review validation readiness checklist, local exposure screening, and inspect reproducible outputs.',
   },
 ];
 
@@ -1171,6 +1165,26 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                             }}
                           >Satellite</button>
                         </div>
+                        <div className="rs-map-type-toggle" role="group" aria-label="Map type">
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'map' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'map'}
+                            onClick={() => {
+                              setMapTypeMode('map');
+                              resultMapInstance.current?.setMapTypeId('roadmap');
+                            }}
+                          >Map</button>
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'satellite'}
+                            onClick={() => {
+                              setMapTypeMode('satellite');
+                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
+                            }}
+                          >Satellite</button>
+                        </div>
                         <button
                           type="button"
                           className={`rs-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
@@ -1260,6 +1274,10 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                         jobState={riverJob.state}
                         artifactCount={riverJob.artifact_manifest?.length || 0}
                       />
+                      <GranuleProvenancePanel
+                        source={asRecord(riverJob.result_summary.source) || (jobPreview?.report || explorerReport)?.source}
+                        report={jobPreview?.report || explorerReport}
+                      />
                     </>
                   )}
                 </section>
@@ -1268,12 +1286,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
               {/* View 2: Spatial QA & Overlap Audit */}
               <div className="rs-view-panel" style={{ display: activeView === 'qa' ? 'block' : 'none' }}>
                 {riverJob?.result_summary ? (
-                  <>
-                    <GranuleProvenancePanel
-                      source={asRecord(riverJob.result_summary.source) || (jobPreview?.report || explorerReport)?.source}
-                      report={jobPreview?.report || explorerReport}
-                    />
-                  </>
+                  <section className="rs-overlap-audit">
+                    <div className="rs-section-heading">
+                      <div><p className="rs-kicker">SPATIAL INTEGRITY</p><h3>Review the map QA below the map</h3></div>
+                    </div>
+                    <p className="rs-muted">The overlap audit and validation readiness are available on the Visual Discovery map tab.</p>
+                  </section>
                 ) : (
                   <section className="rs-overlap-audit">
                     <div className="rs-section-heading">
@@ -1285,46 +1303,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
 
               </div>
 
-              {/* View 3: Validation Readiness & Context */}
-              <div className="rs-view-panel" style={{ display: activeView === 'context' ? 'block' : 'none' }}>
-                <section className="rs-results-panel">
-                  <div className="rs-section-heading">
-                    <div><p className="rs-kicker">03 · RESULTS EXPLORER</p><h2>Inspect reproducible outputs</h2></div>
-                    <span className="rs-chip">NO SYNTHETIC METRICS</span>
-                  </div>
-                  <p className="rs-muted">
-                    Live RiverShift jobs load their checksum-checked report and map previews here automatically.
-                    The import controls below are optional and are intended for external or offline research results.
-                    Catalogue rows are never presented as measured flood or erosion results.
-                  </p>
-                  <p className="rs-kicker">OPTIONAL MANUAL / RESEARCH IMPORT</p>
-                  <div className="rs-upload-grid">
-                    <label className="rs-upload"><span>Import result JSON</span><small>Flood, morphology or validation report</small>
-                      <input type="file" accept=".json,application/json" onChange={(event) => void loadReport(event.target.files?.[0])} />
-                    </label>
-                    <label className="rs-upload"><span>Import change GeoJSON layer(s)</span><small>For playback, select every `water_YYYY-MM-DD.geojson` named in the report</small>
-                      <input type="file" multiple accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadGeoJSONFiles(event.target.files || undefined)} />
-                    </label>
-                  </div>
-                  {reportError && <p className="rs-error" role="alert">{reportError}</p>}
-                  {geoJSONError && <p className="rs-error" role="alert">{geoJSONError}</p>}
-                  {explorerReport && <ReportPanel report={explorerReport} />}
-
-                  {!report && !hasLiveJobResult && (
-                    <div className="rs-empty-state">
-                      <strong>{hasLiveJobResultPending ? 'Live processing finished · preview not loaded' : resultType}</strong>
-                      <p>{hasLiveJobResultPending
-                        ? 'A successful live job is on record, but the automatic preview has not loaded. Manual import is not required for a live job.'
-                        : 'No live result or external report is loaded yet. Start the live processing workflow above; manual JSON and GeoJSON import is optional.'}</p>
-                    </div>
-                  )}
-                  {hasLiveJobResult && !report && (
-                    <p className="rs-info-banner" role="status">
-                      Live NISAR result loaded automatically from the completed job. No CLI run or manual file import is needed. The preview remains PROVISIONAL until independent validation is attached.
-                    </p>
-                  )}
-                </section>
-              </div>
         </section>
 
         <button type="button" className="workspace-nav-link known-place-back" onClick={onBack} style={{ marginTop: '20px' }}>
