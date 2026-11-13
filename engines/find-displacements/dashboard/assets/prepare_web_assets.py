@@ -420,23 +420,22 @@ input[type=range]{accent-color:var(--teal);width:100%;min-width:100px}
 #presentation:hover{background:#a4ebd9}
 .header-link{font-size:13px;text-decoration:none;padding:9px 10px;border:1px solid var(--line);border-radius:10px;color:#c6d7d5}
 .view-switcher-wrap{
-  display:grid;grid-template-columns:minmax(190px,.65fr) minmax(0,2.35fr);
-  gap:12px 24px;align-items:center;padding:13px 0 17px;margin-bottom:14px;
-  border-bottom:1px solid var(--line-soft)
+  display:block;padding:60px 34px 22px;margin-bottom:14px;
+  border:1px solid rgba(255,255,255,.72);border-radius:28px;
+  background:rgba(255,255,255,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 14px 40px -16px rgba(30,65,95,.32);
+  backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)
 }
-.view-switcher-label strong{display:block;font-size:15px;margin-top:3px}
 .view-switcher{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .view-option{
-  display:flex;gap:11px;align-items:center;text-align:left;padding:11px 13px;
-  min-height:68px;background:rgba(14,34,43,.72);border:1px solid var(--line);
-  border-radius:12px;color:var(--ink)
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;text-align:left;padding:12px 26px;
+  min-height:108px;background:linear-gradient(180deg,#43b9ee,#0875c7);border:1px solid rgba(255,255,255,.72);
+  border-radius:18px;color:#000;box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 10px 24px rgba(8,104,190,.24)
 }
-.view-option .view-number{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.view-option strong{display:block;font-size:13px;letter-spacing:.005em}
-.view-option small{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:500}
-.view-option[aria-selected=true]{border-color:var(--teal);background:linear-gradient(125deg,rgba(48,117,109,.3),rgba(17,44,54,.92));box-shadow:inset 0 0 0 1px rgba(131,223,204,.12)}
-.view-option[aria-selected=true] .view-number{color:var(--teal)}
-#modeCaption{grid-column:2;margin:0;color:var(--muted);font-size:12px}
+.view-option .view-number{display:none}
+.view-option strong{display:block;color:#000;font-size:16px;letter-spacing:.005em}
+.view-option small{display:block;margin-top:2px;color:#000;font-size:12px;font-weight:500}
+.view-option[aria-selected=true]{border-color:rgba(255,255,255,.88);background:linear-gradient(135deg,#45cf9c,#129b67);box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 0 0 2px rgba(18,155,103,.26),0 12px 28px rgba(13,107,75,.24)}
+#modeCaption{margin:14px 0 0;color:#3d5368;font-size:13px}
 .kicker{color:var(--teal);font-size:10px;font-weight:850;letter-spacing:.17em;text-transform:uppercase}
 .muted{color:var(--muted)}
 .warn{
@@ -655,8 +654,8 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 .claude-background{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,rgba(5,18,28,.04),rgba(4,18,28,.34)),url('/scenery/alpine-lake.jpg') center 46% / cover fixed no-repeat}
 .claude-background::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 27%,transparent 0 23%,rgba(1,11,17,.18) 72%)}
 .claude-background i{display:none}
-.claude-nav-shell{position:sticky;top:10px;z-index:50;width:min(980px,calc(100% - 24px));margin:10px auto 0;border:1px solid rgba(255,255,255,.82);border-radius:999px;background:rgba(238,248,251,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 14px 40px -18px rgba(0,8,18,.7);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%)}
-.claude-nav-inner{position:relative;height:58px;padding:0 10px 0 16px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.claude-nav-shell{position:sticky;top:10px;z-index:50;width:min(1470px,calc(100% - 72px));margin:10px auto 0;border:1px solid rgba(255,255,255,.82);border-radius:999px;background:rgba(238,248,251,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 14px 40px -18px rgba(0,8,18,.7);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%)}
+.claude-nav-inner{position:relative;height:72px;padding:0 16px 0 24px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .claude-brand{display:flex;width:auto;height:46px;align-items:center;gap:8px;text-decoration:none}
 .claude-brand-mark{position:relative;display:block;width:42px;height:42px;overflow:hidden;border-radius:50%}
 .brand-logo-image.claude-brand-logo{position:absolute;top:0;left:-9px;width:60px;height:60px;border-radius:0;object-fit:cover;object-position:center top;background:transparent;box-shadow:none;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55)) drop-shadow(0 4px 10px rgba(2,13,22,.15))}
@@ -664,7 +663,7 @@ body[data-dashboard-mode=science] .public-only{display:none!important}
 .claude-brand-word b{font-weight:760}
 .claude-nav-links{display:flex;align-items:center;gap:7px}.claude-nav-shell.is-archive .claude-nav-links{margin-left:auto}
 .archive-home-link{display:inline-flex;min-height:38px;padding:0 16px;align-items:center;border:1px solid rgba(255,255,255,.72);border-radius:999px;color:#fff;background:linear-gradient(135deg,#1689df,#075fb4);font-size:13px;font-weight:700;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 24px rgba(8,104,190,.24)}
-.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}.warn,.quick-panel,#modeCaption,.public-explainer-grid,.public-candidate-footnote,.foot{display:none!important}.claude-nav-shell{width:min(980px,calc(100% - 24px));top:10px;margin:10px auto 0}.claude-nav-inner{height:58px;padding:0 10px 0 16px}.archive-home-link{min-height:38px;padding:0 16px}
+.site-header{display:block;border:0;padding:0;margin-bottom:18px}.site-header .hero-copy,.site-header .header-actions{display:none!important}.warn,.quick-panel,#modeCaption,.public-explainer-grid,.public-candidate-footnote,.foot{display:none!important}main{width:min(100% - 64px,1770px);max-width:1770px}.claude-nav-shell{width:min(1470px,calc(100% - 72px));top:10px;margin:10px auto 0}.claude-nav-inner{height:72px;padding:0 16px 0 24px}.archive-home-link{min-height:38px;padding:0 16px}
 .card,.panel{background:rgba(220,239,245,.34)!important;border:1px solid rgba(255,255,255,.68)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.62),0 18px 44px rgba(9,40,58,.2)!important;backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%)}.card h2,.panel h2,.card strong,.panel strong{color:#102d43}.card .muted,.panel .muted,.card p,.panel p{color:#294b60}
 button,.controls select,.maphead select{border-color:rgba(255,255,255,.7)!important;background:linear-gradient(180deg,#43b9ee,#0875c7)!important;color:#061e33!important;box-shadow:0 8px 20px rgba(8,104,190,.2)!important;font-weight:700}button:hover,.controls select:hover,.maphead select:hover{background:linear-gradient(180deg,#5bc5f4,#1689df)!important}.view-option,.public-family-button,.public-playback-actions button,.candidate-focus,.timeline button,.product-row{background:rgba(239,249,252,.42)!important;color:#102d43!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.64),0 8px 18px rgba(9,40,58,.12)!important}.view-option[aria-selected=true],.public-family-button[aria-pressed=true]{background:rgba(255,255,255,.72)!important;border-color:#1689df!important}
 </style></head><body class="claude-home"><div class="claude-background" aria-hidden="true"><i></i><i></i><i></i></div><main>
@@ -675,9 +674,9 @@ button,.controls select,.maphead select{border-color:rgba(255,255,255,.7)!import
 </header>
 <section class="view-switcher-wrap" aria-label="Choose dashboard audience view">
 <div class="view-switcher" role="group" aria-label="Dashboard audience view">
-<button type="button" class="view-option" data-sg-mode="public" aria-selected="true" aria-pressed="true"><span class="view-number">01</span><span><strong>Public Discovery</strong><small>What was observed in this area</small></span></button>
-<button type="button" class="view-option" data-sg-mode="evidence" aria-selected="false" aria-pressed="false"><span class="view-number">02</span><span><strong>Explore the Evidence</strong><small>Maps, pairs and candidate patterns</small></span></button>
-<button type="button" class="view-option" data-sg-mode="science" aria-selected="false" aria-pressed="false"><span class="view-number">03</span><span><strong>Scientific Evidence</strong><small>Measurements, gates and provenance</small></span></button>
+<button type="button" class="view-option" data-sg-mode="public" aria-selected="true" aria-pressed="true"><strong>Public Discovery</strong><small>For everyone</small></button>
+<button type="button" class="view-option" data-sg-mode="evidence" aria-selected="false" aria-pressed="false"><strong>Explore the Evidence</strong><small>Students and analysts</small></button>
+<button type="button" class="view-option" data-sg-mode="science" aria-selected="false" aria-pressed="false"><strong>Scientific Evidence</strong><small>Researchers and reviewers</small></button>
 </div>
 <p id="modeCaption">A plain-language overview of the AOI, observation coverage and candidate evidence.</p>
 </section>
