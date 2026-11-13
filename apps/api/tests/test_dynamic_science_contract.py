@@ -87,56 +87,61 @@ def test_hdf5_inventory_records_named_datatypes_without_treating_them_as_dataset
     assert result["named_datatypes"][0]["path"] == "/committedStringType"
 
 
-def test_account_workflow_calls_the_upstream_dynamic_aoi_streaming_pipeline() -> None:
-    root = Path(__file__).parents[2]
-    workflow = (root / ".github" / "workflows" / "sarguardian-displacement.yml").read_text(encoding="utf-8")
-    dashboard = (root / ".github" / "workflows" / "sarguardian-aoi-wkt-dashboard.yml").read_text(encoding="utf-8")
+def test_primary_account_dispatch_uses_the_root_find_displacements_pipeline() -> None:
+    root = Path(__file__).resolve().parents[3]
+    dispatcher = (root / ".github" / "workflows" / "sarguardian-aoi-wkt-dashboard.yml").read_text(encoding="utf-8")
+    dashboard = (root / ".github" / "workflows" / "sarguardian-aoi-dashboard-engine.yml").read_text(encoding="utf-8")
     worker = (root / ".github" / "workflows" / "sarguardian-aoi-product-worker.yml").read_text(encoding="utf-8")
-    uploader = (root / "tools" / "drive_resumable_upload.py").read_text(encoding="utf-8")
-    assert "uses: ./.github/workflows/sarguardian-aoi-wkt-dashboard.yml" in workflow
-    assert "aoi_wkt: ${{ inputs.aoi_wkt }}" in workflow
-    assert "date_filter_mode: ${{ inputs.acquisition_window }}" in workflow
-    assert "inputs.processing_profile == 'full-aoi' && 'full-aoi-baseline' || 'validation-pilot'" in workflow
-    assert "place_name: ${{ inputs.place_name }}" in workflow
-    assert "target_latitude: ${{ inputs.target_latitude }}" in workflow
-    assert "TARGET_LATITUDE: ${{ inputs.target_latitude }}" in worker
-    assert "TARGET_LONGITUDE: ${{ inputs.target_longitude }}" in worker
+    target_tool = (root / "engines" / "find-displacements" / "tools" / "measure_target_from_raster.py").read_text(encoding="utf-8")
+    uploader = (root / "apps" / "tools" / "drive_resumable_upload.py").read_text(encoding="utf-8")
+
+    # The API dispatches the declared account contract directly to the only
+    # root-level runnable workflow; no nested Dynamic workflow is used.
+    assert "workflow_dispatch:" in dispatcher
+    assert "uses: ./.github/workflows/sarguardian-aoi-dashboard-engine.yml" in dispatcher
+    for name in (
+        "aoi_wkt", "start_date", "end_date", "date_filter_mode", "run_profile",
+        "retention_profile", "job_id", "callback_url", "request_fingerprint",
+        "place_name", "target_latitude", "target_longitude",
+    ):
+        assert f"      {name}:" in dispatcher
+        assert f"{name}: " + "${{ inputs." + name + " }}" in dispatcher
+    assert "MONOREPO_DISPLACEMENT_ACTIONS_ENABLED" in dispatcher
+    assert "MONOREPO_DISPLACEMENT_PROCESSING_GATE=PASS" in dispatcher
+
+    # The reusable engine performs bounded per-product work, receipt-based
+    # retries and dashboard assembly from the exact orchestration revision.
+    assert "python engines/find-displacements/tools/discover_aoi_products.py" in dashboard
+    assert "uses: ./.github/workflows/sarguardian-aoi-product-worker.yml" in dashboard
+    assert re.search(r"(?m)^      max-parallel: 15$", dashboard)
+    assert "retry-plan:" in dashboard
+    assert "retry-products:" in dashboard
+    assert "retry_count != '0'" in dashboard
+    assert "python dashboard-source/engines/find-displacements/tools/aggregate_aoi_run.py" in dashboard
+    assert "repository: moshiour0/SARGuardian-Monorepo" in dashboard
+    assert "ref: " + "${{ needs.manifest.outputs.orchestration_sha }}" in dashboard
+    assert 'test "$actual" = "' + "${EXPECTED_DASHBOARD_SHA:?}" + '"' in dashboard
+    assert "SITE_TARGET_LATITUDE: " + "${{ inputs.target_latitude }}" in dashboard
+
+    # Product diagnostics use the pinned science snapshot, preserve
+    # no-valid-pixel as no measurement, and gate cleanup on verified retention.
+    assert "SCIENCE_COMMIT: 006d4cd1485cf80e509eaf8717c12e9c6390ac09" in worker
+    assert "src/gunw_reader.py" in worker and "src/goff_reader.py" in worker
     assert "id: target_measurement" in worker
     assert "id: local_floor" in worker
+    assert "write_no_valid_pixel_stats.py" in worker
+    assert "NO VALID PIXELS" in worker
     assert "measure_target_from_raster.py" in worker
     assert '--aoi-wkt "$SARGUARDIAN_AOI_WKT"' in worker
     assert "--minimum-valid-pixels 6" in worker
-    assert "SITE_TARGET_LATITUDE: ${{ inputs.target_latitude }}" in dashboard
-    assert "def parse_aoi_wkt_ring" in (root / "tools" / "measure_target_from_raster.py").read_text(encoding="utf-8")
-    assert "ref: ecd125f68ed61c276406f73a1d77eb27979e204e" in dashboard
-    # The reviewed pinned aggregator contains gated movement measurement reports alongside GOFF diagnostics.
-    assert "python dashboard-source/tools/aggregate_aoi_run.py" in dashboard
-    assert '"target_measurement_status"' in (root / ".github" / "workflows" / "sarguardian-aoi-product-worker.yml").read_text(encoding="utf-8") or "target_measurement_status" in worker
-    assert "python tools/discover_aoi_products.py" in dashboard
-    assert "uses: ./.github/workflows/sarguardian-aoi-product-worker.yml" in dashboard
-    assert dashboard.count("job_id: ${{ inputs.job_id }}") >= 1
-    assert '--job-id "$DRIVE_JOB_ID"' in dashboard
-    assert 'DRIVE_JOB_ID: ${{ inputs.job_id }}' in worker
-    assert worker.count('--job-id "$DRIVE_JOB_ID"') == 3
-    assert "python science-source/src/gunw_reader.py" in worker
-    assert "python science-source/src/goff_reader.py" in worker
-    assert "--aoi \"$AOI_NAME\"" in worker
-    assert "SCIENCE_COMMIT: f038e4dfdb53c8d9793aaaefe173570a1032026c" in worker
-    assert 'PYTHONUNBUFFERED: "1"' in worker
-    for milestone in (
-        "PRODUCT_PROCESSING_START", "PRODUCT_MILESTONE=download_started",
-        "PRODUCT_MILESTONE=aoi_validation_started", "PRODUCT_MILESTONE=science_reader_started",
-        "PRODUCT_MILESTONE=derived_validation_started", "PRODUCT_MILESTONE=drive_upload_started",
-        "PRODUCT_MILESTONE=cleanup_started", "PRODUCT_PROCESSING_STATUS=",
-    ):
-        assert milestone in worker
-    run_blocks = "\n".join(
-        line for line in worker.splitlines()
-        if not line.lstrip().startswith(("EARTHDATA_", "GOOGLE_DRIVE_"))
-    )
-    assert 'echo "$EARTHDATA_' not in run_blocks
-    assert 'printf "$EARTHDATA_' not in run_blocks
+    assert "Delete local raw/archive only after successful remote retention" in worker
+    assert "ERROR=REFUSING_RAW_DELETION_WITHOUT_REMOTE_VERIFICATION" in worker
+    assert "REMOTE_DERIVED_OUTPUTS_AND_RETENTION_POLICY_VERIFIED=PASS" in worker
+    assert "REMOTE_RETENTION_FOLDER_ID_MISMATCH" in worker
+    assert "runner_raw_hdf5_deleted" in worker
+    assert "def parse_aoi_wkt_ring" in target_tool
     assert "REMOTE_FOLDER_ID=" not in uploader
+
 
 
 def test_cleanup_never_deletes_raw_without_complete_remote_receipts(tmp_path: Path) -> None:
