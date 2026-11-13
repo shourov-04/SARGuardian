@@ -104,7 +104,7 @@ The links below are direct inspection points, not claims of independent scientif
 |---|---|
 | [API CI — import, 242 tests and Google Maps adapter contract](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | Passed on the API/test update commit |
 | [Web CI — TypeScript/build, lint and 182 tests across 22 files](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Passed |
-| [Full Git-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43461622251) | Passed on main commit `50d3e08eae17a68c680ced970a55bcb6a0b330c8`; 2,892 commits scanned and zero findings |
+| [Full Git-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43462167406) | Passed on main commit `6ed5a22e02f9e534d04bcaec4816c48813a82fd3`; 2,895 commits scanned and zero findings |
 | [Find Displacements example run](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | Completed; 16/16 selected GOFF/GUNW products validated. The AOI-wide output remains candidate screening, not movement/hazard confirmation; common GUNW time-series gates were withheld. |
 | [Known Place generic AOI run](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Completed successfully |
 | [RiverShift GCOV example run](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | Completed; 10 selected acquisition dates, 72 result artifacts, private storage verification passed; release status PROVISIONAL |
