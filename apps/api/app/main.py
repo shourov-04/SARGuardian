@@ -1971,6 +1971,9 @@ def _apply_dashboard_presentation(html: str) -> str:
         else:
             html = html.replace("</head>", "<style>/* SARGuardian responsive science dashboard */\\n" + DASHBOARD_PRESENTATION_CSS + "\n" + legacy_view_css + "\n" + mode_css + "</style></head>", 1)
 
+    if legacy_view_css not in html:
+        html = html.replace("</style>", legacy_view_css + "</style>", 1)
+
     if not native_mode_controls and "<main>" in html and 'id="sgDashboardModes"' not in html:
         html = html.replace("<main>", "<main>\n" + DASHBOARD_MODES_MARKUP, 1)
 
