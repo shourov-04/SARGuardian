@@ -595,11 +595,33 @@ def main() -> int:
         "src/goff_reader.py": ("8a00a5ae51ee5d6d9c67c46ea64f202169621a1b", "37a0d312d37f837664601783d4c951adc5d85f49"),
         "tests/conftest.py": ("f631634824553a111b2c08279cb8432b04466207", "570588d984297744969827a592e770c1b751e803"),
     }
+    river_shift_destination_only = {
+    "river_shift/calibration.py": "643c905810ec1fa34ca13852f8f47cbcc128cc87",
+    "river_shift/classes.py": "8218ca7df710ebe8861aa73469d4298e46bfebc0",
+    "river_shift/exclusion_masks.py": "865737c0f27db49390a1317f87c10e7cc360343d",
+    "river_shift/release_status.py": "0372313b7cacf19956f3d3f6f765c4ef115ff776",
+    "river_shift/speckle.py": "bcac77a4d5a6373d3487daebf8f5338b105f5e13",
+    "river_shift/stage_context.py": "0d7bf439ba8f3257a53521c3f466a1f621d16013",
+    "river_shift/verification.py": "4874589e2eb7b7807aa18d84a4b5bd15bdcd003a",
+    "tests/test_calibration.py": "30f8508d932553621fe9a314772be5ddd2aecbe8",
+    "tests/test_phase2_classifier_foundations.py": "596e9a4107c9eaf0b8f2b5c67f88c81276e1b855",
+    "tests/test_release_status_phase1.py": "cf1f7ce971076ba68ea882ef7e0e3f467d714266"
+}
     river_shift_changed_blob_pins = {
         "tests/test_independent_reference_runner.py": (
             "f7c7a657076da3eaa2e9e8c99a7677106058d768",
             "0ca8093864dcd6e2b537f08ad0631b6de103001a",
         ),
+        "batched_gcov_job.py": ("7e34e1b762c8d0ac3257ba5e98637a738ff4176c", "3223c72d011d990cd3be7102b9196df921ebd33a"),
+        "download_gcov_product.py": ("80d21e13a5cd90b3f4f20d5095e6c27a79bef980", "2c643aa18dc7326331919684bb1fb8f944f5be82"),
+        "process_gcov_job.py": ("7e57dc2cb053128aa70833c98af036031b923ff0", "a4f79c527c5c2d35d1deaf772eed01940f38141c"),
+        "river_shift/flood.py": ("05471d5e1649110ffc9412e7863785ab71bf7370", "a4375489e4b347a986dd05689f88f9133d162fd3"),
+        "river_shift/morphology.py": ("61c608090af1681b0a80624c8b3bc5142fc4212b", "a6db1111fc07284c1d1805e86f1dade822eb1bdc"),
+        "river_shift/timeseries.py": ("3ea07daca9276a6fc000b616483192c8bc091fc6", "2e0590bea20be6147a565ff0a84597e1525bf6ad"),
+        "river_shift/transects.py": ("ad3fa4b3a26ac63d6e5b630fa76a7d8102fe4659", "df69bc3b82470c302596857d44717b71ef7bc1f6"),
+        "river_shift/validation.py": ("a05cbdcfe08872cf6d52606234ebedbeae3acd3c", "a01cd23664983cf9f507695b9d3716ed245ba63e"),
+        "river_shift/water_detection.py": ("5406e58b68ace47e0c6487279195a4542a6e05da", "db63c817fd5b2aacb74922757b524255bf6828f5"),
+        "run_flood_analysis.py": ("3ec3cdba3b724e331f1012d8033a5adf1bae6aed", "abcf3bf28d7004f4a201720bd028f6e7562bb712"),
     }
     dynamic_shared_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     find_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
@@ -633,6 +655,10 @@ def main() -> int:
                 label == "NISAR science promotion"
                 and path[len(destination_prefix) :] in nisar_science_destination_only
             )
+            and not (
+                label == "RiverShift GCOV engine promotion"
+                and path[len(destination_prefix) :] in river_shift_destination_only
+            )
         }
         if label == "Dynamic active API promotion":
             for relative_path, expected_sha in dynamic_api_destination_only.items():
@@ -640,6 +666,12 @@ def main() -> int:
                 if actual_entry != ("100644", "blob", expected_sha):
                     raise RuntimeError(f"Reviewed API destination-only blob changed: {relative_path}")
                 print(f"PROMOTED_API_ADDITION_PASS apps/api/{relative_path}: {expected_sha}")
+        if label == "RiverShift GCOV engine promotion":
+            for relative_path, expected_sha in river_shift_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed RiverShift destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_RIVERSHIFT_ADDITION_PASS engines/river-shift/tools/river_shift/{relative_path}: {expected_sha}")
         if label == "NISAR science promotion":
             for relative_path, expected_sha in nisar_science_destination_only.items():
                 actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
