@@ -109,7 +109,6 @@
 .rs-results-panel { max-width: 1440px; margin: 18px auto 0; }
 .rs-job-panel { max-width: 1440px; margin: 18px auto 0; }
 .rs-report-panel { padding: 0; border: 0; background: transparent; box-shadow: none; }
-.rs-artifact-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; color: #cce6ee; font-size: 11px; }
 .rs-upload-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .rs-upload { display: grid; gap: 5px; padding: 16px; border: 1px dashed rgba(103, 201, 198, .4); border-radius: 11px; background: rgba(32, 116, 120, .08); cursor: pointer; }
 .rs-upload span { color: #d9f0f1; font-size: 12px; font-weight: 800; }.rs-upload small { color: #8eacb9; font-size: 10px; }
@@ -201,29 +200,6 @@
 @media (max-width: 1000px) { .rs-hero { grid-template-columns: 1fr; }.rs-hero-visual { min-height: 200px; }.rs-workspace-grid { grid-template-columns: 1fr; } }
 @media (max-width: 620px) { .rs-panel { padding: 16px; }.rs-fields-two, .rs-upload-grid { grid-template-columns: 1fr; }.rs-section-heading { flex-direction: column; }.rs-hero { margin-top: 30px; }.rs-map { height: 540px; min-height: 420px; }.rs-map-toolbar { align-items: flex-start; flex-direction: column; }.rs-map-toolbar-actions { width: 100%; justify-content: flex-end; }.rs-footer { flex-direction: column; } }
 
-.rs-data-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 9px; margin: 12px 0 16px; padding: 11px; border: 1px solid rgba(149, 194, 208, .14); border-radius: 10px; background: rgba(16, 37, 52, .48); }
-.rs-data-sources > div { display: grid; align-content: start; gap: 5px; min-width: 0; }
-.rs-data-sources strong { color: #9fe7dc; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
-.rs-data-sources span { color: #91aebb; font-size: 10px; line-height: 1.55; }
-@media (max-width: 960px) { .rs-data-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 760px) { .rs-data-sources { grid-template-columns: 1fr; } }
-
-.rs-marker-control { display: grid; gap: 7px; padding: 11px 12px; border: 1px solid rgba(103, 201, 198, .22); border-radius: 9px; background: rgba(32, 116, 120, .07); }
-.rs-marker-toggle { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-.rs-marker-toggle input { flex: 0 0 auto; width: 17px; height: 17px; margin: 2px 0 0; accent-color: #6de2d4; }
-.rs-marker-toggle > span { display: grid; gap: 4px; }
-.rs-marker-toggle strong { color: #d9f0f1; font-size: 11px; }
-.rs-marker-toggle small, .rs-marker-note { margin: 0; color: #91acbb; font-size: 10px; line-height: 1.5; }
-.rs-marker-toggle input:disabled { cursor: not-allowed; }
-
-.rs-change-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 15px; padding: 9px 11px; border: 1px solid rgba(149, 194, 208, .16); border-radius: 9px; background: rgba(16, 37, 52, .42); }
-.rs-change-legend > span { display: inline-flex; align-items: center; gap: 7px; color: #c7dce4; font-size: 10px; line-height: 1.4; }
-.rs-change-swatch { width: 11px; height: 11px; flex: 0 0 11px; border: 1px solid rgba(255, 255, 255, .7); border-radius: 3px; }
-.rs-change-swatch-erosion { background: rgba(240, 116, 98, .82); }
-.rs-change-swatch-deposition { background: rgba(95, 215, 165, .82); }
-.rs-change-swatch-new-water { background: rgba(83, 185, 244, .82); }
-.rs-change-legend-note { margin: 0; color: #91acbb; font-size: 10px; line-height: 1.55; }
-
 .rs-overlay-controls { display: grid; gap: 12px; margin: 12px 0 18px; padding: 13px; border: 1px solid rgba(115, 198, 203, .2); border-radius: 10px; background: rgba(5, 26, 40, .48); }
 .rs-overlay-toggle { display: flex; align-items: flex-start; gap: 9px; min-width: 0; color: #d5e9ee; cursor: pointer; font-size: 10px; }
 .rs-overlay-toggle input { flex: 0 0 auto; width: 15px; height: 15px; margin: 1px 0 0; accent-color: #70d9ce; }
@@ -247,7 +223,7 @@
 .rs-swatch.rs-observed-water { background: rgba(115, 179, 223, .24); border: 1px solid #73b3df; }
 
 
-/* Judge-facing workflow clarity and source-attributed impact context. */
+/* Judge-facing workflow clarity. */
 .rs-quick-start {
   max-width: 1440px;
   margin: 0 auto 20px;
@@ -296,7 +272,7 @@
 .rs-date-readiness small { color: #91acbb; }
 .rs-date-ready { border-color: rgba(95, 215, 165, .35); }
 .rs-date-warning { border-color: rgba(241, 202, 135, .42); }
-.rs-readiness-panel, .rs-impact-panel {
+.rs-readiness-panel {
   display: grid;
   gap: 12px;
   margin-top: 16px;
@@ -354,77 +330,11 @@
 }
 .rs-status-recorded { color: #7edfc0; }
 .rs-status-pending { color: #edc98d; }
-.rs-impact-upload-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  align-items: start;
-}
-.rs-impact-upload-grid .rs-upload { min-height: 78px; }
-.rs-impact-results {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
-}
-.rs-impact-total, .rs-impact-class {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 6px;
-  padding: 13px;
-  border: 1px solid rgba(149, 194, 208, .16);
-  border-radius: 10px;
-  background: rgba(91, 148, 165, .07);
-}
-.rs-impact-total { grid-column: 1 / -1; }
-.rs-impact-total span, .rs-impact-class span {
-  color: #b9d0d8;
-  font-size: 10px;
-  line-height: 1.5;
-}
-.rs-impact-total strong { color: #e8f7f8; font-size: 23px; font-variant-numeric: tabular-nums; }
-.rs-impact-class strong { color: #e2f3f5; font-size: 13px; }
-.rs-impact-total small, .rs-impact-class small { color: #91acbb; font-size: 9px; line-height: 1.45; }
-.rs-impact-source { grid-column: 1 / -1; color: #a9c2cc; font-size: 10px; overflow-wrap: anywhere; }
-.rs-impact-source a { color: #83dcd8; }
-.rs-impact-caveat { margin: 0; color: #d7c39a; font-size: 10px; line-height: 1.55; }
-.rs-impact-help { margin: 0; color: #91acbb; font-size: 10px; line-height: 1.55; }
-
 @media (max-width: 760px) {
   .rs-quick-start { grid-template-columns: 1fr; }
-  .rs-impact-upload-grid { grid-template-columns: 1fr; }
-  .rs-impact-results { grid-template-columns: 1fr; }
-  .rs-impact-total { grid-column: auto; }
   .rs-readiness-row { align-items: flex-start; flex-direction: column; gap: 6px; }
   .rs-readiness-status { max-width: none; text-align: left; }
 }
-
-.rs-impact-osm-action {
-  display: grid;
-  justify-items: start;
-  gap: 7px;
-  padding: 12px;
-  border: 1px solid rgba(103, 201, 198, .22);
-  border-radius: 10px;
-  background: rgba(32, 116, 120, .07);
-}
-.rs-impact-osm-action small { color: #91acbb; font-size: 10px; line-height: 1.55; }
-
-.rs-impact-map-toggle {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 209, 102, .28);
-  border-radius: 9px;
-  background: rgba(255, 209, 102, .06);
-  cursor: pointer;
-}
-.rs-impact-map-toggle input { flex: 0 0 auto; margin-top: 2px; }
-.rs-impact-map-toggle span { display: grid; gap: 4px; }
-.rs-impact-map-toggle strong { color: #e7e5d4; font-size: 11px; }
-.rs-impact-map-toggle small { color: #91acbb; font-size: 10px; line-height: 1.5; }
-.rs-swatch.rs-impact-point { background: #ffd166; border: 1px solid #263238; border-radius: 50%; }
 
 /* Unified Known Place Dashboard container for RiverShift */
 .river-shift-results-shell {
@@ -450,9 +360,7 @@
 .rs-unified-dashboard .rs-readiness-panel,
 .rs-unified-dashboard .rs-results-panel,
 .rs-unified-dashboard .rs-map-section,
-.rs-unified-dashboard .rs-impact-panel,
 .rs-unified-dashboard .rs-report-panel,
-.rs-unified-dashboard .rs-artifact-list,
 .rs-unified-dashboard .rs-upload-grid {
   border-color: rgba(255, 255, 255, .3);
   border-radius: 20px;
@@ -466,7 +374,6 @@
 .rs-unified-dashboard .rs-overlap-audit h3,
 .rs-unified-dashboard .rs-readiness-panel h3,
 .rs-unified-dashboard .rs-map-section h3,
-.rs-unified-dashboard .rs-impact-panel h3,
 .rs-unified-dashboard .rs-results-panel h2 {
   color: #0f2236;
 }
@@ -522,17 +429,6 @@
   border: 1px solid rgba(10, 132, 224, .25);
   border-radius: 10px;
   color: #054c7f;
-}
-.rs-unified-dashboard .rs-data-sources {
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, .3);
-  background: rgba(255, 255, 255, .42);
-}
-.rs-unified-dashboard .rs-data-sources strong {
-  color: #087bd3;
-}
-.rs-unified-dashboard .rs-data-sources span {
-  color: #29465a;
 }
 .rs-unified-dashboard .rs-overlay-controls {
   border-radius: 16px;
