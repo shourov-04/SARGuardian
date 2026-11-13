@@ -9,7 +9,8 @@ This index is the navigation layer for human reviewers, developers, and AI-assis
 3. [Datasets and references](submission/DATASETS_AND_REFERENCES.md) — NISAR products, service references, and how each is used.
 4. [Scientific methods](submission/SCIENTIFIC_METHODS.md) — measurement families, processing flow, provenance, and interpretation.
 5. [AI usage](submission/AI_USAGE.md) — development and media-production disclosure.
-6. [Score-sheet evidence matrix](submission/score-sheet-evidence-matrix.md) — where each rubric category is supported in the product and source.
+6. [Team and contributions](submission/TEAM_AND_CONTRIBUTIONS.md) — member roles, responsibilities, and contribution evidence.
+7. [Score-sheet evidence matrix](submission/score-sheet-evidence-matrix.md) — where each rubric category is supported in the product and source.
 
 ## Current technical documentation
 
