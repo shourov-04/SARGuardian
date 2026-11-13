@@ -462,7 +462,7 @@ def test_dispatch_fails_closed_for_unknown_workflow_contract(monkeypatch) -> Non
         "GITHUB_ACTIONS_REF": "main", "DISPLACEMENT_CALLBACK_SECRET": "callback-secret",
         "PUBLIC_API_URL": "https://api.example.test",
     })
-    with pytest.raises(GitHubDispatchError, match="does not match a supported account-processing contract"):
+    with pytest.raises(GitHubDispatchError, match="must be sarguardian-aoi-wkt-dashboard.yml"):
         dispatch_workflow(settings, UUID("11111111-1111-1111-1111-111111111111"), CreateDisplacementJobRequest(**payload()))
 
 def test_dispatch_reports_the_safe_github_rejection_reason(monkeypatch) -> None:
@@ -584,7 +584,7 @@ def test_displacement_workflow_declares_the_current_account_dispatch_contract() 
     workflow_path = (__import__("pathlib").Path(main_module.__file__).parents[2]
                      / ".github" / "workflows" / "sarguardian-aoi-wkt-dashboard.yml")
     workflow = workflow_path.read_text(encoding="utf-8")
-    assert "run-name: ${{ inputs.job_id" in workflow
+    assert "run-name: ${{ inputs.job_id && format('Displacement {0}', inputs.job_id)" in workflow
     assert "workflow_dispatch:" in workflow
     for input_name in (
         "job_id", "aoi_wkt", "start_date", "end_date", "date_filter_mode",

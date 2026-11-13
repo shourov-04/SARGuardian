@@ -162,7 +162,7 @@ def test_status_is_matched_by_random_request_id_and_workflow_identity(monkeypatc
                     "event": "workflow_dispatch",
                     "status": "completed",
                     "conclusion": "success",
-                    "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/12345",
+                    "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/12345",
                     "created_at": "2026-10-28T00:00:00Z",
                     "updated_at": "2026-10-28T00:01:00Z",
                 },
@@ -332,7 +332,7 @@ def test_gunw_candidate_cannot_be_sent_to_goff_known_place_measurement() -> None
         known_place.KnownPlaceAnalysisRequest(**(REQUEST | {"candidate_context": value}))
 
 
-def test_generic_known_place_dispatch_is_backend_owned_and_paper_reproduction_stays_separate() -> None:
+def test_generic_and_author_exact_known_place_workflows_use_current_repository() -> None:
     assert known_place.KNOWN_PLACE_REPOSITORY == "shourov-04/SARGuardian"
     assert known_place.KNOWN_PLACE_WORKFLOW == "know-place-aoi-dispatcher.yml"
     assert known_place.KNOWN_PLACE_REF == "main"
@@ -673,7 +673,7 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
         known_place_github_actions_repository="shourov-04/SARGuardian",
         known_place_github_actions_workflow="know-place-aoi-dispatcher.yml",
         known_place_github_actions_ref="main",
-        known_place_paper_github_actions_repository="moshiour0/SARGuardian-Monorepo",
+        known_place_paper_github_actions_repository="shourov-04/SARGuardian",
         known_place_paper_github_actions_workflow="know-place-paper-reproduction-dispatcher.yml",
         known_place_paper_github_actions_ref="main",
     )
@@ -689,7 +689,7 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
         known_place.KnownPlaceAnalysisRequest(**REQUEST),
     )
     paper = known_place.dispatch_known_place_paper_reproduction(
-        settings_with_monorepo_targets,
+        settings_with_current_repository_targets,
         known_place.KnownPlacePaperReproductionRequest(confirm_raw_downloads=True),
     )
 
@@ -701,9 +701,9 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
         "https://github.com/moshiour0/SARGuardian-Monorepo/actions/workflows/know-place-aoi-dispatcher.yml"
     )
     assert requests[1]["path"] == (
-        "/repos/moshiour0/SARGuardian-Monorepo/actions/workflows/known-place-author-exact.yml/dispatches"
+        "/repos/moshiour0/SARGuardian-Monorepo/actions/workflows/know-place-paper-reproduction-dispatcher.yml/dispatches"
     )
-    assert requests[1]["body"]["ref"] == "migration/author-exact"
+    assert requests[1]["body"]["ref"] == "main"
     assert paper.github_run_url == (
         "https://github.com/moshiour0/SARGuardian-Monorepo/actions/workflows/known-place-author-exact.yml"
     )
