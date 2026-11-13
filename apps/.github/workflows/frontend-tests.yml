@@ -1,43 +1,43 @@
-name: Frontend build, lint and tests
-# Includes inline Google Maps dashboard rendering in the Processing workspace.
+name: SARGuardian web — build, lint and tests
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - "Frontend/**"
-      - ".github/workflows/frontend-tests.yml"
+      - "apps/web/**"
+      - "apps/.github/workflows/frontend-tests.yml"
   push:
-    branches: [main, feat/in-app-interactive-dashboard, fix/manual-aoi-target-fallback-20261027, fix/google-dashboard-in-frontend-20261028]
+    branches: [main]
     paths:
-      - "Frontend/**"
-      - ".github/workflows/frontend-tests.yml"
+      - "apps/web/**"
+      - "apps/.github/workflows/frontend-tests.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: frontend-tests-${{ github.ref }}
+  group: sarguardian-web-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   frontend:
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     defaults:
       run:
-        working-directory: Frontend
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: apps/web/package-lock.json
       - name: Install locked dependencies
         run: npm ci
-      - name: Type-check and build
+      - name: Type-check and production build
         run: npm run build
       - name: Lint
         run: npm run lint
       - name: Unit tests
-        run: npm test
+        run: npm run test
