@@ -592,8 +592,8 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [riverJob, setRiverJob] = useState<RiverShiftJob | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
-  const [report, setReport] = useState<RiverShiftReport | null>(null);
-  const [geoJSONFiles, setGeoJSONFiles] = useState<LoadedGeoJSON[]>([]);
+  const report: RiverShiftReport | null = null;
+  const geoJSONFiles: LoadedGeoJSON[] = [];
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
   const [mapOverlayReady, setMapOverlayReady] = useState(false);
@@ -692,8 +692,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const activeJobPreview = jobPreview && riverJobId && jobPreview.jobId === riverJobId ? jobPreview : null;
   const isGeneralScanJob = Boolean(riverJob?.state === 'succeeded' && riverJob.analysis_mode === 'general_scan');
 
-  const hasLiveJobResult = Boolean(riverJob?.state === 'succeeded' && activeJobPreview
-    && (activeJobPreview.report || activeJobPreview.changeLayer));
   const explorerReport = report ?? activeJobPreview?.report ?? null;
 
   const verifiedGeoJSONFiles = useMemo(() => {
@@ -1045,7 +1043,17 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         resultAoiPolygon.current = null;
       }
     }
-  }, [mapReady, isGeneralScanJob, riverJob?.id, riverJob?.aoi_wkt]);
+  }, [
+    mapReady,
+    jobLoading,
+    activeJobPreview,
+    currentJobFrame,
+    jobTimeSeriesFrames.length,
+    riverJob?.state,
+    isGeneralScanJob,
+    riverJob?.id,
+    riverJob?.aoi_wkt,
+  ]);
 
   useEffect(() => {
     if (!mapReady) return;
