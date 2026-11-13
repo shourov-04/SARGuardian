@@ -404,9 +404,6 @@ def main() -> int:
                 "public/sarguardian-logo.png",
                 "public/scenery/",
                 "src/components/BrandLogo.tsx",
-                # The archived Dynamic ArchiveSection had no 1:1 promoted file;
-                # the active app uses the separate ArchivePage route instead.
-                "src/components/ArchiveSection.tsx",
                 "src/pages/HowItWorksPage.tsx",
                 "src/useGlassPointer.ts",
             ),
@@ -500,7 +497,7 @@ def main() -> int:
         "landslide/tests/investigationModes.test.tsx", "landslide/ui/knownPlacePreflight.test.ts",
         "landslide/ui/sessionState.test.ts", "landslide/ui/sessionState.ts",
         "landslide/ui/workspace.css", "src/App.tsx", "src/api/catalog.ts",
-        "src/api/knownPlace.ts", "src/components/ArchiveSection.tsx",
+        "src/api/knownPlace.ts",
         "src/components/Footer.tsx", "src/components/Header.tsx",
         "src/components/Hero.tsx", "src/components/ProfileControl.tsx",
         "src/data/engineData.test.ts", "src/data/engineData.ts", "src/index.css",
