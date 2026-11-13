@@ -441,6 +441,61 @@
   border-radius: 10px;
   color: #054c7f;
 }
+
+/* Acquisition pair dropdown heading (matching Known Place 1:1 design) */
+.rs-unified-dashboard .known-place-map-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.rs-unified-dashboard .known-place-map-heading > label {
+  display: grid;
+  gap: 5px;
+  min-width: min(320px, 100%);
+  margin-left: auto;
+  color: #29465a !important;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.rs-unified-dashboard .known-place-map-heading select {
+  min-height: 36px;
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, .82) !important;
+  border-radius: 8px;
+  background: rgba(232, 247, 253, .85) !important;
+  color: #000 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(4, 24, 39, .12);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+  appearance: auto;
+}
+.rs-unified-dashboard .known-place-map-heading select option {
+  background: #e8f5fb;
+  color: #000;
+  padding: 6px 10px;
+}
+.rs-unified-dashboard .known-place-map-heading.is-dark > label {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+.rs-unified-dashboard .known-place-map-heading.is-dark select {
+  border-color: rgba(150, 190, 226, .58) !important;
+  background: rgba(17, 27, 48, .92) !important;
+  color: #f2f8ff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 6px 16px rgba(5, 18, 42, .42) !important;
+}
+.rs-unified-dashboard .known-place-map-heading.is-dark select option {
+  background: #17243d;
+  color: #fff;
+}
 .rs-unified-dashboard .rs-overlay-controls {
   margin-top: 14px;
   padding: 16px 18px;
@@ -687,3 +742,11 @@
 .known-place-limitations li:nth-child(6n + 5)::before { color: #1689df !important; }
 .known-place-limitations li:nth-child(6n + 6) { color: #b42318 !important; border-left-color: #d15b4f; }
 .known-place-limitations li:nth-child(6n + 6)::before { color: #d92d20 !important; }
+.known-place-map-type-toggle { display: inline-flex; overflow: hidden; border: 1px solid rgba(255,255,255,.72); border-radius: 9px; background: rgba(255,255,255,.82); box-shadow: 0 4px 12px rgba(4,24,39,.18); }
+.known-place-map-type-toggle button { min-width: 62px; height: 32px; padding: 0 10px; border: 0; color: #29465a; background: transparent; font-size: 10px; font-weight: 800; cursor: pointer; }
+.known-place-map-type-toggle button + button { border-left: 1px solid rgba(15,34,54,.14); }
+.known-place-map-type-toggle button.is-active { color: #fff; background: linear-gradient(180deg, #43b9ee, #0875c7); }
+.known-place-google-map-toolbar.is-dark .known-place-map-type-toggle { border-color: rgba(150,190,226,.58); background: rgba(17,27,48,.92); }
+.known-place-google-map-toolbar.is-dark .known-place-map-type-toggle button { color: #dce9ff; }
+.known-place-google-map-toolbar.is-dark .known-place-map-type-toggle button + button { border-left-color: rgba(178,208,246,.24); }
+.known-place-google-map-toolbar.is-dark .known-place-map-type-toggle button.is-active { color: #fff; background: linear-gradient(180deg, #45618e, #17243d); }

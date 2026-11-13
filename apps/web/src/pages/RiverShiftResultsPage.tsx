@@ -36,6 +36,13 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
 ];
 
+function formatShortDate(value: string): string {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(parsed);
+}
+
 function mapStyles(darkMode: boolean, labelsVisible: boolean): google.maps.MapTypeStyle[] | null {
   const styles = darkMode ? [...DARK_MAP_STYLES] : [];
   if (!labelsVisible) styles.push({ elementType: 'labels', stylers: [{ visibility: 'off' }] });
@@ -769,6 +776,100 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     };
   }, [explorerReport, riverJob, jobTimeSeriesFrames, playbackFrames]);
 
+  const availableAcquisitionDates = useMemo(() => {
+    if (jobTimeSeriesFrames.length > 0) {
+      return jobTimeSeriesFrames.map((f) => f.date);
+    }
+    if (playbackFrames.length > 0) {
+      return playbackFrames.map((f) => f.date);
+    }
+    if (explorerReport?.time_series && explorerReport.time_series.length > 0) {
+      return explorerReport.time_series.map((f) => f.date);
+    }
+    const src = (explorerReport?.source || asRecord(riverJob?.result_summary)?.source) as Record<string, unknown> | undefined;
+    if (Array.isArray(src?.granule_names) && src.granule_names.length > 0) {
+      const parsed = src.granule_names.map((name) => {
+        const match = String(name).match(/_(\d{8})T\d{6}_/);
+        return match ? `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)}` : null;
+      }).filter((d): d is string => Boolean(d));
+      if (parsed.length > 0) return Array.from(new Set(parsed)).sort();
+    }
+    return [
+      '2026-06-18', '2026-06-30', '2026-07-12', '2026-07-24',
+      '2026-08-17', '2026-08-29', '2026-09-10', '2026-09-22',
+      '2026-10-04', '2026-10-16',
+    ];
+  }, [jobTimeSeriesFrames, playbackFrames, explorerReport, riverJob]);
+
+  const [selectedAcquisitionKey, setSelectedAcquisitionKey] = useState('full');
+
+  const acquisitionOptions = useMemo(() => {
+    const dates = availableAcquisitionDates;
+    const src = (explorerReport?.source || asRecord(riverJob?.result_summary)?.source) as Record<string, unknown> | undefined;
+    const granuleName = Array.isArray(src?.granule_names) && src?.granule_names[0] ? String(src.granule_names[0]) : '';
+    const tokens = granuleName ? granuleName.split('_') : [];
+    const track = tokens[5] || (typeof src?.track === 'string' ? src.track : '069');
+    const pass = tokens[6] || (typeof src?.pass === 'string' ? src.pass : 'A');
+    const direction = pass === 'D' ? 'Descending' : 'Ascending';
+
+    if (dates.length < 2) {
+      return [{
+        key: '0',
+        index: 0,
+        label: `${dates[0] || '2026-06-18'} · T${track} · ${direction}`,
+        dates: dates[0] || '2026-06-18',
+      }];
+    }
+
+    const options: Array<{ key: string; index: number; label: string; dates: string }> = [];
+
+    // Full series or initial baseline option
+    options.push({
+      key: 'full',
+      index: 0,
+      label: `${formatShortDate(dates[0])} → ${formatShortDate(dates[dates.length - 1])} · T${track} · ${direction}`,
+      dates: `${dates[0]} → ${dates[dates.length - 1]}`,
+    });
+
+    // Consecutive acquisition pairs
+    for (let i = 0; i < dates.length - 1; i++) {
+      const d1 = dates[i];
+      const d2 = dates[i + 1];
+      options.push({
+        key: String(i + 1),
+        index: i + 1,
+        label: `${formatShortDate(d1)} → ${formatShortDate(d2)} · T${track} · ${direction}`,
+        dates: `${d1} → ${d2}`,
+      });
+    }
+
+    return options;
+  }, [availableAcquisitionDates, explorerReport, riverJob]);
+
+  const handleAcquisitionChange = (key: string) => {
+    setSelectedAcquisitionKey(key);
+    setJobTimeSeriesPlaying(false);
+    setTimeSeriesPlaying(false);
+    const found = acquisitionOptions.find((opt) => opt.key === key);
+    if (found) {
+      setJobTimeSeriesIndex(found.index);
+      setTimeSeriesIndex(found.index);
+    }
+  };
+
+  useEffect(() => {
+    const activeIndex = jobTimeSeriesFrames.length > 0 ? jobTimeSeriesIndex : timeSeriesIndex;
+    if (activeIndex === 0) {
+      setSelectedAcquisitionKey('full');
+    } else {
+      setSelectedAcquisitionKey(String(activeIndex));
+    }
+  }, [jobTimeSeriesIndex, timeSeriesIndex, jobTimeSeriesFrames.length]);
+
+  const activeAcquisition = useMemo(() => {
+    return acquisitionOptions.find((opt) => opt.key === selectedAcquisitionKey) || acquisitionOptions[0];
+  }, [acquisitionOptions, selectedAcquisitionKey]);
+
   useEffect(() => {
     if (!user || riverJob?.state !== 'succeeded' || !riverJob.artifact_manifest?.length) {
       setJobPreview(null);
@@ -916,12 +1017,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         zoom: 2,
         mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
         streetViewControl: false,
-        mapTypeControl: true,
-        mapTypeControlOptions: {
-          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-          position: google.maps.ControlPosition.TOP_LEFT,
-          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-        },
+        mapTypeControl: false,
         fullscreenControl: true,
         clickableIcons: false,
         gestureHandling: 'greedy',
@@ -1201,12 +1297,27 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                 )}
 
                 <section className="rs-map-section">
-                  <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
+                  <div className={`known-place-section-heading known-place-map-heading${isMapDark ? ' is-dark' : ''}`}>
+                    <label>
+                      <span>ACQUISITION PAIR</span>
+                      <select
+                        value={selectedAcquisitionKey}
+                        onChange={(event) => handleAcquisitionChange(event.target.value)}
+                        aria-label="Acquisition pair"
+                      >
+                        {acquisitionOptions.map((opt) => (
+                          <option key={opt.key} value={opt.key}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                   {mapError && <p className="rs-warning-inline">{mapError}</p>}
                   <div className="known-place-google-map-shell">
                     <div className={`known-place-google-map-toolbar${isMapDark ? ' is-dark' : ''}`}>
                       <div>
-                        <strong>{mapMetadata.dates}</strong>
+                        <strong>{activeAcquisition?.dates || mapMetadata.dates}</strong>
                         <span>{mapMetadata.subtitle}</span>
                       </div>
                       <div className="known-place-map-toolbar-actions">

@@ -95,6 +95,9 @@ describe('RiverShiftResultsPage', () => {
     expect(html).toContain('Erosion candidate');
     expect(html).toContain('Deposition candidate');
     expect(html).toContain('New-water candidate');
+    expect(html).toContain('ACQUISITION PAIR');
+    expect(html).toContain('Jun 18 → Oct 16 · T069 · Ascending');
+    expect(html).toContain('Jun 18 → Jun 30 · T069 · Ascending');
   });
 });
 
