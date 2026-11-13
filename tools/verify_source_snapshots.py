@@ -583,6 +583,10 @@ def main() -> int:
         "validation/validation_receipt.py": "aa5898e4dcc2f351f7eb26da6f826757519dddf6",
         "validation/vector_decomposition.py": "69bbffc5bfc6538869e125498c3faa25e4e0c1c2"
     }
+    find_tools_changed_blob_pins = {
+        "aoi_wide_displacement_screen.py": ("cea9a8bd7f95a3107f3aec0bbc66f9bdce253141", "b66a7642ca8ebcbeba105ff215cc2b62c2b1d0fd"),
+        "tests/test_aoi_wide_displacement_screen.py": ("5a3666c0b430758f7f21c00f75d1a791a9cee545", "d0d8277a40f6277e6f5179f766b161acfb685b72"),
+    }
     find_dashboard_changed_blob_pins = {
         "assets/prepare_web_assets.py": ("40408efe792927266ec4a864ded212b1a3c69cd4", "b301e0e60a188935066f96ce85101fc89540a584"),
         "tests/test_prepare_web_assets.py": ("8310651f82b6e362c3a60c95c18936adc4652c62", "94de4492e0f06ca7774b673f2b0e457515cad8ec"),
@@ -659,6 +663,11 @@ def main() -> int:
         for relative_path in changed:
             override_key = f"{label}:{relative_path}"
             override = promotion_overrides.get(override_key)
+            if label == "Find Displacements tools promotion" and relative_path in find_tools_changed_blob_pins:
+                source_sha, destination_sha = find_tools_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_FIND_TOOLS_TRANSFORMATION_PASS engines/find-displacements/tools/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "Find Displacements dashboard promotion" and relative_path in find_dashboard_changed_blob_pins:
                 source_sha, destination_sha = find_dashboard_changed_blob_pins[relative_path]
                 if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
