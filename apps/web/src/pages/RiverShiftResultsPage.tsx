@@ -463,7 +463,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showNewWaterOverlay, setShowNewWaterOverlay] = useState(true);
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [mapDarkMode, setMapDarkMode] = useState(false);
-  const [mapLabelsVisible, setMapLabelsVisible] = useState(true);
+  const [mapLabelsVisible, setMapLabelsVisible] = useState(false);
   const [mapType, setMapType] = useState('satellite');
 
 
