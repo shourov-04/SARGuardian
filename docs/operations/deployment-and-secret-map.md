@@ -25,7 +25,7 @@ The API reads server-side settings defined in `apps/api/app/config.py` and illus
 Processing workflows may require:
 - Earthdata Login credentials or a supported Earthdata token.
 - Google Drive OAuth client and refresh credentials for private result delivery.
-- The configured Drive parent folder identifier.
+- The current root Find Displacements product-worker contract uses `GOOGLE_DRIVE_OAUTH_CLIENT_JSON`, `GOOGLE_DRIVE_REFRESH_TOKEN`, and `GOOGLE_DRIVE_PARENT_FOLDER_ID` as GitHub Actions secrets. It also requires the workflow-specific callback secret and the configured Earthdata credentials where applicable. See [the active product-worker workflow](../../.github/workflows/sarguardian-aoi-product-worker.yml) for the exact contract.
 - API callback URL and per-workflow callback secret.
 - A GitHub token with only the repository/workflow permissions needed by the dispatcher.
 
