@@ -1,7 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { User } from 'firebase/auth';
-import { RiverShiftResultsPage, GranuleProvenancePanel } from './RiverShiftResultsPage';
+import type { RiverShiftReport } from '../riverShift/manifest';
+import { RiverShiftResultsPage, GranuleProvenancePanel, ReportPanel } from './RiverShiftResultsPage';
 
 describe('RiverShiftResultsPage', () => {
   const mockUser = {
@@ -45,6 +46,34 @@ describe('RiverShiftResultsPage', () => {
     expect(html).toContain('<details');
     expect(html).toContain('<summary');
   });
+
+  it('renders scientific limitations using Known Place limitation pills', () => {
+    const mockReport: RiverShiftReport = {
+      schema_version: 1,
+      engine: 'RiverShift',
+      analysis_type: 'flood_inundation_screening',
+      source: {
+        mission: 'NISAR',
+        product: 'GCOV',
+        granule_names: ['NISAR_L2_PR_GCOV_023_069_A_014_4005_DHDH_A_20260618T232135_20260618T232210_P05023_N_F_J_001'],
+      },
+      metrics: {},
+      quality: {
+        status: 'PROVISIONAL',
+        warnings: [
+          'Each frame is one satellite acquisition date; no daily observations or interpolated states are implied.',
+          'Low-backscatter open-water candidates can omit flooded vegetation and include smooth bare soil or radar shadow.',
+          'All observations are compared on the intersection of their valid-pixel masks; source coverage outside that common support is excluded from every date’s area estimate.',
+        ],
+      },
+    };
+    const html = renderToStaticMarkup(<ReportPanel report={mockReport} />);
+    expect(html).toContain('known-place-limitations');
+    expect(html).toContain('SCIENTIFIC LIMITATIONS');
+    expect(html).toContain('Each frame is one satellite acquisition date');
+    expect(html).toContain('Low-backscatter open-water candidates');
+  });
 });
+
 
 

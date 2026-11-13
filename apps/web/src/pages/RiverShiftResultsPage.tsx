@@ -419,7 +419,7 @@ export function GranuleProvenancePanel({
   );
 }
 
-function ReportPanel({ report }: { report: RiverShiftReport }) {
+export function ReportPanel({ report }: { report: RiverShiftReport }) {
   const verified = isRiverShiftReportVerified(report);
   const verification = report.quality.verification;
   const verificationRecord = verification && typeof verification === 'object'
@@ -485,9 +485,13 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
         </details>
       )}
       {warnings.length > 0 && (
-        <div className="rs-warning-list">
-          <strong>Scientific interpretation and limitations</strong>
-          {warnings.map((warning, index) => <p key={index}>• {warning}</p>)}
+        <div className="known-place-limitations" aria-label="Scientific limitations">
+          <span className="result-kicker">SCIENTIFIC LIMITATIONS</span>
+          <ul>
+            {warnings.map((warning, index) => (
+              <li key={index}>{warning.replace(/^[•\-\*]\s*/, '')}</li>
+            ))}
+          </ul>
         </div>
       )}
     </section>
@@ -587,6 +591,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [showMapLabels, setShowMapLabels] = useState(false);
   const [isMapDark, setIsMapDark] = useState(false);
+  const [mapTypeMode, setMapTypeMode] = useState<'map' | 'satellite'>('satellite');
 
 
   const resultMapElement = useRef<HTMLDivElement>(null);
@@ -851,7 +856,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         zoom: 2,
         mapTypeId: 'satellite',
         streetViewControl: false,
-        mapTypeControl: true,
+        mapTypeControl: false,
         fullscreenControl: true,
       };
       if (resultMapElement.current && !resultMapInstance.current) {
@@ -1145,6 +1150,27 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                         <span>Use Map/Satellite, Labels and Light/Dark controls to change the view only.</span>
                       </div>
                       <div className="rs-map-toolbar-actions">
+                        <div className="rs-map-type-toggle" role="group" aria-label="Map type">
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'map' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'map'}
+                            onClick={() => {
+                              setMapTypeMode('map');
+                              setShowMapLabels(true);
+                              resultMapInstance.current?.setMapTypeId('roadmap');
+                            }}
+                          >Map</button>
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'satellite'}
+                            onClick={() => {
+                              setMapTypeMode('satellite');
+                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
+                            }}
+                          >Satellite</button>
+                        </div>
                         <button
                           type="button"
                           className={`rs-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
@@ -1152,7 +1178,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                           onClick={() => {
                             const next = !showMapLabels;
                             setShowMapLabels(next);
-                            resultMapInstance.current?.setMapTypeId(next ? 'hybrid' : 'satellite');
+                              if (mapTypeMode === 'satellite') {
+                                resultMapInstance.current?.setMapTypeId(next ? 'hybrid' : 'satellite');
+                              }
                           }}
                         >
                           <span>Labels</span>
