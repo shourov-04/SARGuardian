@@ -404,6 +404,9 @@ def main() -> int:
                 "public/sarguardian-logo.png",
                 "public/scenery/",
                 "src/components/BrandLogo.tsx",
+                # The archived Dynamic ArchiveSection had no 1:1 promoted file;
+                # the active app uses the separate ArchivePage route instead.
+                "src/components/ArchiveSection.tsx",
                 "src/pages/HowItWorksPage.tsx",
                 "src/useGlassPointer.ts",
             ),
@@ -515,12 +518,28 @@ def main() -> int:
     # Blob pins keep later edits visible to this provenance gate.
     dynamic_frontend_destination_only = {
         "landslide/ui/KnownPlaceResultsPage.tsx": "9aaa674bf3a028aa86018e189687132a6695316b",
+        # Monorepo-owned RiverShift routes are additional to the Dynamic snapshot.
+        "src/pages/RiverShiftProcessingPage.tsx": "50e257de9ab8a0f0cbf25d023d6cc4fe620b70d7",
+        "src/pages/RiverShiftProcessingPage.test.tsx": "38704de03b1e6b5033155fed06083944351dddf0",
+        "src/pages/RiverShiftResultsPage.tsx": "c263ae282399a8c3d01a46c591110310bc58affe",
+        "src/pages/RiverShiftResultsPage.test.tsx": "098b25d02bedf58a7e2dd2dbae6445d080fdb090",
     }
     dynamic_frontend_changed_blob_pins = {
         "landslide/ui/landslide.css": (
             "554b975bff72abde25fa268d5e85b94c6110dc66",
             "4891a2529405a4fbf95d924da666fa4bf5d59794",
         ),
+        # Exact Git blob pins for reviewed frontend design/product adaptations.
+        "README.md": ("cda57b87c8815a1fc82771e5622fca79313ca352", "70e458613f5f7847f733cdb0b4d8b23ff2119509"),
+        "landslide/tests/validation.test.ts": ("6f7f988aee0e16f952bb8b0f172131a435ad833b", "d3627c09f7d7e31976626bbc96056c15f98a7e13"),
+        "landslide/ui/KnownPlaceGoogleMap.tsx": ("fe37553f5a6a51a068b1cbabe1e1f15df86a8534", "d82eac32f179199368817865f5b41dc3328338e1"),
+        "landslide/ui/KnownPlaceResultsDashboard.tsx": ("1502f365a96d672615d7e50a30e707084323d5ad", "e36ceaf2c67aaf23ce0d7cd3d5031e99fe7122c3"),
+        "landslide/ui/knownPlaceResults.css": ("0fb85bab47ebd062672dffebb07f03c652485359", "2c62de74b3ad71e7f3d78c6ca75e9ba77465d6f6"),
+        "src/api/catalog.test.ts": ("c6290e0ebb585213ffab4b58f74a9f5d4850808c", "d2ae34db4ec1dce5c4c0b8a23ab4eebdc60c1a9a"),
+        "src/dashboardDocument.ts": ("681950427d67455c38ecf83e2962faee45ba2316", "d632b0cf53282aa8985d1db65220636d86b91239"),
+        "src/pages/DashboardPage.test.tsx": ("1e3fc95825eea1fd9df9583d664825e725a44d5f", "42166590f50249220bf1a3ed159faac87b619105"),
+        "src/pages/DashboardPage.tsx": ("ab024025925e88299c6a09e961f57afdc3fcf450", "b5c64354cdea6dc9c610c1f6e28469584d6d75e0"),
+        "src/pages/river-shift.css": ("1c9bc4f4868aced2978129518e62e12c9779a22b", "f58b10d5b22df2e7c9fe19a5df0eb87047e16017"),
     }
     dynamic_shared_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     find_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
