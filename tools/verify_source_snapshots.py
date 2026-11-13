@@ -605,13 +605,13 @@ def main() -> int:
     "river_shift/verification.py": "4874589e2eb7b7807aa18d84a4b5bd15bdcd003a",
     "tests/test_calibration.py": "30f8508d932553621fe9a314772be5ddd2aecbe8",
     "tests/test_phase2_classifier_foundations.py": "596e9a4107c9eaf0b8f2b5c67f88c81276e1b855",
-    "tests/test_release_status_phase1.py": "cf1f7ce971076ba68ea882ef7e0e3f467d714266"
+    "tests/test_release_status_phase1.py": "cf1f7ce971076ba68ea882ef7e0e3f467d714266",
+    "tests/test_stage_context.py": "9e4d304d8480d6128d267712b27558f40bf6429f",
+    "tests/test_verification.py": "6db7d1d6181aa9f51fa7c55452804010a6d6a815",
+    "verify_rivershift_evidence.py": "5c4e438962f8e2a6d020d89b714ce215a44e1b0e"
 }
     river_shift_changed_blob_pins = {
-        "tests/test_independent_reference_runner.py": (
-            "f7c7a657076da3eaa2e9e8c99a7677106058d768",
-            "0ca8093864dcd6e2b537f08ad0631b6de103001a",
-        ),
+        "tests/test_independent_reference_runner.py": ("f7c7a657076da3eaa2e9e8c99a7677106058d768", "0ca8093864dcd6e2b537f08ad0631b6de103001a"),
         "batched_gcov_job.py": ("7e34e1b762c8d0ac3257ba5e98637a738ff4176c", "3223c72d011d990cd3be7102b9196df921ebd33a"),
         "download_gcov_product.py": ("80d21e13a5cd90b3f4f20d5095e6c27a79bef980", "2c643aa18dc7326331919684bb1fb8f944f5be82"),
         "process_gcov_job.py": ("7e57dc2cb053128aa70833c98af036031b923ff0", "a4f79c527c5c2d35d1deaf772eed01940f38141c"),
@@ -622,6 +622,11 @@ def main() -> int:
         "river_shift/validation.py": ("a05cbdcfe08872cf6d52606234ebedbeae3acd3c", "a01cd23664983cf9f507695b9d3716ed245ba63e"),
         "river_shift/water_detection.py": ("5406e58b68ace47e0c6487279195a4542a6e05da", "db63c817fd5b2aacb74922757b524255bf6828f5"),
         "run_flood_analysis.py": ("3ec3cdba3b724e331f1012d8033a5adf1bae6aed", "abcf3bf28d7004f4a201720bd028f6e7562bb712"),
+        "run_morphology_analysis.py": ("1a547156da430e74749a887307e9310246f414ed", "68c18a515120d46183be8c3a020bcd579919c4a2"),
+        "tests/test_download_gcov_product.py": ("41fbcf781c54027900e2577db37a52f29793e843", "df48ed68c013cbd432977d4718ad9eea2e35f42c"),
+        "tests/test_process_gcov_job.py": ("fb9de2cb775733caad99294276d9311377f27456", "ec8813eb14271ef6768d99eea54183757f95cac8"),
+        "tests/test_raster_first_previews.py": ("e5b19cd43cfc96b29359a6169903f9ed2ce9e7f7", "9a61e41b47afff23d67f8a468bbef12f6e01a8d8"),
+        "validate_water_classification.py": ("c792b76fa80b8fa0d7a4f474ba2c4c48f90931cf", "dd0d1b8ab10550b74c47a1adcbf4c9b6345ca90e"),
     }
     dynamic_shared_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     find_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
