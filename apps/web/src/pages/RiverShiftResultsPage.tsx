@@ -325,17 +325,6 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
         <div><p className="rs-kicker">RIVER SHIFT SCIENTIFIC RESULT</p><h2>{title}</h2></div>
         <span className="rs-quality">{report.quality.status.replace(/_/g, ' ')}</span>
       </div>
-      <div className="rs-provenance">
-        <span>Mission: <strong>{String(source.mission || 'Not stated')}</strong></span>
-        <span>Product: <strong>{String(source.product || 'Not stated')}</strong></span>
-        <span>Maturity: <strong>{String(source.maturity || 'Not stated')}</strong></span>
-        <span>Frequency: <strong>{String(source.frequency || 'Not stated')}</strong></span>
-        <span>Term: <strong>{String(source.covariance_term || 'Not stated')}</strong></span>
-      </div>
-      <div className="rs-warning-inline" role="status">
-        Release status: <strong>{String(report.quality.release_status || 'PROVISIONAL')}</strong>
-        {!verified && <span> · The metrics and map are provisional evidence, not independently validated findings.</span>}
-      </div>
       <div className="rs-metric-grid">
         {Object.entries(report.metrics).map(([key, value]) => (
           <article className="rs-metric" key={key}>
@@ -935,17 +924,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         showPageTitle
         pageTitle="River Shift Results"
       />
-
-      <div style={{ maxWidth: 1440, margin: '20px auto 0', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button type="button" className="rs-secondary-button" onClick={onBack} style={{ cursor: 'pointer' }}>
-          ← Back to processing
-        </button>
-        {riverJob && (
-          <span className="rs-chip">
-            JOB: {riverJob.id.slice(0, 8)}… · {riverJob.state.toUpperCase()}
-          </span>
-        )}
-      </div>
 
       <main className="rs-workspace-grid" style={{ marginTop: '16px' }}>
         {jobLoading && (
