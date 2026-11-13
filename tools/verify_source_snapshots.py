@@ -537,6 +537,13 @@ def main() -> int:
         "src/pages/DashboardPage.test.tsx": ("1e3fc95825eea1fd9df9583d664825e725a44d5f", "42166590f50249220bf1a3ed159faac87b619105"),
         "src/pages/DashboardPage.tsx": ("ab024025925e88299c6a09e961f57afdc3fcf450", "b5c64354cdea6dc9c610c1f6e28469584d6d75e0"),
         "src/pages/river-shift.css": ("1c9bc4f4868aced2978129518e62e12c9779a22b", "f58b10d5b22df2e7c9fe19a5df0eb87047e16017"),
+        # RiverShift's current frontend map/impact contracts have five reviewed
+        # destination adaptations; exact source/destination blobs prevent drift.
+        "src/riverShift/generalChangeMarkers.ts": ("762a5f9b860ffb9ed0dfac861a458cf70b3cd78b", "596c2f0fce37437fdec811f4841b5102cea6cc00"),
+        "src/riverShift/impactContext.test.ts": ("9bbae28e8b0c4f707ab8991ed8a97e7b614ad4a3", "5be8d51fb173646a42043eb3684d5f73adf5c7cc"),
+        "src/riverShift/impactContext.ts": ("ea1d7e6ebca311186dbcf916e6c27c85c83cfb68", "35a05a94f94f45333f16191db0ba0d819cdfc077"),
+        "src/riverShift/manifest.test.ts": ("8f2201be952c82225ac335d40df32af3bbd23990", "44b2a04ea3f4bb6f5855f529915e31b295bff4ac"),
+        "src/riverShift/manifest.ts": ("c969ca762cb9e84dccf4b8920599590116e4fee2", "a30797b499b356f6d713bada9eb4d6fdc71da09b"),
     }
     river_shift_changed_blob_pins = {
         "tests/test_independent_reference_runner.py": (
