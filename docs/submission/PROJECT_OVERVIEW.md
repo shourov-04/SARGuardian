@@ -21,7 +21,7 @@ SARGuardian is a NISAR-powered surface-change intelligence platform. It connects
 
 ## Why NISAR is central
 
-NISAR observations are the measurement inputs, not decorative context. GOFF, GUNW, and GCOV provide different forms of radar evidence and are handled separately. ASF and NASA CMR provide product discovery/access services. The application surfaces actual acquisition dates, product identity, and processing provenance so that users can inspect how an output was produced.
+NISAR observations are the measurement inputs, not decorative context. GOFF, GUNW, and GCOV provide different forms of radar evidence and are handled separately. ASF and NASA CMR provide product discovery/access services. The application surfaces actual acquisition dates, product identity, and processing provenance so that users can inspect how an output was produced. The separate `science/nisar-core/` study provides supplementary research context and is not the runtime scientific engine for these four workflows.
 
 ## How the platform operates
 
@@ -36,7 +36,7 @@ GitHub Actions is an essential part of the scientific implementation: it execute
 - `engines/find-displacements/` — AOI-wide displacement processing.
 - `engines/known-place/` — two-polygon and research-analysis workflows.
 - `engines/river-shift/` — NISAR GCOV river-change processing.
-- `science/nisar-core/` — shared scientific modules.
+- `science/nisar-core/` — supplementary, reproducible NISAR detectability research; separate from the four live application workflows and not a runtime dependency.
 - `.github/workflows/` — automated processing and validation.
 - `docs/submission/` — reviewer-oriented project and method documents.
 
