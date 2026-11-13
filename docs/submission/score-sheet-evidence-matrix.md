@@ -21,7 +21,7 @@ This matrix follows the supplied local judging score sheet. The five headline cr
 
 | Criterion | Maximum | Evidence to inspect |
 |---|---:|---|
-| **Teamwork** | 5 | Team member roles and responsibilities in the root README, current contributor graph, and source commit history. [Contributors](https://github.com/shourov-04/SARGuardian/graphs/contributors) |
+| **Teamwork** | 5 | Detailed roles and responsibilities in [Team & Contributions](TEAM_AND_CONTRIBUTIONS.md), the root README, current contributor graph, and source commit history. [Contributors](https://github.com/shourov-04/SARGuardian/graphs/contributors) |
 | **User Experience** | 5 | Workflow cards, place search/AOI drawing, date selection, clear processing stages, maps, observed-date result navigation, and user-facing evidence panels. [Live app](https://sarguardian.vercel.app/) |
 | **NASA Data Usage** | 5 | NISAR GOFF, GUNW, and GCOV product families as primary scientific inputs; NASA CMR/ASF for discovery and access; Google Maps as third-party geographic visualization context. [Dataset register](DATASETS_AND_REFERENCES.md) |
 | **Challenge category identified** | 1 | “Dancing with the SARs” and “Earth Science” are identified in the root README and project documents. |
@@ -36,7 +36,7 @@ This matrix follows the supplied local judging score sheet. The five headline cr
 |---|---|
 | [API CI](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | API imports, 242 tests and Google Maps adapter contract passed |
 | [Web CI](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Production build, lint and 182 tests across 22 files passed |
-| [Historical secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43446585245) | Full Git-history Gitleaks scan passed |
+| [Latest full-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43448237561) | Exact main commit `a5c184d9307d307b8f99d89804e8569b9bc2a416`; 2,879 commits scanned, zero findings |
 | [Find Displacements example](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | 16/16 selected products validated; 697 spatial candidate features and 27 AOI-wide screening candidates. Neither movement nor hazard was confirmed; common GUNW temporal inversion was withheld by its science gates. |
 | [Known Place example](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Generic two-polygon workflow completed successfully |
 | [RiverShift example](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | 10 selected GCOV dates; 72 result artifacts; verified private publication; PROVISIONAL release status |
