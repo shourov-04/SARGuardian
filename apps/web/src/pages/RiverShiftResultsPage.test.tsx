@@ -22,7 +22,8 @@ describe('RiverShiftResultsPage', () => {
     );
     expect(html).toContain('River Shift Results');
     expect(html).toContain('Back to processing');
-    expect(html).toContain('03 · RESULTS EXPLORER');
+    expect(html).toContain('GEOSPATIAL OUTPUT');
+    expect(html).toContain('Interactive Map &amp; Playback');
   });
 
   it('renders granule provenance with toggle details, sha-256 and size data matching Known Place style', () => {
@@ -72,6 +73,28 @@ describe('RiverShiftResultsPage', () => {
     expect(html).toContain('SCIENTIFIC LIMITATIONS');
     expect(html).toContain('Each frame is one satellite acquisition date');
     expect(html).toContain('Low-backscatter open-water candidates');
+  });
+
+  it('renders Known Place map shell with dates toolbar, label toggle, theme switch and docked legend', () => {
+    const html = renderToStaticMarkup(
+      <RiverShiftResultsPage
+        user={mockUser}
+        authState="ready"
+        onSignIn={vi.fn().mockResolvedValue(undefined)}
+        onSignOut={vi.fn().mockResolvedValue(undefined)}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(html).toContain('known-place-google-map-shell');
+    expect(html).toContain('known-place-google-map-toolbar');
+    expect(html).toContain('known-place-map-label-toggle');
+    expect(html).toContain('known-place-mini-switch');
+    expect(html).toContain('known-place-map-theme-toggle');
+    expect(html).toContain('known-place-google-map');
+    expect(html).toContain('known-place-map-legend');
+    expect(html).toContain('Erosion candidate');
+    expect(html).toContain('Deposition candidate');
+    expect(html).toContain('New-water candidate');
   });
 });
 

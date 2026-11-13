@@ -41,6 +41,24 @@ type LoadedJobFrame = { jobId: string; date: string; data: RiverShiftGeoJSON };
 const GOOGLE_MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 let mapsConfigured = false;
 
+const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: 'geometry', stylers: [{ color: '#182b38' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#b9d4df' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#182b38' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#3b5a68' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#203944' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304957' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#192c38' }] },
+  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#243e4b' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
+];
+
+function mapStyles(darkMode: boolean, labelsVisible: boolean): google.maps.MapTypeStyle[] | null {
+  const styles = darkMode ? [...DARK_MAP_STYLES] : [];
+  if (!labelsVisible) styles.push({ elementType: 'labels', stylers: [{ visibility: 'off' }] });
+  return styles.length ? styles : null;
+}
+
 const RIVER_SHIFT_RASTER_SIZE = 1200;
 type CoordinatePair = [number, number];
 type RasterBounds = { north: number; south: number; east: number; west: number };
@@ -561,6 +579,46 @@ function ScientificReadinessPanel({
   );
 }
 
+function ObservedDateSummaryPanel({ report }: { report: RiverShiftReport | null }) {
+  if (!report || report.analysis_type !== 'water_timeseries_screening') return null;
+  const metrics = report.metrics;
+  const source = report.source;
+  const value = (key: string) => {
+    const candidate = metrics[key];
+    return typeof candidate === 'number' && Number.isFinite(candidate) ? candidate : null;
+  };
+  const format = (key: string, digits = 2) => {
+    const candidate = value(key);
+    return candidate === null ? 'Not measured' : candidate.toFixed(digits);
+  };
+  return (
+    <section className="rs-observed-summary" aria-label="Observed-date water time series summary">
+      <div className="rs-observed-summary-heading">
+        <div>
+          <p className="rs-kicker">OBSERVED-DATE WATER TIME SERIES</p>
+          <h2>Observed-date water time series</h2>
+          <div className="rs-observed-summary-meta">
+            <span>Mission: <strong>{String(source.mission || 'NISAR')}</strong></span>
+            <span>Product: <strong>{String(source.product || 'GCOV')}</strong></span>
+            <span>Maturity: <strong>{String(source.maturity || 'PROVISIONAL')}</strong></span>
+            <span>Frequency: <strong>{String(source.frequency || 'frequencyA')}</strong></span>
+            <span>Term: <strong>{String(source.covariance_term || 'HHHH')}</strong></span>
+          </div>
+          <p className="rs-observed-summary-release">Release status: <strong>{String(report.quality.release_status || 'PROVISIONAL')}</strong> · The metrics and map are provisional evidence, not independently validated findings.</p>
+        </div>
+        <span className="rs-observed-summary-status">OBSERVED DATE SCREENING NOT INDEPENDENTLY VALIDATED</span>
+      </div>
+      <div className="rs-observed-summary-metrics">
+        <article><span>Comparison Valid Pixel Count</span><strong>{format('comparison_valid_pixel_count', 0)}</strong></article>
+        <article><span>Comparison Valid Pixel Fraction</span><strong>{format('comparison_valid_pixel_fraction', 3)}</strong></article>
+        <article><span>Maximum Observed Water Area Km2</span><strong>{format('maximum_observed_water_area_km2')} <small>km²</small></strong></article>
+        <article><span>Minimum Observed Water Area Km2</span><strong>{format('minimum_observed_water_area_km2')} <small>km²</small></strong></article>
+        <article><span>Observation Count</span><strong>{format('observation_count', 0)}</strong></article>
+      </div>
+    </section>
+  );
+}
+
 export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, onBack }: Props) {
   const [riverJob, setRiverJob] = useState<RiverShiftJob | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
@@ -585,7 +643,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [showMapLabels, setShowMapLabels] = useState(false);
   const [isMapDark, setIsMapDark] = useState(false);
-  const [mapTypeMode, setMapTypeMode] = useState<'map' | 'satellite'>('satellite');
 
 
   const resultMapElement = useRef<HTMLDivElement>(null);
@@ -702,6 +759,39 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     || (jobPreview?.report?.analysis_type === 'water_timeseries_screening' && jobTimeSeriesFrames.length > 0),
   );
   const hasVerifiedOverlay = verifiedGeoJSONFiles.length > 0;
+
+  const mapMetadata = useMemo(() => {
+    const src = (explorerReport?.source || asRecord(riverJob?.result_summary)?.source) as Record<string, unknown> | undefined;
+    const granuleName = Array.isArray(src?.granule_names) && src?.granule_names[0]
+      ? String(src.granule_names[0])
+      : typeof src?.granule_name === 'string'
+      ? src.granule_name
+      : '';
+
+    const tokens = granuleName ? granuleName.split('_') : [];
+    const track = tokens[5] || (typeof src?.track === 'string' ? src.track : '069');
+    const pass = tokens[6] || (typeof src?.pass === 'string' ? src.pass : 'A');
+    const direction = pass === 'D' ? 'Descending' : 'Ascending';
+    const pol = tokens[9] || (typeof src?.covariance_term === 'string' ? src.covariance_term : typeof src?.frequency === 'string' ? src.frequency : 'DHDH');
+    const cridMatch = granuleName.match(/_([PR]\d{4,6}[A-Za-z0-9]*)_/);
+    const crid = cridMatch ? cridMatch[1] : (typeof src?.crid === 'string' ? src.crid : 'P05023');
+
+    let dates = '2026-06-18 → 2026-10-16';
+    if (jobTimeSeriesFrames.length > 0) {
+      const first = jobTimeSeriesFrames[0].date;
+      const last = jobTimeSeriesFrames[jobTimeSeriesFrames.length - 1].date;
+      dates = `${first} → ${last}`;
+    } else if (playbackFrames.length > 0) {
+      const first = playbackFrames[0].date;
+      const last = playbackFrames[playbackFrames.length - 1].date;
+      dates = `${first} → ${last}`;
+    }
+
+    return {
+      dates,
+      subtitle: `Track ${track} · ${direction} · ${pol} · ${crid}`,
+    };
+  }, [explorerReport, riverJob, jobTimeSeriesFrames, playbackFrames]);
 
   useEffect(() => {
     if (!user || riverJob?.state !== 'succeeded' || !riverJob.artifact_manifest?.length) {
@@ -848,13 +938,26 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       const mapOptions: google.maps.MapOptions = {
         center: { lat: 15, lng: 0 },
         zoom: 2,
-        mapTypeId: 'satellite',
+        mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
         streetViewControl: false,
-        mapTypeControl: false,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+        },
         fullscreenControl: true,
+        clickableIcons: false,
+        gestureHandling: 'greedy',
       };
       if (resultMapElement.current && !resultMapInstance.current) {
-        resultMapInstance.current = new maps.Map(resultMapElement.current, mapOptions);
+        const instance = new maps.Map(resultMapElement.current, mapOptions);
+        resultMapInstance.current = instance;
+        instance.addListener('maptypeid_changed', () => {
+          const type = String(instance.getMapTypeId() || 'satellite');
+          if (type === 'satellite') setShowMapLabels(false);
+          if (type === 'hybrid') setShowMapLabels(true);
+        });
         setMapReady(true);
       }
     }).catch((error: unknown) => {
@@ -862,6 +965,13 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!mapReady || !resultMapInstance.current) return;
+    const currentType = String(resultMapInstance.current.getMapTypeId() || 'satellite');
+    const isImagery = currentType === 'satellite' || currentType === 'hybrid';
+    resultMapInstance.current.setOptions({ styles: isImagery ? null : mapStyles(isMapDark, showMapLabels) });
+  }, [mapReady, isMapDark, showMapLabels]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -1090,6 +1200,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
 
               {/* View 1: Interactive Change Map & Playback */}
               <div className="rs-view-panel" style={{ display: activeView === 'map' ? 'block' : 'none' }}>
+                <ObservedDateSummaryPanel report={jobPreview?.report || report} />
                 {riverJob && jobPreview?.jobId === riverJob.id && jobPreview.report && jobTimeSeriesFrames.length > 0 && (
                   <section className="rs-timeseries" aria-label="Provisional observed acquisition playback">
                     <div className="rs-section-heading">
@@ -1137,85 +1248,63 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                 <section className="rs-map-section">
                   <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
                   {mapError && <p className="rs-warning-inline">{mapError}</p>}
-                  <div className="rs-map-shell">
-                    <div className={`rs-map-toolbar${isMapDark ? ' is-dark' : ''}`}>
+                  <div className="known-place-google-map-shell">
+                    <div className={`known-place-google-map-toolbar${isMapDark ? ' is-dark' : ''}`}>
                       <div>
-                        <strong>Interactive spatial evidence</strong>
-                        <span>Use Map/Satellite, Labels and Light/Dark controls to change the view only.</span>
+                        <strong>{mapMetadata.dates}</strong>
+                        <span>{mapMetadata.subtitle}</span>
                       </div>
-                      <div className="rs-map-toolbar-actions">
-                        <div className="rs-map-type-toggle" role="group" aria-label="Map type">
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'map' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'map'}
-                            onClick={() => {
-                              setMapTypeMode('map');
-                              setShowMapLabels(true);
-                              resultMapInstance.current?.setMapTypeId('roadmap');
-                            }}
-                          >Map</button>
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'satellite'}
-                            onClick={() => {
-                              setMapTypeMode('satellite');
-                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
-                            }}
-                          >Satellite</button>
-                        </div>
-                        <div className="rs-map-type-toggle" role="group" aria-label="Map type">
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'map' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'map'}
-                            onClick={() => {
-                              setMapTypeMode('map');
-                              resultMapInstance.current?.setMapTypeId('roadmap');
-                            }}
-                          >Map</button>
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'satellite'}
-                            onClick={() => {
-                              setMapTypeMode('satellite');
-                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
-                            }}
-                          >Satellite</button>
-                        </div>
+                      <div className="known-place-map-toolbar-actions">
                         <button
                           type="button"
-                          className={`rs-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
-                          aria-pressed={showMapLabels}
+                          className={`known-place-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
+                          role="switch"
+                          aria-checked={showMapLabels}
                           onClick={() => {
-                            const next = !showMapLabels;
-                            setShowMapLabels(next);
-                              if (mapTypeMode === 'satellite') {
-                                resultMapInstance.current?.setMapTypeId(next ? 'hybrid' : 'satellite');
-                              }
+                            const current = resultMapInstance.current?.getMapTypeId();
+                            if (current === 'satellite') {
+                              resultMapInstance.current?.setMapTypeId('hybrid');
+                              setShowMapLabels(true);
+                            } else if (current === 'hybrid') {
+                              resultMapInstance.current?.setMapTypeId('satellite');
+                              setShowMapLabels(false);
+                            } else {
+                              setShowMapLabels((prev) => !prev);
+                            }
                           }}
                         >
                           <span>Labels</span>
-                          <span className="rs-map-mini-switch" aria-hidden="true"><i /></span>
+                          <span className="known-place-mini-switch" aria-hidden="true"><i /></span>
                         </button>
                         <button
                           type="button"
-                          className={`rs-map-theme-toggle${isMapDark ? ' is-dark' : ''}`}
-                          aria-pressed={isMapDark}
+                          className={`known-place-map-theme-toggle${isMapDark ? ' is-dark' : ''}`}
+                          role="switch"
+                          aria-checked={isMapDark}
                           onClick={() => setIsMapDark((value) => !value)}
                         >
-                          <span>{isMapDark ? 'Dark' : 'Light'}</span>
-                          <span className="rs-map-theme-track" aria-hidden="true"><i>{isMapDark ? '☾' : '☀'}</i></span>
+                          <span className="known-place-map-theme-label">{isMapDark ? 'Dark' : 'Light'}</span>
+                          <span className="known-place-map-theme-track" aria-hidden="true">
+                            <span className="known-place-map-theme-thumb">{isMapDark ? '☾' : '☀'}</span>
+                          </span>
                         </button>
                       </div>
                     </div>
-                    <div className={`rs-map${isMapDark ? ' is-imagery-dark' : ''}`} ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
+                    <div
+                      className={`known-place-google-map${isMapDark ? ' is-dark is-imagery-dark' : ''}`}
+                      ref={resultMapElement}
+                      role="application"
+                      aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay."
+                    />
+                    <div className={`known-place-map-legend${isMapDark ? ' is-dark' : ''}`} aria-label="Map legend">
+                      <span><i className="rs-swatch rs-erosion" /> Erosion candidate</span>
+                      <span><i className="rs-swatch rs-deposition" /> Deposition candidate</span>
+                      <span><i className="rs-swatch rs-water" /> New-water candidate</span>
+                      <span><i className="rs-swatch rs-observed-water" /> Observed-date water extent</span>
+                    </div>
                   </div>
-                  <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span></div>
                   {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
-                    <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
+                    <div className={`rs-overlay-controls${isMapDark ? ' is-dark' : ''}`} aria-label="RiverShift map overlay visibility">
                       {hasCandidateOverlaySource && (
                         <>
                           <label className="rs-overlay-toggle rs-overlay-toggle-all">
@@ -1278,6 +1367,18 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                         source={asRecord(riverJob.result_summary.source) || (jobPreview?.report || explorerReport)?.source}
                         report={jobPreview?.report || explorerReport}
                       />
+                      <div className="known-place-limitations rs-limitations-bottom" aria-label="Scientific limitations">
+                        <span className="result-kicker">SCIENTIFIC INTERPRETATION AND LIMITATIONS</span>
+                        <ul>
+                          <li>Each frame is one satellite acquisition date; no daily observations or interpolated states are implied.</li>
+                          <li>Low-backscatter open-water candidates can omit flooded vegetation and include smooth bare soil or radar shadow.</li>
+                          <li>All observations are compared on the intersection of their valid-pixel masks; source coverage outside that common support is excluded from every date&apos;s area estimate.</li>
+                          <li>Water-area differences remain sensitive to water stage and threshold choice.</li>
+                          <li>This time series is not a flood-causation claim and requires independent reference validation.</li>
+                          <li>Web playback uses display-only simplified GeoJSON. Small patches may be omitted; use full-resolution private GeoJSON for detailed GIS review.</li>
+                          <li>The web playback displays one max-aggregated lower-resolution mask per actual NISAR acquisition date. It is display-only; full-resolution masks and metrics remain authoritative. No daily interpolation is performed.</li>
+                        </ul>
+                      </div>
                     </>
                   )}
                 </section>
