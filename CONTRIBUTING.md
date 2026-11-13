@@ -1,27 +1,45 @@
-# Contributing to SARGuardian Monorepo
+# Contributing to SARGuardian
 
-## Before changing source code
-1. Read [AGENTS.md](AGENTS.md) and the relevant architecture/science constraints.
-2. Identify the authoritative source repository, branch, and commit for the code being changed.
-3. Confirm whether the change is migration-only or an intentional product/science change.
-4. Keep migration-only PRs free of algorithm changes.
+SARGuardian combines a React/TypeScript web application, a FastAPI API layer, NISAR processing engines, scientific modules, and GitHub Actions automation.
 
-## Branch and pull request rules
-- Do not commit directly to `main`.
-- Use a focused branch and a draft PR while migration is in progress.
-- Include source provenance and file-level integrity evidence for imported code.
-- Explain any path, import, workflow, build-root, or environment-name changes.
-- Never include secrets, service-account files, raw NISAR products, or private data in commits.
+## Before changing code
 
-## Required evidence
-A migration PR should state:
-- source repository/ref/commit;
-- imported and excluded paths;
-- file counts and SHA-256 integrity result;
-- relevant tests and workflow runs;
-- deployment/API impact;
-- rollback path;
-- confirmation that scientific output/status semantics are unchanged, or a separate science-review record if intentionally changed.
+1. Read [AGENTS.md](AGENTS.md), [system architecture](docs/architecture/system-boundaries.md), and the relevant engine documentation.
+2. Identify the workflow and product family affected by the change.
+3. Trace the browser/API request, Actions workflow, engine entry point, result contract, and UI consumer before changing a processing path.
+4. Preserve the distinction between GOFF, GUNW, and GCOV.
+5. Keep user-visible names consistent with the four project workflows.
 
-## Review bar
-A passing build alone is not sufficient. Review source provenance, workflow event scope, cross-repository dispatch, callback contracts, retention, secret handling, and scientific meaning.
+## Pull requests
+
+- Use a focused branch and a descriptive pull-request title.
+- Explain the user-visible or scientific behaviour being changed.
+- Link the relevant source paths and tests.
+- Describe any API, workflow input, callback, artifact, or data-manifest contract change.
+- Include before/after screenshots for material UI changes when available.
+- Never include credentials, service-account files, private result URLs, raw user data, or large raw NISAR products.
+
+## Verification
+
+Run the checks relevant to the changed area:
+
+**Web application**
+- From `apps/web/`: `npm ci`
+- `npm run lint`
+- `npm run build`
+- `npm run test`
+
+**API**
+- From `apps/api/`: install `requirements.txt`
+- `python -m pytest -q`
+
+**Scientific engines**
+- Run the targeted pytest suite under the engine's `tests/` or `tools/*/tests/` directory.
+- Validate modified workflow YAML and action contracts.
+- Where a change affects real product handling, preserve product manifests, native layer checks, source hashes, and output provenance.
+
+A passing unit test proves the tested software contract. Keep that result distinct from satellite-product QA and independent geophysical validation.
+
+## Documentation
+
+Update the relevant document under `docs/` or the engine directory whenever implementation, routes, product inputs, or reviewer instructions change. Keep `docs/migration/` as a dated historical archive; do not use migration records as current setup instructions.

@@ -2,122 +2,101 @@
 ### NISAR-Powered Surface Change Intelligence
 **NASA Space Apps Challenge 2026 · Dancing with the SARs · Earth Science**
 
-SARGuardian is a NISAR-powered platform for exploring and investigating changes across Earth's surface. It connects area-of-interest (AOI) selection, NISAR product discovery, automated scientific processing, and interactive geospatial results in one workflow.
+SARGuardian brings NISAR-based surface-change exploration into one interactive application. Choose an area of interest (AOI) and observation period, discover compatible satellite products, start the relevant processing workflow, and inspect maps, measurements, acquisition information, and provenance.
 
-**Explore the live platform:** https://sarguardian.vercel.app/
+## Open the project
 
-Reviewers, researchers, and interested users are invited to select an area and observation period, run an available analysis, and examine the resulting maps, measurements, acquisition information, and processing provenance. Results depend on compatible NISAR observations and products released for the selected place and time.
+**Live application:** https://sarguardian.vercel.app/
 
----
+**Primary public submission repository:** https://github.com/shourov-04/SARGuardian
 
-## What you can explore
+**GitHub Actions — processing and validation history:** https://github.com/shourov-04/SARGuardian/actions
 
-| Workflow | What it helps investigate | Main NISAR evidence |
+Reviewers are invited to use the live application, select their own AOI and observation window, and explore the available analysis workflows. The repository contains the web application, API implementation, processing engines, scientific modules, automated workflows, tests, and reviewer documentation.
+
+## What SARGuardian does
+
+| Workflow | What users investigate | Main NISAR product family |
 |---|---|---|
-| **Find Displacements** | AOI-wide, target-free discovery of potential surface-displacement signals, including landslide-oriented screening | GOFF offset observations and separately presented GUNW phase/Line-of-Sight (LOS) diagnostics |
-| **Glacier Movement** | Candidate surface-change and movement signals in glacier environments | The shared displacement workflow, with GOFF and GUNW kept as distinct evidence families |
-| **Known Place Analysis** | Focused investigation of a user-selected location using separate Measurement and Reference Polygons | Compatible NISAR products selected for the analysis; includes a separately gated author-exact P05023 research path |
-| **RiverShift** | River and water/land transition screening across a selected reach and observation window | NISAR L-band Level-2 GCOV observations |
+| **Find Displacements** | Target-free, AOI-wide screening for candidate surface-displacement signals | GOFF offsets, with separate GUNW phase/LOS diagnostics |
+| **Glacier Movement** | Candidate surface-change and movement signals across glacier terrain | Shared displacement workflow using GOFF and available GUNW diagnostics |
+| **Known Place Analysis** | Focused analysis with separate Measurement and Reference Polygons | Compatible GOFF observations and the dedicated author-exact research path |
+| **RiverShift** | Multi-date river and water/land transition screening | GCOV covariance/backscatter observations |
 
-### How it works
+### From an AOI to inspectable results
 
-1. **Choose an area:** Search for a place or define an AOI on the map.
-2. **Set the observation window:** Select the period to investigate.
-3. **Discover compatible data:** Search available NISAR acquisitions and products for that request.
-4. **Run the analysis:** The scientific processing workflows execute through the platform's processing infrastructure.
-5. **Explore the result:** Review spatial layers, acquisition dates, product provenance, quality information, and available measurements.
+1. **Select an area.** Search for a place or draw the AOI on the map.
+2. **Choose an observation window.** Specify the dates relevant to the investigation.
+3. **Discover available NISAR products.** Catalogue preflight identifies products and acquisition metadata compatible with the request.
+4. **Run the workflow.** The authenticated application/API coordinates the selected processing job and its GitHub Actions worker.
+5. **Review the result.** Inspect spatial layers, actual acquisition dates, source identifiers, quality information, and processing provenance.
 
-The platform presents actual observations and available processing outputs. It does not fabricate missing acquisitions or treat unobserved periods as measured change.
+Catalogue preflight and scientific processing are separate stages: a catalogue match identifies candidate source products; the processing worker performs product-level checks and analysis.
 
-## Scientific processing and GitHub Actions
+## The scientific core
 
-The **Scientific Core Engine** is the processing foundation behind SARGuardian. It contains the scientific and geospatial workflows that transform compatible NISAR products into analysis outputs.
+SARGuardian keeps the three NISAR evidence families distinct:
 
-**GitHub Actions plays a central engineering role** in implementing and operating these workflows. It provides automated workflow execution and orchestration for processing workers, product handling, quality checks, provenance, result assembly, and delivery.
+- **GOFF — Geocoded Pixel Offsets:** along-track and slant-range pixel-offset observations used for spatial displacement screening.
+- **GUNW — Geocoded Unwrapped Interferogram:** interferometric phase observations used for pairwise Line-of-Sight (LOS) diagnostics where valid support is available.
+- **GCOV — Geocoded Polarimetric Covariance:** radar covariance/backscatter observations used by RiverShift to screen water and persistent land–water transitions.
 
-The repository is therefore more than the source code for a website: it also contains the processing engines and automation that make live analyses possible. Explore the workflow definitions in [`.github/workflows`](.github/workflows) and the processing components under [`engines/`](engines/).
+The workflows preserve product identity, acquisition dates, processing maturity, geometry, usable-pixel support, and source provenance. The application presents actual acquisition observations rather than manufacturing missing dates.
 
 ## Scientific interpretation
 
-SARGuardian is designed to help users investigate satellite-derived signals, not to overstate what those signals prove.
+SARGuardian is built around **evidence before interpretation**:
 
-- A GOFF anomaly is a candidate signal, not automatic proof of a landslide or confirmed ground movement.
-- GUNW phase/LOS diagnostics are distinct from GOFF offsets. Pairwise LOS observations are not automatically cumulative or three-dimensional displacement.
-- A RiverShift map class is a change-screening candidate, not by itself field-confirmed erosion, deposition, flood damage, or sediment volume.
-- A successful processing or structural QA status is not independent geophysical validation.
-- A missing or unavailable measurement must not be interpreted as zero.
-- Playback represents actual acquisition observations, not a forecast or interpolated time series.
+- GOFF anomalies are candidate signals for investigation, not automatic confirmation of a landslide or ground movement.
+- GUNW pairwise LOS observations are presented separately from GOFF offsets; they are not automatically cumulative or three-dimensional displacement.
+- RiverShift colours identify satellite-derived screening classes, not field-confirmed erosion, deposition, damage, or sediment volume.
+- A processing or structural/provenance PASS reports the checks performed by the workflow; it is not an independent geophysical accuracy score.
+- Playback follows observed acquisition dates. A missing measurement is not treated as zero.
 
-For every analysis, interpretation depends on the selected AOI, product family, acquisition dates, compatibility, and usable pixel support.
+These distinctions make the outputs easier to interpret, compare, and review.
 
-## Team and contributions
+## Processing architecture
 
-| Team member | Project contribution |
+The web application is in `apps/web/`; the FastAPI API implementation and request adapters are in `apps/api/`. Scientific processing components are organised under `engines/` and `science/nisar-core/`. GitHub Actions workflows coordinate product workers, automated checks, provenance handling, result assembly, and delivery.
+
+Useful implementation locations:
+
+- [Web application](apps/web/)
+- [API implementation](apps/api/)
+- [Find Displacements engine](engines/find-displacements/)
+- [Known Place engine](engines/known-place/)
+- [RiverShift engine](engines/river-shift/)
+- [NISAR scientific modules](science/nisar-core/)
+- [GitHub Actions workflows](.github/workflows/)
+- [Automated tests and validation suites](engines/)
+
+## Start here for review
+
+The documentation is organised so that a human reviewer or AI-assisted reviewer can follow the same source-first path:
+
+1. [Project overview](docs/submission/PROJECT_OVERVIEW.md)
+2. [Reviewer guide — run the application and inspect the code](docs/submission/REVIEWER_GUIDE.md)
+3. [Datasets and official references](docs/submission/DATASETS_AND_REFERENCES.md)
+4. [Scientific methods and interpretation](docs/submission/SCIENTIFIC_METHODS.md)
+5. [AI usage disclosure](docs/submission/AI_USAGE.md)
+6. [Score-sheet evidence matrix](docs/submission/score-sheet-evidence-matrix.md)
+7. [Documentation index](docs/README.md)
+
+## Team
+
+| Team member | Contribution |
 |---|---|
-| **[Moshiur Rahman Sarker](https://github.com/moshiour0)** · Team Lead | Scientific Core Engine and processing development; overall project development and integration; project coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh. |
-| **[Shagor Chandra Modak](https://github.com/Sagormodak)** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project polishing and refinement. Computer Science and Engineering, Shahjalal University of Science and Technology (SUST), Bangladesh. |
-| **[MD Fahim](https://github.com/mdfahim15164-cell)** | RiverShift development and video editing. Computer Science and Engineering, Islamic University, Kushtia, Bangladesh. |
+| **Moshiur Rahman Sarker — Team Lead** | Scientific Core Engine and processing development; project development and integration; coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh. |
+| **Shagor Chandra Modak** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project refinement. CSE, Shahjalal University of Science and Technology, Bangladesh. |
+| **MD Fahim** | RiverShift development and video editing. CSE, Islamic University, Kushtia, Bangladesh. |
 | **Tasmia Binte Hasan** | Project storytelling and presentation. |
 
-### Public repository — GitHub Insights snapshot
+[View live contributor activity](https://github.com/shourov-04/SARGuardian/graphs/contributors) · [View commit history](https://github.com/shourov-04/SARGuardian/commits/main)
 
-The following figures are transcribed from the **SARGuardian repository Insights → Contributors** view supplied by the team. The selected view covers **8 August–6 November 2026**, for the `main` branch, with merge commits excluded.
+## Project history
 
-| GitHub author | Attributed commits |
-|---|---:|
-| [`moshiour0`](https://github.com/moshiour0) — Moshiur Rahman Sarker | **2,467** |
-| [`Sagormodak`](https://github.com/Sagormodak) — Shagor Chandra Modak | **374** |
-
-The same Insights view also attributes 48 commits to Copilot and 2 to `github-actions[bot]`. These tool/automation identities are listed separately and are not counted as human team members.
-
-- [Open SARGuardian contributor graph](https://github.com/shourov-04/SARGuardian/graphs/contributors?from=08%2F08%2F2026)
-- [Browse SARGuardian main-branch commit history](https://github.com/shourov-04/SARGuardian/commits/main)
-- [Open SARGuardian repository Insights](https://github.com/shourov-04/SARGuardian/pulse)
-
-### Earlier application repository — additional contribution history
-
-Before the current public-facing repository, application development also took place in [`SARGuardian_Dynamic`](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic). Its contribution history is kept separate from the current repository's Insights figures.
-
-A check of that repository's `main`-branch commit records for the supplied 8 August–6 November 2026 window found the visible commit history spanning **15 October–2 November 2026**. Excluding merge commits, the author attribution was:
-
-| GitHub author | Non-merge commits in the earlier Dynamic repository |
-|---|---:|
-| [`mdfahim15164-cell`](https://github.com/mdfahim15164-cell) — MD Fahim | **182** |
-| [`moshiour0`](https://github.com/moshiour0) — Moshiur Rahman Sarker | **101** |
-| [`Sagormodak`](https://github.com/Sagormodak) — Shagor Chandra Modak | **47** |
-
-These are a **separate repository-history count**, not an addition to the current SARGuardian Insights totals. The project contribution descriptions above explain each person's responsibilities; GitHub's graphs and commit history show repository-attributed activity.
-
-- [Open SARGuardian_Dynamic contributor graph](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic/graphs/contributors?from=08%2F08%2F2026)
-- [Browse SARGuardian_Dynamic main-branch commit history](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic/commits/main)
-
-## Repository structure
-
-- `apps/web/` — React/Vite web application.
-- `apps/api/` — application API and job orchestration.
-- `engines/` — displacement, Known Place, and RiverShift processing components.
-- `science/nisar-core/` — NISAR scientific processing source.
-- `.github/workflows/` — automated processing and validation workflows.
-- `docs/` — project, scientific, operational, and migration documentation.
-
-## Brief repository history
-
-The current consolidated codebase brings together work from three earlier SARGuardian repositories:
-
-- [SARGuardian_Dynamic](https://github.com/moshiour0/SARGuardian_Dynamic) — web application and application API.
-- [SARGuardian-backend](https://github.com/moshiour0/SARGuardian-backend) — scientific processing workers and reusable GitHub Actions workflows.
-- [SARGuardian](https://github.com/moshiour0/SARGuardian) — NISAR science and processing source.
-
-Their source history and migration records are retained in [`docs/migration/`](docs/migration/). This short note explains the origins; the main focus of this repository is the SARGuardian platform and its scientific capabilities.
-
-## Useful links
-
-- **Live application:** https://sarguardian.vercel.app/
-- **Source repository:** https://github.com/shourov-04/SARGuardian
-- **NASA NISAR mission:** https://science.nasa.gov/mission/nisar/mission-overview/
-- **ASF NISAR data availability:** https://nisar-docs.asf.alaska.edu/availability-overview/
-- **ASF NISAR product guide:** https://nisar-docs.asf.alaska.edu/products-overview/
+The current repository consolidates the team's application, processing, and scientific work into one public-facing codebase. Dated source-lineage and migration records are preserved under [docs/migration/](docs/migration/); the current product, workflows, and review path are described in the documents linked above.
 
 ---
 
-**SARGuardian — explore real NISAR observations, run your own analysis, and investigate a changing Earth.**
+**SARGuardian — explore real NISAR observations, run an analysis, and investigate a changing Earth.**

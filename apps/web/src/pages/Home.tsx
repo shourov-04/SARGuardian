@@ -71,6 +71,7 @@ export function Home({
 }: HomeProps) {
   useGlassPointer();
   const displacement = engines.find((engine) => engine.id === 'landslide')!;
+  const glacier = engines.find((engine) => engine.id === 'glacier')!;
   const knownPlace = engines.find((engine) => engine.id === 'known-place')!;
   const riverShift = engines.find((engine) => engine.id === 'river-shift')!;
 
@@ -95,29 +96,30 @@ export function Home({
             <h2>What do you want to investigate?</h2>
             <div className="claude-workflow-grid">
               <WorkflowCard
-                title="Find displacement"
-                description="Screen a whole area for surface change, then inspect what the data supports."
+                title="Find Displacements"
+                description="Screen a whole area for surface-change candidates, then inspect the measurements supported by the observations."
                 action="Open area analysis"
                 image="/scenery/mountain-forest.jpg"
                 onClick={() => onSelectEngine(displacement)}
               />
               <WorkflowCard
-                title="Flood analysis"
-                description="Map where water has spread after heavy rain."
-                image="/scenery/flood-valley.jpg"
-                comingSoon
+                title="Glacier Movement"
+                description="Explore candidate displacement signals across glacier terrain with the shared AOI-based displacement workflow."
+                action="Explore glacier terrain"
+                image="/scenery/alpine-lake.jpg"
+                onClick={() => onSelectEngine(glacier)}
               />
               <WorkflowCard
-                title="Known place analysis"
-                description="Draw a measurement area and a reference area for focused analysis."
+                title="Known Place Analysis"
+                description="Draw a Measurement Polygon and a Reference Polygon for focused location analysis."
                 action="Select an area"
                 image="/scenery/night-ridge.jpg"
                 onClick={() => onSelectEngine(knownPlace)}
               />
               <WorkflowCard
-                title="River shift"
-                description="Find where rivers and land are trading places."
-                action="Open River Shift"
+                title="RiverShift"
+                description="Explore eligible river reaches and review observed-date water and persistent land–water change candidates."
+                action="Open RiverShift"
                 image="/scenery/forest-river.jpg"
                 onClick={() => onSelectEngine(riverShift)}
               />

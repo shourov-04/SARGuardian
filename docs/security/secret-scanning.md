@@ -1,58 +1,26 @@
-# Historical secret scanning
+# SARGuardian secret-scanning record
 
-<badge color="success">Full-history scan passed</badge>
+## Current repository scan
 
-## Scanner and coverage
+The GitHub Actions workflow **Historical Secret Scan** completed successfully for the public repository's main commit:
 
-- Scanner: Gitleaks CLI 8.30.1.
-- Binary: official Linux x64 release asset, SHA-256 verified before execution:
-  `551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb`.
-- Checkout: full history (`fetch-depth: 0`).
-- Git scan: `gitleaks git --redact --exit-code=1 --report-format=json --report-path=... --log-opts=--all .`.
-- The scan traverses commits reachable from all fetched refs, including preserved source commit parents; it is not limited to the current working tree or latest commit.
-- Reports are written only to the ephemeral runner temp directory, parsed for safe metadata, and deleted. No SARIF/report artifact is uploaded and no `Match` or `Secret` field is printed.
+- Repository: [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian)
+- Scanned commit: `e9a346a4553780d2a43442892298daa7a4850163`
+- Workflow run: [43400901832 — Historical Secret Scan](https://github.com/shourov-04/SARGuardian/actions/runs/43400901832)
+- Scanner: pinned Gitleaks 8.30.1
+- History inspected: 2,836 reachable commits
+- Result: **PASS — no Gitleaks findings in the scanned reachable history**
 
-## Initial triage and reviewed false positives
+The scan log records `SECRET_SCAN_FINDING_COUNT=0` and `SECRET_SCAN_PASS`.
 
-The initial full-history scan produced 20 `generic-api-key` findings in test files:
-- deterministic `idempotency-key-001`-style test IDs;
-- `displacement-test-001`-style test IDs;
-- explicit Google Maps test environment/header stubs and a corresponding test URL assertion.
+## What this check establishes
 
-The historical source lines were inspected without exposing the literal values in logs. The key-like values are synthetic test inputs/stubs, not credentials for a live Google Cloud project, GitHub account, or deployment. No finding appeared in an environment file, production configuration module, deployment workflow, or live runtime adapter.
+The workflow scans the repository history reachable from the fetched refs at the scanned commit. Its successful result is a useful repository-security control and can be independently opened from the Actions link above.
 
-## Narrow false-positive handling
+## Ongoing handling
 
-The root `.gitleaksignore` contains exactly 21 reviewed `commit:path:rule:line` fingerprints: 20 synthetic test fixtures plus one exact documentation-only prose false positive from the migration scope checklist (commit c246f3b, line 43). That documentation line listed credential classes but contained no credential value; it has since been reworded. The scanner finding was a generic-api-key heuristic, not evidence that a secret value was committed. It does **not** ignore:
-- all files in test directories;
-- the `generic-api-key` rule;
-- any whole source repository or snapshot path;
-- new commits, changed lines, or new test values.
-
-`tools/validate_gitleaks_allowlist.py` enforces:
-- exactly 21 entries: 20 test-fixture fingerprints and one predeclared exact documentation fingerprint;
-- unique fingerprints;
-- the `generic-api-key` rule only;
-- test-file paths for all synthetic fixtures;
-- the single documentation exception at exactly one commit, path, rule and line;
-- exact commit and line coordinates.
-
-The allowlist is checked by [Migration Metadata Validation](../.github/workflows/migration-metadata.yml). A new value or changed line receives a new fingerprint and fails the scan until separately reviewed.
-
-## Latest result
-
-- Latest full-history scan: [run 42187445962](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445962).
-- Scanned commit: `9bd6858b7ea4e2500a531634e4a96f2d2288bf09` on `migration/source-snapshot-import`.
-- Result: **PASS**; Gitleaks reported zero unreviewed findings after the exact 21-entry allowlist validator passed.
-- The scan includes all reachable Git history (`fetch-depth: 0`), including preserved source histories and the latest documentation-only false-positive correction.
-- Matching metadata validation: [run 42187445630](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445630), **success**.
-- This establishes that no unreviewed finding was detected in the scanned reachable history; it does not prove a credential was never exposed outside this repository or in external systems.
-
-
-A passing Gitleaks scan means no unreviewed finding was detected in the scanned Git history. It does not prove that a provider credential is active, inactive, or never leaked outside this repository. If a future scan points to a probable real credential:
-1. stop merge/cutover;
-2. identify the owning service/provider without printing the value;
-3. rotate/revoke it at the provider;
-4. check logs/artifacts and downstream copies;
-5. remove it from current code and coordinate source-history remediation where needed;
-6. add a fingerprint exception only when the value is proven synthetic and the exact finding is documented.
+- Keep all API tokens, Earthdata credentials, Firebase Admin JSON, Supabase server keys, Drive OAuth credentials, callback secrets, and signed URLs out of commits and logs.
+- Use placeholder-only values in example configuration files.
+- Do not paste secret values into issues, pull requests, job summaries, or generated artifacts.
+- Rotate a provider credential at its source if a real value is ever exposed; removing it from the latest file is not sufficient.
+- Run the repository secret scan after material history or configuration changes and inspect the result attached to the exact commit.

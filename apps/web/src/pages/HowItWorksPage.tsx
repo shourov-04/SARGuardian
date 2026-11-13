@@ -106,7 +106,7 @@ function HardcodedMapDemo() {
       style={satellitePreviewUrl ? { backgroundImage: `url("${satellitePreviewUrl}")` } : undefined}
     >
       <div ref={mapElement} className="claude-demo-map-canvas" aria-hidden="true" />
-      <span className="claude-demo-location">Khumbu, Nepal · Satellite study area</span>
+      <span className="claude-demo-location">Khumbu, Nepal · Example study area</span>
     </div>
   );
 }
@@ -122,44 +122,45 @@ export function HowItWorksPage({ user, authState, onStart, onSignIn, onSignOut }
         <div className="claude-wrap">
           <header className="claude-how-hero">
             <h1>How it works.</h1>
-            <p>From a place on the map to evidence you can check, in four steps.</p>
+            <p>From an area on the map to evidence you can inspect: select an AOI, discover compatible NISAR products, process the request, and review the result.</p>
+            <p className="claude-how-note">The panels below are explanatory examples. Live maps, acquisition dates, source products, and processing states are generated from each submitted analysis.</p>
           </header>
 
-          <DemoRow number={1} title="Choose an area." description="Search for a place or draw a polygon on the map. Then pick your dates.">
+          <DemoRow number={1} title="Choose an area." description="Search for a place or draw a polygon on the map. Then choose the observation dates.">
             <HardcodedMapDemo />
-            <DemoLine label="Observation window" value="Jan – Mar" tone="info" />
+            <DemoLine label="Observation window" value="User-selected dates" tone="info" />
           </DemoRow>
 
-          <DemoRow number={2} title="Check what exists." description="We search the NISAR archive for matching products before any processing starts." reverse>
-            <DemoLine label="Unwrapped interferograms" value="Found" tone="ok" />
-            <DemoLine label="Offset tracking" value="Found" tone="ok" />
-            <DemoLine label="Download or analysis" value="Not started" />
+          <DemoRow number={2} title="Discover compatible data." description="The catalogue preflight searches for NISAR products intersecting the selected AOI and observation window." reverse>
+            <DemoLine label="Unwrapped interferograms" value="GUNW product family" tone="ok" />
+            <DemoLine label="Pixel offsets" value="GOFF product family" tone="ok" />
+            <DemoLine label="Processing" value="Next workflow stage" />
           </DemoRow>
 
-          <DemoRow number={3} title="Process and screen." description="The workflow runs, keeps its quality and geometry checks, and scans the area for candidate patterns.">
-            <div className="claude-progress"><span><b>Processing</b><em>Done</em></span><i><b style={{ width: '100%' }} /></i></div>
-            <div className="claude-progress"><span><b>Quality checks</b><em>Done</em></span><i><b style={{ width: '100%' }} /></i></div>
-            <div className="claude-progress"><span><b>Screening</b><em>Running</em></span><i><b style={{ width: '64%' }} /></i></div>
+          <DemoRow number={3} title="Process and screen." description="The selected workflow passes the request to its processing worker, which checks product compatibility, data support, and the relevant analysis contract.">
+            <div className="claude-progress"><span><b>Product processing</b><em>Workflow stage</em></span><i><b style={{ width: '100%' }} /></i></div>
+            <div className="claude-progress"><span><b>Quality and provenance</b><em>Workflow stage</em></span><i><b style={{ width: '100%' }} /></i></div>
+            <div className="claude-progress"><span><b>Candidate screening</b><em>Workflow stage</em></span><i><b style={{ width: '64%' }} /></i></div>
           </DemoRow>
 
-          <DemoRow number={4} title="Review the evidence." description="Explore maps, measurements, limits and where every number came from." reverse>
-            <DemoLine label="Area A" value="Candidate" tone="warn" />
-            <DemoLine label="Measurement" value="Line of sight, pairwise" />
-            <DemoLine label="Area B" value="Withheld" tone="info" />
-            <DemoLine label="Source" value="Linked to archive" />
+          <DemoRow number={4} title="Review the evidence." description="Explore spatial outputs together with the acquisition dates, product identifiers, measurements, and quality information that support interpretation." reverse>
+            <DemoLine label="Spatial output" value="Candidate layers" tone="warn" />
+            <DemoLine label="Measurement context" value="Product-specific" />
+            <DemoLine label="Quality record" value="Available with result" tone="info" />
+            <DemoLine label="Source" value="Linked to product record" />
           </DemoRow>
 
           <section className="claude-how-limits">
-            <h2>Know the limits.</h2>
+            <h2>Three NISAR evidence families.</h2>
             <div className="claude-limits-grid">
-              <article data-glass-pointer><h3>Unwrapped interferograms</h3><p>Pairwise line-of-sight displacement where valid pixels allow.</p></article>
-              <article data-glass-pointer><h3>Offset tracking</h3><p>Evidence for screening. Not a displacement measurement on its own.</p></article>
-              <article data-glass-pointer><h3>Archive search</h3><p>Finds matching products. It is not a download or an analysis.</p></article>
+              <article data-glass-pointer><h3>GOFF · Pixel offsets</h3><p>Along-track and slant-range offset observations used for spatial displacement screening.</p></article>
+              <article data-glass-pointer><h3>GUNW · Interferometric phase</h3><p>Pairwise phase and Line-of-Sight diagnostics, presented separately from GOFF offsets.</p></article>
+              <article data-glass-pointer><h3>GCOV · Radar covariance</h3><p>Multi-date radar observations used by RiverShift to screen water and land–water transitions.</p></article>
             </div>
           </section>
 
           <section className="claude-how-cta">
-            <h2>Ready to look?</h2>
+            <h2>Ready to explore?</h2>
             <button className="claude-button primary" type="button" onClick={onStart}>Start exploring</button>
           </section>
         </div>

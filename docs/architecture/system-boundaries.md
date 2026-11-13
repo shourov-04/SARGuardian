@@ -1,98 +1,68 @@
-# SARGuardian system boundaries
+# SARGuardian system architecture
 
-**Baseline date:** 2026-11-05  
-**Status:** migration architecture decision; implementation not yet consolidated.
+**Project repository:** [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian)  
+**Live application:** https://sarguardian.vercel.app/
 
-## 1. Current source topology
+## System at a glance
 
-### Dynamic — application and active API
-Source: `moshiour0/SARGuardian_Dynamic`  
-Audited baseline: `dd64b7adc90594f1d7f316b352e39fbac2013cb6`
+SARGuardian is organised as a web application, an authenticated API/orchestration layer, product-specific scientific engines, and automated GitHub Actions workflows.
 
-This repository contains more than a frontend:
-- React/Vite application, map and engine pages, archive/dashboard UI.
-- Firebase-authenticated active FastAPI service under `Backend/app`.
-- Supabase-backed job persistence and API contracts for displacement, Known Place, and RiverShift.
-- GitHub Actions dispatch adapters, callbacks, result-manifest and Drive retrieval adapters.
-- Frontend/API tests and deployment configuration.
-
-**Decision:** this is the current application/API source of truth unless live deployment evidence disproves it. The initial destination is `apps/web` and `apps/api`, but preserve source-relative build/import paths until safe relocation is tested.
-
-### Backend — processing and workflow system
-Source: `moshiour0/SARGuardian-backend`  
-Audited baseline: `97d849454918b1425ac41bb70e7a32d11cfd3833`
-
-Contains:
-- NISAR processing workers and batch/streaming tools.
-- Find Displacements AOI candidate and pixel diagnostics under `dashboard/` and `tools/`.
-- RiverShift GCOV engine under `tools/river_shift/`.
-- GitHub Actions workflow collection (35 YAML files at the audited baseline).
-- A separate `app/` FastAPI/SQLAlchemy/session-oriented service, migrations, and legacy dispatch components.
-
-**Decision:** import workers and workflows as source-preserving units. Do not merge the backend `app/` service into the Dynamic API. First classify it by tracing inbound dispatches, callbacks, and external deployment use.
-
-### NISAR science source
-Source: `moshiour0/SARGuardian`  
-Current main at audit: `9fcb543ef28a7f6fe70a379aed9cfe3e43e277ec`
-
-This source includes science modules such as:
-- `timeseries.py`
-- `local_floor.py`
-- `inverse_velocity.py`
-- `geometry_merge.py`
-- `bound.py`
-- `candidate_check.py`
-- `pixel_stack.py`
-- `goff_reader.py`
-- `gunw_reader.py`
-
-**Decision:** preserve exact worker-pinned revisions separately from current `main`. The source SHA used by a run is part of scientific provenance.
-
-## 2. Engine boundaries
-
-| Engine / category | Purpose | Boundary that must remain |
+| Layer | Repository location | Responsibility |
 |---|---|---|
-| Find Displacements | AOI + time window; target-free candidate discovery | GOFF and GUNW remain separate; GUNW is gated by network/grid/support/reference checks |
-| Known Place Analysis | Fixed paper benchmark and two-polygon research | Separate from AOI-wide discovery; preserve P05023 author-exact benchmark and feature-branch/PR lineage |
-| River Shift | NISAR GCOV river/flood surface-change intelligence | Independent GCOV engine and validation chain |
-| Glacier Movement | Product category currently routed into Find Displacements | Do not represent as an independent processing engine without code/workflow evidence |
+| Web application | `apps/web/` | User interface, map/AOI selection, sign-in, workflow entry, processing status, dashboard and results |
+| API | `apps/api/` | Authenticated request validation, catalogue discovery, job records, workflow dispatch, callbacks and result retrieval |
+| Find Displacements | `engines/find-displacements/` | AOI-wide displacement candidate screening, product processing, dashboards and science diagnostics |
+| Known Place | `engines/known-place/` | Focused AOI analysis, two-polygon measurement/reference workflow, and research reproduction tools |
+| RiverShift | `engines/river-shift/` | Multi-date NISAR GCOV processing, water/change screening, raster QA, manifests and result packaging |
+| Shared NISAR science | `science/nisar-core/` | Reusable NISAR readers and scientific analysis modules |
+| Automation | `.github/workflows/` and engine-local workflow directories | Processing workers, orchestration, validation, retries, callbacks and artifact handling |
+| Documentation | `docs/` and engine-local docs | Reviewer guides, methods, operational instructions and historical lineage |
 
-## 3. API boundary
+## Browser-to-result flow
 
-Two FastAPI implementations exist:
-1. Dynamic `Backend/app`: Firebase authentication, Supabase persistence, current frontend API contracts, Vercel serverless entrypoint.
-2. Backend `app/`: older SQLAlchemy/session-oriented service with different persistence and auth assumptions.
+1. The user opens the web application and signs in through Firebase Authentication when a protected workspace is entered.
+2. The browser sends an authenticated request to the configured API origin.
+3. The API validates the user, AOI, date window, selected products, and workflow-specific request contract.
+4. Catalogue preflight retrieves NISAR granule metadata from ASF/NASA CMR. It is a discovery stage, distinct from analysis.
+5. A confirmed processing job is coordinated through the relevant GitHub Actions workflow.
+6. The worker obtains compatible products, validates source metadata and native product layers, and runs the selected engine.
+7. Workflow outputs, result manifests, quality information, and provenance are returned through the job/result contract.
+8. The web application presents the result for inspection.
 
-They are not interchangeable. Inventory every caller, route, auth mechanism, schema, and callback before retiring or merging either one.
+The exact request and response models are implemented in `apps/web/src/api/catalog.ts` and `apps/api/app/`.
 
-## 4. Target layout (provisional)
+## Product and workflow boundaries
 
-```text
-apps/
-  web/
-  api/
-engines/
-  find-displacements/
-  known-place/
-  river-shift/
-science/
-  nisar-core/
-.github/workflows/
-infrastructure/
-  supabase/
-  vercel/
-docs/
-  architecture/
-  migration/
-  scientific-validation/
-```
+### Find Displacements
 
-A source-layout snapshot may be retained temporarily to keep the first import behavior-preserving. Final destinations will be selected from the real import graph, not names alone.
+The user selects an AOI and observation window. The workflow performs target-free spatial candidate discovery. GOFF offsets and GUNW phase/LOS diagnostics are separate measurement families and are reviewed independently.
 
-## 5. Non-goals for first migration wave
-- No new scientific algorithms or merging of GOFF, GUNW, and GCOV measurements.
-- No production callback/dispatch endpoint change.
-- No Vercel production-root or alias change.
-- No Supabase schema migration.
-- No secret-value transfer.
-- No source-repository deletion or archival.
+### Glacier Movement
+
+Glacier Movement is a user-facing category that routes into the shared AOI-wide displacement analysis. The category expresses the application context; it does not create a separate measurement family.
+
+### Known Place Analysis
+
+Known Place Analysis uses distinct Measurement and Reference Polygons. The generic user-defined AOI path is separate from the author-exact research reproduction path so that generic user input does not silently change a fixed research benchmark.
+
+### RiverShift
+
+RiverShift is an independent GCOV-oriented workflow. It discovers eligible acquisition dates for the submitted river AOI, validates product compatibility and raster support, derives the configured water/change screening layers, and packages observed-date results with source provenance.
+
+## Identity, jobs, and result handling
+
+- Firebase ID tokens authenticate browser-to-API requests.
+- The API applies user ownership checks to job reads and writes.
+- Job requests preserve the AOI, dates, selected processing options, and request identity needed to connect the UI, API, and worker.
+- GitHub Actions workers use server-side credentials and return status through the configured callback contract.
+- Result artifacts and manifests retain product identity and processing provenance. Private storage credentials are never sent to the browser.
+
+## Source navigation
+
+- [Web app](../../apps/web/)
+- [API](../../apps/api/)
+- [Find Displacements](../../engines/find-displacements/)
+- [Known Place](../../engines/known-place/)
+- [RiverShift](../../engines/river-shift/)
+- [Shared science](../../science/nisar-core/)
+- [Root Actions workflows](../../.github/workflows/)

@@ -1,41 +1,54 @@
-# SARGuardian repository guardrails
+# SARGuardian — repository and review guide
 
-These rules apply to every migration, code review, workflow change, and deployment.
+This file is the repository-level operating context for coding assistants and human contributors. The canonical public project is **shourov-04/SARGuardian**. Start with the root README and the current documents under `docs/submission/`.
 
-## Source provenance
-- Treat the three source repositories and their recorded SHAs as immutable migration inputs.
-- Do not rewrite, delete, archive, or force-push any source repository or source branch.
-- Record source repository, ref, commit SHA, import date, and any transformation for every imported subtree.
-- Never silently replace a pinned NISAR science revision with a newer default-branch revision.
+## Canonical project entry points
 
-## Engine boundaries
-- Find Displacements is a target-free AOI scan. Do not add a required target point or merge GOFF and GUNW measurements.
-- Known Place Analysis is a separate research reproduction workflow. Preserve author-exact acquisition rules, two-polygon semantics, feature-branch lineage, and retention checks.
-- River Shift is an independent GCOV engine. Do not route it through or change the scientific methods of Find Displacements.
-- Glacier Movement is currently a product route into Find Displacements; do not claim a separate engine without evidence.
+- Live application: https://sarguardian.vercel.app/
+- Primary source repository: https://github.com/shourov-04/SARGuardian
+- Actions history: https://github.com/shourov-04/SARGuardian/actions
+- Reviewer guide: `docs/submission/REVIEWER_GUIDE.md`
+- Scientific methods: `docs/submission/SCIENTIFIC_METHODS.md`
+- Data sources: `docs/submission/DATASETS_AND_REFERENCES.md`
 
-## Scientific interpretation
-- PASS means structural/provenance checks passed; it is not independent geophysical validation.
-- A GOFF anomaly is not, by itself, proof of landslide or surface movement.
-- Pairwise LOS displacement is not automatically cumulative displacement or 3-D motion.
-- Playback represents actual observations only, not interpolation or forecast.
-- Not measured is not zero.
-- Reference stability is not independently verified unless independent evidence exists.
+When reviewing the project, use the current default branch and cite exact file paths, workflow names, product identifiers, and observed dates. The `docs/migration/` directory and `migration/source-snapshots/` preserve dated historical records; they are lineage evidence, not the current product overview or current operating guide.
 
-## Workflow safety
-- Do not enable duplicate production workflows during migration.
-- Preserve triggers, permissions, concurrency, artifacts, callbacks, retries, and retention behaviour.
-- RiverShift must retain retry-only-failed-products semantics and staged processing/assembly barriers.
-- A green outer job is invalid if a required inner stage failed; propagate failures to the final workflow conclusion.
-- Never put tokens, service-account JSON, private keys, callback secrets, or signed URLs in source files, logs, docs, or artifacts.
+## Product and engine boundaries
 
-## API and deployment safety
-- Keep the active Firebase/Supabase API separate from the older SQLAlchemy/session-oriented backend service until usage, auth, schema, and contract parity are proven.
-- Do not assume Render is the production host. Confirm deployment ownership from Vercel settings and deployment evidence.
-- Do not change Vercel roots, production aliases, DNS, Supabase schema, or live callback destinations during source import.
-- Use preview deployments and isolated/mock processing tests before any real-data pilot.
+- **Find Displacements** is target-free AOI-wide candidate discovery. It does not require a user-specified target point.
+- **Glacier Movement** is a user-facing analysis category that uses the shared displacement workflow. Do not describe it as an independent glacier-collapse physics engine.
+- **Known Place Analysis** is a focused two-polygon workflow. Keep the Measurement Polygon and Reference Polygon roles distinct. Its author-exact research route is separate from generic AOI analysis.
+- **RiverShift** is the GCOV-based river and water/land change workflow. Keep its source products and QA chain separate from GOFF/GUNW displacement measurements.
 
-## Change control
-- Work on migration branches and use draft PRs for structural changes.
-- Do not merge to main or switch production until tests, source-integrity checks, workflow audits, and deployment checks pass.
-- Do not make scientific algorithm changes as incidental migration cleanup.
+## Scientific evidence rules
+
+- GOFF offsets and GUNW phase/LOS are different measurement families; never merge their values or units.
+- A GOFF anomaly is a candidate signal, not proof of a landslide or confirmed ground movement.
+- Pairwise GUNW LOS is not automatically cumulative displacement or three-dimensional motion.
+- GCOV-derived RiverShift classes are screening candidates; label them as observed radar-derived transitions.
+- Playback represents actual acquisition dates, not interpolation or forecast.
+- Preserve source product IDs, acquisition dates, processing maturity, geometry, valid-pixel support, checksums, and workflow provenance when available.
+- A processing PASS describes the checks completed by that workflow; do not relabel it as independent geophysical validation.
+- Missing or withheld measurements are not zero.
+
+## Implementation and security
+
+- Keep browser code in `apps/web/`, API code in `apps/api/`, processing engines in `engines/`, shared NISAR science modules in `science/nisar-core/`, and automated workflows in `.github/workflows/` or engine-local workflow directories.
+- The web client obtains a Firebase ID token and sends authenticated requests through the configured API origin. Do not expose server credentials in browser code.
+- GitHub Actions workers receive their credentials from repository/environment secret stores. Never commit tokens, passwords, service-account JSON, callback secrets, private result URLs, or raw private user data.
+- Do not change production routing, callback destinations, database schema, or secret names as incidental documentation or UI cleanup.
+- Preserve retry, cancellation, idempotency, request-fingerprint, callback-signature, and result-retention contracts.
+- Do not weaken source-integrity, QA, or validation gates to make a check pass.
+
+## Change and verification workflow
+
+1. Read the relevant canonical docs and the implementation before changing behavior.
+2. Keep changes scoped to the requested UI, API, engine, or documentation area.
+3. Add or update tests for changed behavior.
+4. Run the applicable lint, type-check, build, and test commands where the execution environment permits.
+5. Inspect the current GitHub Actions results for the exact commit; distinguish a successful secret scan from a full regression run.
+6. Update documentation when a route, workflow contract, data family, or user-visible behavior changes.
+
+## Reviewer-facing writing
+
+Use clear capability-first descriptions supported by source code and actual workflow behaviour. Explain what each dataset measures and where it is used. Keep application examples, illustrative media, test fixtures, satellite observations, and processing outputs clearly distinguishable. Do not invent metrics, user outcomes, coverage, scientific validation, or score results.
