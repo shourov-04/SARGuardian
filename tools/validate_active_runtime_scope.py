@@ -65,13 +65,23 @@ def validate_known_place_active_pin() -> None:
         if fork_overlay.get(key) != value:
             fail(f"Known Place fork overlay provenance mismatch: {key}")
     overlay_rows = fork_overlay.get("files")
-    if not isinstance(overlay_rows, list) or len(overlay_rows) != 1:
-        fail("expected one explicitly reviewed Known Place fork overlay file")
-    overlay = overlay_rows[0]
+    expected_fork_overlay_files = {
+        "engines/known-place/tools/know_place/aoi_runner.py": "a95e41a18cb37e3357188f597d88e005b2ae23a2",
+        "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py": "0aa48bb894c823eabf685d5110ab860799e290fb",
+        "engines/known-place/tools/tests/test_know_place_noise_floor.py": "841115f5a25b75674404695c2d17c5e5f9210230",
+        "engines/known-place/tools/tests/test_know_place_reference_stationarity.py": "d5f1d7defd26fcde53060fa122889de2efc98f19",
+        "engines/known-place/tools/validation/valkit.py": "4f2cf9e9c4ca4e1ee95b979bc2c121f7f0fb0ea8",
+    }
+    if not isinstance(overlay_rows, list) or len(overlay_rows) != len(expected_fork_overlay_files):
+        fail("expected five exact, explicitly reviewed Known Place fork overlay files")
+    observed_fork_overlay_files = {
+        row.get("destination_path"): row.get("source_blob_sha")
+        for row in overlay_rows if isinstance(row, dict)
+    }
+    if observed_fork_overlay_files != expected_fork_overlay_files:
+        fail("Known Place fork overlay file inventory or SHA-256 pins changed")
     overlay_path = "engines/known-place/tools/know_place/aoi_runner.py"
-    overlay_sha = "a95e41a18cb37e3357188f597d88e005b2ae23a2"
-    if overlay.get("destination_path") != overlay_path or overlay.get("source_blob_sha") != overlay_sha:
-        fail("Known Place fork overlay must pin the reviewed AOI runner blob")
+    overlay_sha = expected_fork_overlay_files[overlay_path]
     implementation_commits = {
         "6d7820987e8ee32a29ad48ea64ff8b39e033344c",
         "2bf5af598eb91825d94f822aa0ff13ab4b2f26d3",
@@ -89,11 +99,13 @@ def validate_known_place_active_pin() -> None:
     }
     if set(overlay.get("verification_paths", [])) != expected_tests:
         fail("Known Place fork overlay verification test set is incomplete")
-    for test_path in expected_tests:
-        require_file(test_path)
-    overlay_file = ROOT / overlay_path
-    if not overlay_file.is_file() or git_blob_sha(overlay_file.read_bytes()) != overlay_sha:
-        fail("Known Place fork AOI runner blob does not match its reviewed fork provenance")
+    for overlay_destination, expected_sha in expected_fork_overlay_files.items():
+        overlay_file = ROOT / overlay_destination
+        if not overlay_file.is_file():
+            fail(f"Known Place fork overlay file is missing: {overlay_destination}")
+        actual_sha = git_blob_sha(overlay_file.read_bytes())
+        if actual_sha != expected_sha:
+            fail(f"Known Place fork overlay blob mismatch: {overlay_destination}; expected={expected_sha}; actual={actual_sha}")
     files = manifest.get("files")
     if not isinstance(files, list) or len(files) != 10:
         fail("expected ten exact current-runtime Known Place overlays")

@@ -436,6 +436,11 @@ def main() -> int:
                 "tools/know_place/geometry.py",
                 "tools/know_place/series.py",
                 "tools/know_place/upload_bundle_to_drive.py",
+                # Current-fork test/validation overlays are pinned separately.
+                "tools/tests/test_know_place_generic_magnitude_rejection.py",
+                "tools/tests/test_know_place_noise_floor.py",
+                "tools/tests/test_know_place_reference_stationarity.py",
+                "tools/validation/valkit.py",
                 "tools/tests/test_know_place_aoi_runner.py",
                 "tools/tests/test_know_place_geometry.py",
                 "tools/tests/test_know_place_series.py",

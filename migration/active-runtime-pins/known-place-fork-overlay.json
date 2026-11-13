@@ -7,7 +7,7 @@
   "source_tree": "engines/known-place",
   "source_tree_sha": "ec31cc41c4afa7b73b5345d07966708c4988c326",
   "import_date": "2026-11-13",
-  "transformation": "Reviewed current-fork scientific feature overlay; historical Backend 0e061 runtime pin remains separately preserved.",
+  "transformation": "Reviewed current-fork scientific feature overlay and supporting regression tests; historical Backend 0e061 runtime pin remains separately preserved.",
   "files": [
     {
       "source_path": "engines/known-place/tools/know_place/aoi_runner.py",
@@ -27,6 +27,26 @@
         "engines/known-place/tools/tests/test_know_place_reference_stationarity.py",
         "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py"
       ]
+    },
+    {
+      "source_path": "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py",
+      "destination_path": "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py",
+      "source_blob_sha": "0aa48bb894c823eabf685d5110ab860799e290fb"
+    },
+    {
+      "source_path": "engines/known-place/tools/tests/test_know_place_noise_floor.py",
+      "destination_path": "engines/known-place/tools/tests/test_know_place_noise_floor.py",
+      "source_blob_sha": "841115f5a25b75674404695c2d17c5e5f9210230"
+    },
+    {
+      "source_path": "engines/known-place/tools/tests/test_know_place_reference_stationarity.py",
+      "destination_path": "engines/known-place/tools/tests/test_know_place_reference_stationarity.py",
+      "source_blob_sha": "d5f1d7defd26fcde53060fa122889de2efc98f19"
+    },
+    {
+      "source_path": "engines/known-place/tools/validation/valkit.py",
+      "destination_path": "engines/known-place/tools/validation/valkit.py",
+      "source_blob_sha": "4f2cf9e9c4ca4e1ee95b979bc2c121f7f0fb0ea8"
     }
   ]
 }
