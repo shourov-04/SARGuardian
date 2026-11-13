@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCOPE_PATH = ROOT / "migration" / "active-runtime-scope.json"
 KNOWN_PLACE_PIN_PATH = ROOT / "migration" / "active-runtime-pins" / "known-place-generic-0e061.json"
+KNOWN_PLACE_FORK_OVERLAY_PATH = ROOT / "migration" / "active-runtime-pins" / "known-place-fork-overlay.json"
 
 
 def fail(message: str) -> None:
@@ -51,6 +52,50 @@ def validate_known_place_active_pin() -> None:
         fail("generic Known Place Backend main dispatcher blob pin changed")
     if manifest.get("source_reusable_workflow_blob") != "844cdeefd2d78c74c623a4d910f9b6091789d79b":
         fail("generic Known Place reusable workflow blob pin changed")
+    try:
+        fork_overlay = json.loads(KNOWN_PLACE_FORK_OVERLAY_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"cannot read current Known Place fork overlay provenance: {exc}")
+    expected_overlay = {
+        "source_repository": "shourov-04/SARGuardian",
+        "source_commit_sha": "e9a346a4553780d2a43442892298daa7a4850163",
+        "source_tree_sha": "ec31cc41c4afa7b73b5345d07966708c4988c326",
+    }
+    for key, value in expected_overlay.items():
+        if fork_overlay.get(key) != value:
+            fail(f"Known Place fork overlay provenance mismatch: {key}")
+    overlay_rows = fork_overlay.get("files")
+    if not isinstance(overlay_rows, list) or len(overlay_rows) != 1:
+        fail("expected one explicitly reviewed Known Place fork overlay file")
+    overlay = overlay_rows[0]
+    overlay_path = "engines/known-place/tools/know_place/aoi_runner.py"
+    overlay_sha = "a95e41a18cb37e3357188f597d88e005b2ae23a2"
+    if overlay.get("destination_path") != overlay_path or overlay.get("source_blob_sha") != overlay_sha:
+        fail("Known Place fork overlay must pin the reviewed AOI runner blob")
+    implementation_commits = {
+        "6d7820987e8ee32a29ad48ea64ff8b39e033344c",
+        "2bf5af598eb91825d94f822aa0ff13ab4b2f26d3",
+        "e7fffd52e8b09e8bf281217dcfb1622ae0386cbb",
+        "bde213694b12a274549c03fe1221b986b1cf4bc5",
+        "ce2bd768ecd8b88be49a165626c378f8894511c3",
+        "3447a8186fa5198ddea27c6755cf8989e1f40704",
+    }
+    if set(overlay.get("implementation_commits", [])) != implementation_commits:
+        fail("Known Place fork overlay implementation commit set is incomplete")
+    verification_paths = overlay.get("verification_paths")
+    expected_tests = {
+        "engines/known-place/tools/tests/test_know_place_noise_floor.py",
+        "engines/known-place/tools/tests/test_know_place_reference_stationarity.py",
+        "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py",
+    }
+    if set(verification_paths or []) != expected_tests:
+        fail("Known Place fork overlay verification test set is incomplete")
+    for test_path in expected_tests:
+        require_file(test_path)
+    target = ROOT / overlay_path
+    if not target.is_file() or git_blob_sha(target.read_bytes()) != overlay_sha:
+        fail("Known Place fork AOI runner blob does not match its reviewed fork provenance")
+
     files = manifest.get("files")
     if not isinstance(files, list) or len(files) != 10:
         fail("expected ten exact current-runtime Known Place overlays")
@@ -66,8 +111,9 @@ def validate_known_place_active_pin() -> None:
         if not target.is_file():
             fail(f"active Known Place overlay file is missing: {destination}")
         actual = git_blob_sha(target.read_bytes())
-        if actual != source_sha:
-            fail(f"active Known Place source blob mismatch: {destination}; expected={source_sha}; actual={actual}")
+        expected_sha = overlay_sha if destination == overlay_path else source_sha
+        if actual != expected_sha:
+            fail(f"Known Place source blob mismatch: {destination}; expected={expected_sha}; actual={actual}")
     expected = {
         "engines/known-place/tools/know_place/aoi_request.py": "8fcfdf635994ceb6093160931f21ae6cf0f986de",
         "engines/known-place/tools/know_place/aoi_runner.py": "ef1f4b4f38b0078ad5ee7168f76deeeeeb4c72cd",
@@ -83,7 +129,7 @@ def validate_known_place_active_pin() -> None:
     observed = {row["destination_path"]: row["source_blob_sha"] for row in files}
     if observed != expected:
         fail("Known Place active source-pin manifest differs from the reviewed ten-file overlay")
-    print("KNOWN_PLACE_ACTIVE_PIN_BLOB_PARITY=PASS source=0e0611c files=10")
+    print("KNOWN_PLACE_ACTIVE_PIN_BLOB_PARITY=PASS source=0e0611c exact_files=9 fork_overlay=a95e41a")
 
 
 def main() -> int:

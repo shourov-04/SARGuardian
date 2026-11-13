@@ -1,0 +1,32 @@
+{
+  "schema_version": "source-import-provenance/1.0",
+  "engine": "known-place",
+  "source_repository": "https://github.com/shourov-04/SARGuardian",
+  "source_ref": "refs/heads/main",
+  "source_commit_sha": "e9a346a4553780d2a43442892298daa7a4850163",
+  "source_tree": "engines/known-place",
+  "source_tree_sha": "ec31cc41c4afa7b73b5345d07966708c4988c326",
+  "import_date": "2026-11-13",
+  "transformation": "Reviewed current-fork scientific feature overlay; original active Backend 0e061 source pin remains preserved as historical runtime lineage.",
+  "files": [
+    {
+      "source_path": "engines/known-place/tools/know_place/aoi_runner.py",
+      "destination_path": "engines/known-place/tools/know_place/aoi_runner.py",
+      "source_blob_sha": "a95e41a18cb37e3357188f597d88e005b2ae23a2",
+      "source_bytes": 103506,
+      "implementation_commits": [
+        "6d7820987e8ee32a29ad48ea64ff8b39e033344c",
+        "2bf5af598eb91825d94f822aa0ff13ab4b2f26d3",
+        "e7fffd52e8b09e8bf281217dcfb1622ae0386cbb",
+        "bde213694b12a274549c03fe1221b986b1cf4bc5",
+        "ce2bd768ecd8b88be49a165626c378f8894511c3",
+        "3447a8186fa5198ddea27c6755cf8989e1f40704"
+      ],
+      "verification_paths": [
+        "engines/known-place/tools/tests/test_know_place_noise_floor.py",
+        "engines/known-place/tools/tests/test_know_place_reference_stationarity.py",
+        "engines/known-place/tools/tests/test_know_place_generic_magnitude_rejection.py"
+      ]
+    }
+  ]
+}

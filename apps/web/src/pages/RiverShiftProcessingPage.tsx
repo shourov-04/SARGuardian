@@ -251,6 +251,11 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
   const [signatureConflict, setSignatureConflict] = useState(false);
   const [riverJobError, setRiverJobError] = useState('');
   const retryPending = useRef(false);
+  const setupRef = useRef(setup);
+
+  useEffect(() => {
+    setupRef.current = setup;
+  }, [setup]);
   const [clock, setClock] = useState(() => Date.now());
 
   useEffect(() => {
@@ -282,10 +287,11 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
           if (existing) window.sessionStorage.setItem('sarguardian.riverShiftActiveJobId', existing.id);
         }
         if (!cancelled) {
-          if (pendingRun && setup?.aoiWkt && setup.startDate && setup.endDate) {
+          const currentSetup = setupRef.current;
+          if (pendingRun && currentSetup?.aoiWkt && currentSetup.startDate && currentSetup.endDate) {
             if (existing && activeRiverShiftStates.has(existing.state)) {
               setRiverJob(existing);
-              if (signaturesMatch(setup, existing)) {
+              if (signaturesMatch(currentSetup, existing)) {
                 window.sessionStorage.removeItem('sarguardian.riverShiftPendingRun');
                 window.sessionStorage.removeItem('sarguardian.riverShiftPendingDispatch');
               } else {
@@ -296,7 +302,7 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
             }
           } else if (existing) {
             setRiverJob(existing);
-            if (!setup || activeRiverShiftStates.has(existing.state)) {
+            if (!currentSetup || activeRiverShiftStates.has(existing.state)) {
               const restoredSetup = setupForJob(existing);
               setSetup(restoredSetup);
               window.sessionStorage.setItem(RIVER_SHIFT_SETUP_STORAGE_KEY, JSON.stringify(restoredSetup));
