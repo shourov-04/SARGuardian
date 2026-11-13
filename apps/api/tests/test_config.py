@@ -83,10 +83,10 @@ def test_enabled_displacement_actions_requires_server_only_settings() -> None:
         raise AssertionError("enabled Actions integration unexpectedly accepted missing settings")
 
 
-def test_river_shift_actions_are_disabled_by_default_and_target_backend_worker() -> None:
+def test_river_shift_actions_are_disabled_by_default_and_target_repository_worker() -> None:
     settings = config.get_settings({})
     assert settings.river_shift_actions_enabled is False
-    assert settings.river_shift_github_actions_repository == "moshiour0/SARGuardian-backend"
+    assert settings.river_shift_github_actions_repository == "shourov-04/SARGuardian"
     assert settings.river_shift_github_actions_workflow == "river-shift-gcov-process.yml"
     assert settings.river_shift_github_actions_ref == "main"
 
@@ -116,7 +116,7 @@ def test_enabled_river_shift_actions_accept_valid_https_callback_configuration()
         "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_test_only",
         "RIVERSHIFT_ACTIONS_ENABLED": "true",
         "RIVERSHIFT_GITHUB_ACTIONS_TOKEN": "server-token",
-        "RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY": "moshiour0/SARGuardian-backend",
+        "RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY": "shourov-04/SARGuardian",
         "RIVERSHIFT_GITHUB_ACTIONS_WORKFLOW": "river-shift-gcov-process.yml",
         "RIVERSHIFT_GITHUB_ACTIONS_REF": "main",
         "RIVERSHIFT_CALLBACK_SECRET": "callback-secret",
@@ -137,19 +137,19 @@ def test_known_place_workflow_targets_keep_backend_compatibility_defaults() -> N
 
 def test_known_place_workflow_targets_are_independently_configurable() -> None:
     settings = config.get_settings({
-        "KNOWN_PLACE_GITHUB_ACTIONS_REPOSITORY": "moshiour0/SARGuardian-Monorepo",
-        "KNOWN_PLACE_GITHUB_ACTIONS_WORKFLOW": "known-place-aoi.yml",
-        "KNOWN_PLACE_GITHUB_ACTIONS_REF": "migration/known-place",
-        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REPOSITORY": "moshiour0/SARGuardian-Monorepo",
-        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_WORKFLOW": "known-place-author-exact.yml",
-        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REF": "migration/author-exact",
+        "KNOWN_PLACE_GITHUB_ACTIONS_REPOSITORY": "shourov-04/SARGuardian",
+        "KNOWN_PLACE_GITHUB_ACTIONS_WORKFLOW": "know-place-aoi-dispatcher.yml",
+        "KNOWN_PLACE_GITHUB_ACTIONS_REF": "main",
+        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REPOSITORY": "shourov-04/SARGuardian",
+        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_WORKFLOW": "know-place-paper-reproduction-dispatcher.yml",
+        "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REF": "main",
     })
-    assert settings.known_place_github_actions_repository == "moshiour0/SARGuardian-Monorepo"
-    assert settings.known_place_github_actions_workflow == "known-place-aoi.yml"
-    assert settings.known_place_github_actions_ref == "migration/known-place"
+    assert settings.known_place_github_actions_repository == "shourov-04/SARGuardian"
+    assert settings.known_place_github_actions_workflow == "know-place-aoi-dispatcher.yml"
+    assert settings.known_place_github_actions_ref == "main"
     assert settings.known_place_paper_github_actions_repository == "moshiour0/SARGuardian-Monorepo"
-    assert settings.known_place_paper_github_actions_workflow == "known-place-author-exact.yml"
-    assert settings.known_place_paper_github_actions_ref == "migration/author-exact"
+    assert settings.known_place_paper_github_actions_workflow == "know-place-paper-reproduction-dispatcher.yml"
+    assert settings.known_place_paper_github_actions_ref == "main"
 
 
 def test_production_rejects_unsafe_known_place_workflow_filename() -> None:
@@ -160,8 +160,8 @@ def test_production_rejects_unsafe_known_place_workflow_filename() -> None:
         "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_test_only",
         "DISPLACEMENT_ACTIONS_ENABLED": "true",
         "GITHUB_ACTIONS_TOKEN": "server-token",
-        "GITHUB_ACTIONS_REPOSITORY": "moshiour0/SARGuardian-backend",
-        "GITHUB_ACTIONS_WORKFLOW": "sarguardian-displacement.yml",
+        "GITHUB_ACTIONS_REPOSITORY": "shourov-04/SARGuardian",
+        "GITHUB_ACTIONS_WORKFLOW": "sarguardian-aoi-wkt-dashboard.yml",
         "GITHUB_ACTIONS_REF": "main",
         "DISPLACEMENT_CALLBACK_SECRET": "callback-secret",
         "PUBLIC_API_URL": "https://api.example.test",
@@ -225,7 +225,7 @@ def test_enabled_river_shift_actions_accepts_branch_refs() -> None:
         "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_test_only",
         "RIVERSHIFT_ACTIONS_ENABLED": "true",
         "RIVERSHIFT_GITHUB_ACTIONS_TOKEN": "server-token",
-        "RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY": "moshiour0/SARGuardian-Monorepo",
+        "RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY": "shourov-04/SARGuardian",
         "RIVERSHIFT_GITHUB_ACTIONS_WORKFLOW": "river-shift-gcov-process.yml",
         "RIVERSHIFT_GITHUB_ACTIONS_REF": "migration/river-shift-preview",
         "RIVERSHIFT_CALLBACK_SECRET": "callback-secret",

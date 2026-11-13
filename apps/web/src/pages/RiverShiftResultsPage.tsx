@@ -592,8 +592,8 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [riverJob, setRiverJob] = useState<RiverShiftJob | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
-  const report: RiverShiftReport | null = null;
-  const geoJSONFiles: LoadedGeoJSON[] = [];
+  const [report] = useState<RiverShiftReport | null>(null);
+  const [geoJSONFiles] = useState<LoadedGeoJSON[]>([]);
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
   const [mapOverlayReady, setMapOverlayReady] = useState(false);

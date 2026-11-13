@@ -35,7 +35,7 @@ KNOWN_PLACE_WORKFLOW_PAGE = (
 )
 
 # The fixed author-exact paper launcher remains separate from the generic AOI workflow.
-KNOWN_PLACE_PAPER_REPOSITORY = "moshiour0/SARGuardian-backend"
+KNOWN_PLACE_PAPER_REPOSITORY = "shourov-04/SARGuardian"
 KNOWN_PLACE_PAPER_WORKFLOW = "know-place-paper-reproduction-dispatcher.yml"
 KNOWN_PLACE_PAPER_REF = "main"
 KNOWN_PLACE_PAPER_WORKFLOW_PAGE = (

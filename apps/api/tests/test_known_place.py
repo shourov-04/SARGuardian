@@ -78,7 +78,7 @@ def test_known_place_dry_run_summary_preserves_release_ids_without_motion_dynami
 @pytest.mark.parametrize(
     "repository,workflow",
     [
-        ("moshiour0/SARGuardian-backend", "know-place-aoi-dispatcher.yml"),
+        ("shourov-04/SARGuardian", "know-place-aoi-dispatcher.yml"),
         ("moshiour0/SARGuardian-backend", "know-place-paper-reproduction-dispatcher.yml"),
     ],
 )

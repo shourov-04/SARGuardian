@@ -101,7 +101,7 @@ def configure(monkeypatch, store: RiverShiftStore, *, owner: str = "river-user")
     monkeypatch.setattr(river_module, "get_settings", lambda: type("Settings", (), {
         "river_shift_actions_enabled": True,
         "river_shift_github_actions_token": "server-token",
-        "river_shift_github_actions_repository": "moshiour0/SARGuardian-backend",
+        "river_shift_github_actions_repository": "shourov-04/SARGuardian",
         "river_shift_github_actions_workflow": "river-shift-gcov-process.yml",
         "river_shift_github_actions_ref": "main",
         "river_shift_callback_secret": "river-callback-secret",

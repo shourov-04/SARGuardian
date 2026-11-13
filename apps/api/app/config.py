@@ -101,8 +101,8 @@ def get_settings(environ: Mapping[str, str] | None = None) -> RuntimeSettings:
         preflight_ttl_seconds=_bounded_int(values, "PREFLIGHT_TTL_SECONDS", DEFAULT_PREFLIGHT_TTL_SECONDS, 60, 604_800),
         displacement_actions_enabled=_flag(values, "DISPLACEMENT_ACTIONS_ENABLED", False),
         github_actions_token=values.get("GITHUB_ACTIONS_TOKEN", "").strip(),
-        github_actions_repository=values.get("GITHUB_ACTIONS_REPOSITORY", "").strip(),
-        github_actions_workflow=values.get("GITHUB_ACTIONS_WORKFLOW", "sarguardian-displacement.yml").strip(),
+        github_actions_repository=values.get("GITHUB_ACTIONS_REPOSITORY", "shourov-04/SARGuardian").strip(),
+        github_actions_workflow=values.get("GITHUB_ACTIONS_WORKFLOW", "sarguardian-aoi-wkt-dashboard.yml").strip(),
         github_actions_ref=values.get("GITHUB_ACTIONS_REF", "main").strip(),
         displacement_callback_secret=values.get("DISPLACEMENT_CALLBACK_SECRET", "").strip(),
         # Generic Known Place runs use the Actions worker in this repository.
@@ -114,7 +114,7 @@ def get_settings(environ: Mapping[str, str] | None = None) -> RuntimeSettings:
         ).strip(),
         known_place_github_actions_ref=values.get("KNOWN_PLACE_GITHUB_ACTIONS_REF", "main").strip(),
         known_place_paper_github_actions_repository=values.get(
-            "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REPOSITORY", "moshiour0/SARGuardian-backend"
+            "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_REPOSITORY", "shourov-04/SARGuardian"
         ).strip(),
         known_place_paper_github_actions_workflow=values.get(
             "KNOWN_PLACE_PAPER_GITHUB_ACTIONS_WORKFLOW", "know-place-paper-reproduction-dispatcher.yml"
@@ -125,7 +125,7 @@ def get_settings(environ: Mapping[str, str] | None = None) -> RuntimeSettings:
         displacement_dispatch_timeout_seconds=_bounded_int(values, "DISPLACEMENT_DISPATCH_TIMEOUT_SECONDS", DEFAULT_DISPLACEMENT_DISPATCH_TIMEOUT_SECONDS, 300, 86_400),
         river_shift_actions_enabled=_flag(values, "RIVERSHIFT_ACTIONS_ENABLED", False),
         river_shift_github_actions_token=values.get("RIVERSHIFT_GITHUB_ACTIONS_TOKEN", values.get("GITHUB_ACTIONS_TOKEN", "")).strip(),
-        river_shift_github_actions_repository=values.get("RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY", "moshiour0/SARGuardian-backend").strip(),
+        river_shift_github_actions_repository=values.get("RIVERSHIFT_GITHUB_ACTIONS_REPOSITORY", "shourov-04/SARGuardian").strip(),
         river_shift_github_actions_workflow=values.get("RIVERSHIFT_GITHUB_ACTIONS_WORKFLOW", "river-shift-gcov-process.yml").strip(),
         river_shift_github_actions_ref=values.get("RIVERSHIFT_GITHUB_ACTIONS_REF", "main").strip(),
         river_shift_callback_secret=values.get("RIVERSHIFT_CALLBACK_SECRET", "").strip(),
