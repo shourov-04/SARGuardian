@@ -16,6 +16,7 @@ from download_gcov_product import (
     download_product,
     is_hdf5_file,
     _earthdata_http_auth_rejection,
+    _login_with_bounded_retry,
     _reauthenticate_with_username_password,
 )
 
@@ -642,6 +643,35 @@ def test_unsupported_http_range_falls_back_to_earthaccess_download(monkeypatch, 
     assert result["download_method"] == "earthaccess.download"
     assert fake.download_calls and len(fake.download_calls) == 1
     assert (tmp_path / f"{GRANULE}.h5").read_bytes() == fake.payload
+
+
+@pytest.mark.parametrize("empty_token", ["", "   "])
+def test_blank_earthdata_token_is_removed_before_password_login(monkeypatch, empty_token):
+    class PasswordLoginEarthaccess(FakeEarthaccess):
+        def login(self, **kwargs):
+            self.login_calls.append({
+                **kwargs,
+                "token_env": os.environ.get("EARTHDATA_TOKEN"),
+                "username": os.environ.get("EARTHDATA_USERNAME"),
+                "password": os.environ.get("EARTHDATA_PASSWORD"),
+            })
+            return True
+
+    fake = PasswordLoginEarthaccess()
+    monkeypatch.setenv("EARTHDATA_TOKEN", empty_token)
+    monkeypatch.setenv("EARTHDATA_USERNAME", "researcher@example.test")
+    monkeypatch.setenv("EARTHDATA_PASSWORD", "password-test-value")
+
+    auth_mode = _login_with_bounded_retry(fake, retry_wave=False)
+
+    assert auth_mode == "username_password"
+    assert fake.login_calls == [{
+        "strategy": "environment",
+        "token_env": None,
+        "username": "researcher@example.test",
+        "password": "password-test-value",
+    }]
+    assert "EARTHDATA_TOKEN" not in os.environ
 
 
 def test_transient_earthdata_login_connection_error_is_retried_within_three_attempts(monkeypatch, tmp_path):

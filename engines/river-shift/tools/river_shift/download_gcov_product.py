@@ -216,6 +216,23 @@ def _login_with_bounded_retry(earthaccess, *, retry_wave: bool) -> str:
     token = os.environ.get("EARTHDATA_TOKEN", "").strip()
     username = os.environ.get("EARTHDATA_USERNAME", "").strip()
     password = os.environ.get("EARTHDATA_PASSWORD", "")
+
+    # GitHub Actions exports configured secrets as environment variables,
+    # including an unset secret as an empty string. earthaccess 0.19.0 checks
+    # whether user_token is not None rather than whether it is non-empty.
+    # Therefore EARTHDATA_TOKEN="" is incorrectly accepted as a bearer token,
+    # marks the Auth object authenticated, and prevents the supported
+    # username/password flow from creating a real EDL token. Remove blank
+    # values before login so earthaccess receives None and uses the credentials.
+    if not token:
+        removed_empty_token = os.environ.pop("EARTHDATA_TOKEN", None)
+        if removed_empty_token is not None:
+            print("RIVERSHIFT_DOWNLOAD_STAGE " + json.dumps({
+                "stage": "earthdata_auth_configuration",
+                "status": "NORMALIZED",
+                "reason": "empty_EARTHDATA_TOKEN_removed_for_username_password_login",
+            }), flush=True)
+
     use_password_fallback = bool(retry_wave and token and username and password)
     auth_mode = "username_password_delayed_retry" if use_password_fallback else (
         "bearer_token" if token else "username_password"
