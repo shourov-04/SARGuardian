@@ -925,9 +925,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         )}
 
         {explorerReport && (
-          <section className="rs-panel rs-results-panel rs-report-summary-top">
-            <ReportPanel report={explorerReport} />
-          </section>
+          <ReportPanel report={explorerReport} />
         )}
 
         {riverJob?.state === 'succeeded' && (
