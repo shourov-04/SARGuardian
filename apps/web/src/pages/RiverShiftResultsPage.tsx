@@ -617,7 +617,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [showMapLabels, setShowMapLabels] = useState(false);
   const [isMapDark, setIsMapDark] = useState(false);
-  const [mapTypeMode, setMapTypeMode] = useState<'map' | 'satellite'>('satellite');
 
 
   const resultMapElement = useRef<HTMLDivElement>(null);
@@ -1009,12 +1008,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         zoom: 2,
         mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
         streetViewControl: false,
-        mapTypeControl: true,
-        mapTypeControlOptions: {
-          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-          position: google.maps.ControlPosition.TOP_LEFT,
-          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-        },
+        mapTypeControl: false,
         fullscreenControl: true,
         clickableIcons: false,
         gestureHandling: 'greedy',
@@ -1024,10 +1018,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         resultMapInstance.current = instance;
         instance.addListener('maptypeid_changed', () => {
           const type = String(instance.getMapTypeId() || 'satellite');
-          if (type === 'roadmap' || type === 'terrain') {
-            setMapTypeMode('map');
-          } else {
-            setMapTypeMode('satellite');
+          if (type !== 'roadmap' && type !== 'terrain') {
             if (type === 'satellite') setShowMapLabels(false);
             if (type === 'hybrid') setShowMapLabels(true);
           }
@@ -1255,22 +1246,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
               <div className="rs-view-panel">
                 <ObservedDateSummaryPanel report={jobPreview?.report || report} />
                 <section className="rs-map-section">
-                  <div className={`known-place-section-heading known-place-map-heading${isMapDark ? ' is-dark' : ''}`}>
-                    <label>
-                      <span>ACQUISITION PAIR</span>
-                      <select
-                        value={selectedAcquisitionKey}
-                        onChange={(event) => handleAcquisitionChange(event.target.value)}
-                        aria-label="Acquisition pair"
-                      >
-                        {acquisitionOptions.map((opt) => (
-                          <option key={opt.key} value={opt.key}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
                   {mapError && <p className="rs-warning-inline">{mapError}</p>}
                   <div className="known-place-google-map-shell">
                     <div className={`known-place-google-map-toolbar${isMapDark ? ' is-dark' : ''}`}>
@@ -1279,30 +1254,20 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                         <span>{mapMetadata.subtitle}</span>
                       </div>
                       <div className="known-place-map-toolbar-actions">
-                        <div className="known-place-map-type-toggle" role="group" aria-label="Map type">
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'map' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'map'}
-                            onClick={() => {
-                              setMapTypeMode('map');
-                              resultMapInstance.current?.setMapTypeId('roadmap');
-                            }}
+                        <label className="known-place-map-acquisition">
+                          <span>ACQUISITION PAIR</span>
+                          <select
+                            value={selectedAcquisitionKey}
+                            onChange={(event) => handleAcquisitionChange(event.target.value)}
+                            aria-label="Acquisition pair"
                           >
-                            Map
-                          </button>
-                          <button
-                            type="button"
-                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
-                            aria-pressed={mapTypeMode === 'satellite'}
-                            onClick={() => {
-                              setMapTypeMode('satellite');
-                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
-                            }}
-                          >
-                            Satellite
-                          </button>
-                        </div>
+                            {acquisitionOptions.map((opt) => (
+                              <option key={opt.key} value={opt.key}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                         <button
                           type="button"
                           className={`known-place-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
@@ -1342,7 +1307,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                       className={`known-place-google-map${isMapDark ? ' is-dark is-imagery-dark' : ''}`}
                       ref={resultMapElement}
                       role="application"
-                      aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay."
+                      aria-label="Interactive Google map showing RiverShift overlays."
                     />
                     <div className={`known-place-map-legend${isMapDark ? ' is-dark' : ''}`} aria-label="Map legend">
                       <span><i className="rs-swatch rs-erosion" /> Erosion candidate</span>
@@ -1351,55 +1316,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                       <span><i className="rs-swatch rs-observed-water" /> Observed-date water extent</span>
                     </div>
                   </div>
-                  {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
-                    <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
-                      {hasCandidateOverlaySource && (
-                        <>
-                          <label className="rs-overlay-toggle rs-overlay-toggle-all">
-                            <input
-                              type="checkbox"
-                              checked={allCandidateLayersVisible}
-                              onChange={(event) => {
-                                setShowErosionOverlay(event.target.checked);
-                                setShowDepositionOverlay(event.target.checked);
-                                setShowNewWaterOverlay(event.target.checked);
-                              }}
-                            />
-                            <span><strong>All candidate overlays</strong><small>Show or hide all implemented change classes.</small></span>
-                          </label>
-                          <div className="rs-overlay-class-grid">
-                            <label className="rs-overlay-toggle">
-                              <input type="checkbox" checked={showErosionOverlay} disabled={candidateOverlayCounts.erosion === 0}
-                                onChange={(event) => setShowErosionOverlay(event.target.checked)} />
-                              <span><strong>Erosion</strong><small>{candidateOverlayCounts.erosion} feature(s)</small></span>
-                            </label>
-                            <label className="rs-overlay-toggle">
-                              <input type="checkbox" checked={showDepositionOverlay} disabled={candidateOverlayCounts.deposition === 0}
-                                onChange={(event) => setShowDepositionOverlay(event.target.checked)} />
-                              <span><strong>Deposition</strong><small>{candidateOverlayCounts.deposition} feature(s)</small></span>
-                            </label>
-                            <label className="rs-overlay-toggle">
-                              <input type="checkbox" checked={showNewWaterOverlay} disabled={candidateOverlayCounts.newWater === 0}
-                                onChange={(event) => setShowNewWaterOverlay(event.target.checked)} />
-                              <span><strong>New water</strong><small>{candidateOverlayCounts.newWater} feature(s)</small></span>
-                            </label>
-                            <label className="rs-overlay-toggle rs-overlay-unavailable">
-                              <input type="checkbox" disabled />
-                              <span><strong>Exposed bar / char</strong><small>Unavailable — detection method not yet validated or implemented.</small></span>
-                            </label>
-                          </div>
-                        </>
-                      )}
-                      {hasObservedWaterFrames && (
-                        <label className="rs-overlay-toggle rs-overlay-observed">
-                          <input type="checkbox" checked={showObservedWaterExtent}
-                            onChange={(event) => setShowObservedWaterExtent(event.target.checked)} />
-                          <span><strong>Observed-date open-water extent</strong><small>{candidateOverlayCounts.observedWater > 0 ? `${candidateOverlayCounts.observedWater} feature(s) in the result layer; ` : ''}Current acquired-date water layer; separate from date-window change candidates.</small></span>
-                        </label>
-                      )}
-                      <p className="rs-overlay-note">Visibility controls affect the map only. Full-resolution masks and scientific metrics are unchanged. Preview polygons require more than 50% sub-cell occupancy; sparser candidates are approximate point markers, not area fills. Different classes may share a coarse preview cell.</p>
-                    </div>
-                  )}
                   {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
                   {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
                   {riverJob?.result_summary && (
