@@ -104,7 +104,7 @@ The links below are direct inspection points, not claims of independent scientif
 |---|---|
 | [API CI — import, 242 tests and Google Maps adapter contract](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | Passed on the API/test update commit |
 | [Web CI — TypeScript/build, lint and 182 tests across 22 files](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Passed |
-| [Full Git-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43446585245) | Passed on the current documentation commit |
+| [Full Git-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43448237561) | Passed on exact main commit `a5c184d9307d307b8f99d89804e8569b9bc2a416`; 2,879 commits scanned and zero findings |
 | [Find Displacements example run](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | Completed; 16/16 selected GOFF/GUNW products validated. The AOI-wide output remains candidate screening, not movement/hazard confirmation; common GUNW time-series gates were withheld. |
 | [Known Place generic AOI run](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Completed successfully |
 | [RiverShift GCOV example run](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | Completed; 10 selected acquisition dates, 72 result artifacts, private storage verification passed; release status PROVISIONAL |
@@ -114,6 +114,7 @@ These examples are intended for workflow inspection. Reviewers should still run 
 ## H. Read the supporting documents
 
 - [Project overview](PROJECT_OVERVIEW.md)
+- [Team and contributions](TEAM_AND_CONTRIBUTIONS.md)
 - [Datasets and references](DATASETS_AND_REFERENCES.md)
 - [Scientific methods](SCIENTIFIC_METHODS.md)
 - [AI usage disclosure](AI_USAGE.md)
