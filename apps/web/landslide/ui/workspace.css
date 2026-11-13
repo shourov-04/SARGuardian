@@ -1279,7 +1279,7 @@
 
 /* Find Displacement result selector mirrors the Known Place Analysis tabs. */
 .displacement-results-view-page .dashboard-selection {
-  padding: 19px;
+  padding: 60px 34px 22px;
   border: 1px solid rgba(255,255,255,.72);
   border-radius: 28px;
   background: rgba(255,255,255,.42);
@@ -1290,7 +1290,7 @@
 }
 .displacement-results-view-page .dashboard-view-options {
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 0;
 }
 .displacement-results-view-page .dashboard-view-option {
   min-height: 72px;
@@ -1311,14 +1311,24 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 0 0 2px rgba(18,155,103,.26), 0 12px 28px rgba(13,107,75,.24);
 }
 .displacement-results-view-page .dashboard-view-option strong,
-.displacement-results-view-page .dashboard-view-option small,
-.displacement-results-view-page .dashboard-view-option > span:last-child { color: #000; }
-.displacement-results-view-page .dashboard-option-number { color: #000; }
+.displacement-results-view-page .dashboard-view-option small { color: #000; }
+.displacement-results-view-page .dashboard-view-summary {
+  margin: 14px 0 0;
+  color: #3d5368;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.displacement-results-view-page .claude-nav-shell {
+  width: min(1470px, calc(100% - 72px));
+}
+.displacement-results-view-page .displacement-results-view-main {
+  width: min(1770px, calc(100% - 64px));
+}
 @media(max-width:760px) {
-  .displacement-results-view-main { width: min(100% - 24px, 1080px); padding-top: 24px; }
+  .displacement-results-view-page .displacement-results-view-main { width: min(100% - 24px, 1080px); padding-top: 24px; }
   .dashboard-view-options { grid-template-columns: minmax(0,1fr); }
   .dashboard-view-option { min-height: 0; }
-  .dashboard-selection { padding: 14px; }
+  .displacement-results-view-page .dashboard-selection { padding: 24px 14px 18px; }
 }
 
 .processing-context-strip {

@@ -9,19 +9,19 @@ const dashboardViews: Array<{ id: DashboardView; title: string; audience: string
   {
     id: 'public',
     title: 'Public Discovery',
-    audience: 'Communities and general users',
+    audience: 'For everyone',
     description: 'A plain-language explanation of the observations, candidate evidence and limitations.',
   },
   {
     id: 'evidence',
     title: 'Explore the Evidence',
-    audience: 'Analysts and decision teams',
+    audience: 'Students and analysts',
     description: 'Interactive map layers, real acquisition pairs and observation playback.',
   },
   {
     id: 'science',
     title: 'Scientific Evidence',
-    audience: 'Researchers and technical reviewers',
+    audience: 'Researchers and reviewers',
     description: 'Measurement diagnostics, quality gates, acquisition networks and provenance.',
   },
 ];
@@ -109,15 +109,8 @@ export function ScientificResults({ job, user, showDownload = true }: { job: Dis
     <section className="scientific-results scientific-results-v2" aria-label="Scientific result outputs">
       {canOpenDashboard && (
         <div className="dashboard-selection">
-          <div className="dashboard-selection-heading">
-            <div>
-              <span className="result-kicker">CHOOSE YOUR VIEW</span>
-              <h3>How would you like to explore this result?</h3>
-              <p>Open any view directly. All three use the same verified saved result bundle; only the presentation and level of detail change.</p>
-            </div>
-          </div>
           <div className="dashboard-view-options" role="group" aria-label="Dashboard audience view">
-            {dashboardViews.map((view, index) => (
+            {dashboardViews.map((view) => (
               <button
                 className={`dashboard-view-option ${selectedView === view.id ? 'is-selected' : ''}`}
                 type="button"
@@ -126,14 +119,12 @@ export function ScientificResults({ job, user, showDownload = true }: { job: Dis
                 aria-pressed={selectedView === view.id}
                 onClick={() => void openDashboard(view.id)}
               >
-                <span className="dashboard-option-number">0{index + 1}</span>
                 <strong>{view.title}</strong>
                 <small>{view.audience}</small>
-                <span>{view.description}</span>
               </button>
             ))}
           </div>
-
+          <p className="dashboard-view-summary">{dashboardViews.find((view) => view.id === selectedView)?.description}</p>
         </div>
       )}
       {canDownloadBundle && <div className="scientific-results-actions">
