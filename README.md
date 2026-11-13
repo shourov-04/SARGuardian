@@ -50,24 +50,46 @@ SARGuardian is designed to help users investigate satellite-derived signals, not
 
 For every analysis, interpretation depends on the selected AOI, product family, acquisition dates, compatibility, and usable pixel support.
 
-## Meet the team
+## Team and contributions
 
 | Team member | Project contribution |
 |---|---|
 | **[Moshiur Rahman Sarker](https://github.com/moshiour0)** · Team Lead | Scientific Core Engine and processing development; overall project development and integration; project coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh. |
 | **[Shagor Chandra Modak](https://github.com/Sagormodak)** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project polishing and refinement. Computer Science and Engineering, Shahjalal University of Science and Technology (SUST), Bangladesh. |
-| **MD Fahim** | RiverShift development and video editing. Computer Science and Engineering, Islamic University, Kushtia, Bangladesh. |
+| **[MD Fahim](https://github.com/mdfahim15164-cell)** | RiverShift development and video editing. Computer Science and Engineering, Islamic University, Kushtia, Bangladesh. |
 | **Tasmia Binte Hasan** | Project storytelling and presentation. |
 
-### GitHub contribution activity
+### Public repository — GitHub Insights snapshot
 
-GitHub calculates the repository's contributor graph from attributed commits. The graph is maintained by GitHub and can update as repository activity is processed; contributor profiles cannot be manually inserted into that generated panel.
+The following figures are transcribed from the **SARGuardian repository Insights → Contributors** view supplied by the team. The selected view covers **8 August–6 November 2026**, for the `main` branch, with merge commits excluded.
 
-- [View contributor statistics](https://github.com/shourov-04/SARGuardian/graphs/contributors)
-- [Browse the commit history](https://github.com/shourov-04/SARGuardian/commits/main)
-- [Open the repository Insights](https://github.com/shourov-04/SARGuardian/pulse)
+| GitHub author | Attributed commits |
+|---|---:|
+| [`moshiour0`](https://github.com/moshiour0) — Moshiur Rahman Sarker | **2,467** |
+| [`Sagormodak`](https://github.com/Sagormodak) — Shagor Chandra Modak | **374** |
 
-The team table above records project responsibilities. The live GitHub contributor graph and commit history provide the repository-attributed development activity.
+The same Insights view also attributes 48 commits to Copilot and 2 to `github-actions[bot]`. These tool/automation identities are listed separately and are not counted as human team members.
+
+- [Open SARGuardian contributor graph](https://github.com/shourov-04/SARGuardian/graphs/contributors?from=08%2F08%2F2026)
+- [Browse SARGuardian main-branch commit history](https://github.com/shourov-04/SARGuardian/commits/main)
+- [Open SARGuardian repository Insights](https://github.com/shourov-04/SARGuardian/pulse)
+
+### Earlier application repository — additional contribution history
+
+Before the current public-facing repository, application development also took place in [`SARGuardian_Dynamic`](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic). Its contribution history is kept separate from the current repository's Insights figures.
+
+A check of that repository's `main`-branch commit records for the supplied 8 August–6 November 2026 window found the visible commit history spanning **15 October–2 November 2026**. Excluding merge commits, the author attribution was:
+
+| GitHub author | Non-merge commits in the earlier Dynamic repository |
+|---|---:|
+| [`mdfahim15164-cell`](https://github.com/mdfahim15164-cell) — MD Fahim | **182** |
+| [`moshiour0`](https://github.com/moshiour0) — Moshiur Rahman Sarker | **101** |
+| [`Sagormodak`](https://github.com/Sagormodak) — Shagor Chandra Modak | **47** |
+
+These are a **separate repository-history count**, not an addition to the current SARGuardian Insights totals. The project contribution descriptions above explain each person's responsibilities; GitHub's graphs and commit history show repository-attributed activity.
+
+- [Open SARGuardian_Dynamic contributor graph](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic/graphs/contributors?from=08%2F08%2F2026)
+- [Browse SARGuardian_Dynamic main-branch commit history](https://github.com/mdfahim15164-cell/SARGuardian_Dynamic/commits/main)
 
 ## Repository structure
 
