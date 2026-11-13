@@ -89,7 +89,7 @@ The documentation is organised so that a human reviewer or AI-assisted reviewer 
 | Team member | Contribution |
 |---|---|
 | **Moshiur Rahman Sarker — Team Lead** | Scientific Core Engine and processing development; project development and integration; coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh. |
-| **Shagor Chandra Modak** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project refinement. CSE, Shahjalal University of Science and Technology, Bangladesh. |
+| **Sagor Chandra Modak** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project refinement and Scientific Validation. CSE, Shahjalal University of Science and Technology, Bangladesh. |
 | **MD Fahim** | RiverShift development and video editing. CSE, Islamic University, Kushtia, Bangladesh. |
 | **Tasmia Binte Hasan** | Project storytelling and presentation. |
 
