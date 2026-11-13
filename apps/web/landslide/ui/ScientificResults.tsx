@@ -180,11 +180,10 @@ export function ScientificResultsPage({ jobId, user, onBack }: { jobId: string |
   return (
     <div className="home-page claude-home claude-processing-page displacement-results-view-page">
       <div className="claude-background" aria-hidden="true"><i /><i /><i /></div>
-      <header className="claude-nav-shell is-archive processing-only-header">
+      <header className="claude-nav-shell is-archive">
         <div className="claude-nav-inner">
           <a className="claude-brand" href="/" aria-label="SARGuardian home"><span className="claude-brand-mark"><BrandLogo className="claude-brand-logo" /></span><span className="claude-brand-word"><b>SAR</b>Guardian</span></a>
-          <span className="claude-nav-title">Results</span>
-          <nav className="claude-nav-links" aria-label="Results navigation"><button type="button" className="archive-home-link" onClick={onBack}>Back</button></nav>
+          <nav className="claude-nav-links" aria-label="Results navigation"><a className="archive-home-link" href="/">Home</a></nav>
         </div>
       </header>
       <main className="displacement-results-view-main">

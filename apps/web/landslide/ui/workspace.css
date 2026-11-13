@@ -1040,7 +1040,7 @@
 .landslide-route-shell .known-place-analysis .known-place-consent {
   margin: 0;
   padding: 22px 24px;
-  border-top: 1px solid rgba(255, 255, 255, .7);
+  border-top: 0;
 }
 .landslide-route-shell .known-place-analysis .known-place-consent label { color: var(--known-muted); }
 .landslide-route-shell .known-place-analysis .known-place-consent b { color: var(--known-ink); }
@@ -1276,6 +1276,44 @@
 .dashboard-view-option strong { color: #f7fcfd; font: 700 14px 'Manrope',sans-serif; }
 .dashboard-view-option small { color: #a8d5d9; font-size: 9px; font-weight: 700; }
 .dashboard-view-option > span:last-child { color: var(--sg-muted); font-size: 10px; line-height: 1.55; }
+
+/* Find Displacement result selector mirrors the Known Place Analysis tabs. */
+.displacement-results-view-page .dashboard-selection {
+  padding: 19px;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 28px;
+  background: rgba(255,255,255,.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 14px 40px -16px rgba(30,65,95,.32);
+  color: var(--known-ink);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+}
+.displacement-results-view-page .dashboard-view-options {
+  gap: 8px;
+  margin-top: 18px;
+}
+.displacement-results-view-page .dashboard-view-option {
+  min-height: 72px;
+  padding: 12px 18px;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #43b9ee, #0875c7);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 10px 24px rgba(8,104,190,.24);
+}
+.displacement-results-view-page .dashboard-view-option:hover:not(:disabled) {
+  border-color: rgba(255,255,255,.9);
+  background: linear-gradient(180deg, #5bc5f4, #1689df);
+}
+.displacement-results-view-page .dashboard-view-option.is-selected {
+  border-color: rgba(255,255,255,.88);
+  background: linear-gradient(135deg, #45cf9c, #129b67);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 0 0 2px rgba(18,155,103,.26), 0 12px 28px rgba(13,107,75,.24);
+}
+.displacement-results-view-page .dashboard-view-option strong,
+.displacement-results-view-page .dashboard-view-option small,
+.displacement-results-view-page .dashboard-view-option > span:last-child { color: #000; }
+.displacement-results-view-page .dashboard-option-number { color: #000; }
 @media(max-width:760px) {
   .displacement-results-view-main { width: min(100% - 24px, 1080px); padding-top: 24px; }
   .dashboard-view-options { grid-template-columns: minmax(0,1fr); }
