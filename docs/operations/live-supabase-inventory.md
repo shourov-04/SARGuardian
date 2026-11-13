@@ -1,4 +1,6 @@
-# Live Supabase inventory — read-only audit
+# Supabase inventory — historical read-only snapshot
+
+> **Historical record — 2026-11-05 only.** This document preserves a read-only database inventory captured on 5 November 2026. Row counts, project status, migration history, policies, grants, and advisor findings are time-specific observations, not assertions about the current database state. Do not use this snapshot as permission to modify production or as a substitute for a current, authorized audit. No Supabase status or data was checked or changed while updating this documentation.
 
 **Audited:** 2026-11-05  
 **Project:** `SARGuardian_Dynamic` (`ufwjmhivvnoewjsbteey`)  
