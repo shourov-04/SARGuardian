@@ -25,6 +25,17 @@ let mapsConfigured = false;
 
 const RIVER_SHIFT_RASTER_SIZE = 1200;
 
+const RIVER_SHIFT_DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: 'geometry', stylers: [{ color: '#182b38' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#b9d4df' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#182b38' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#3b5a68' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#203944' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304957' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#192c38' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
+];
+
 type CoordinatePair = [number, number];
 type RasterBounds = { north: number; south: number; east: number; west: number };
 
@@ -451,6 +462,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showDepositionOverlay, setShowDepositionOverlay] = useState(true);
   const [showNewWaterOverlay, setShowNewWaterOverlay] = useState(true);
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
+  const [mapDarkMode, setMapDarkMode] = useState(false);
+  const [mapLabelsVisible, setMapLabelsVisible] = useState(true);
+  const [mapType, setMapType] = useState('satellite');
 
 
   const resultMapElement = useRef<HTMLDivElement>(null);
@@ -747,7 +761,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         mapTypeId: 'satellite',
         streetViewControl: false,
         mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          mapTypeIds: ['roadmap', 'terrain', 'satellite'],
+        },
         fullscreenControl: true,
+        gestureHandling: 'greedy',
       };
       if (resultMapElement.current && !resultMapInstance.current) {
         resultMapInstance.current = new maps.Map(resultMapElement.current, mapOptions);
@@ -758,6 +777,31 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = resultMapInstance.current;
+    if (!map) return;
+    const syncMapType = () => {
+      const nextType = String(map.getMapTypeId() || 'satellite');
+      setMapType(nextType);
+      if (nextType === 'satellite') setMapLabelsVisible(false);
+      if (nextType === 'hybrid') setMapLabelsVisible(true);
+    };
+    syncMapType();
+    const listener = map.addListener('maptypeid_changed', syncMapType);
+    return () => listener.remove();
+  }, [mapReady]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = resultMapInstance.current;
+    if (!map) return;
+    const isImagery = mapType === 'satellite' || mapType === 'hybrid';
+    const styles = mapDarkMode ? [...RIVER_SHIFT_DARK_MAP_STYLES] : [];
+    if (!mapLabelsVisible) styles.push({ elementType: 'labels', stylers: [{ visibility: 'off' }] });
+    map.setOptions({ styles: isImagery ? null : styles });
+  }, [mapReady, mapDarkMode, mapLabelsVisible, mapType]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -998,7 +1042,40 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           <section className="rs-map-section">
             <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
             {mapError && <p className="rs-warning-inline">{mapError}</p>}
-            <div className="rs-map" ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
+            <div className={`rs-map-shell${mapDarkMode ? ' is-dark' : ''}`}>
+              <div className={`rs-map-toolbar${mapDarkMode ? ' is-dark' : ''}`}>
+                <div>
+                  <strong>River Shift spatial output</strong>
+                  <span>Satellite context · display-only preview overlays</span>
+                </div>
+                <div className="rs-map-toolbar-actions">
+                  <button
+                    type="button"
+                    className={`rs-map-label-toggle${mapLabelsVisible ? ' is-on' : ''}`}
+                    role="switch"
+                    aria-checked={mapLabelsVisible}
+                    onClick={() => {
+                      if (mapType === 'satellite') resultMapInstance.current?.setMapTypeId('hybrid');
+                      else if (mapType === 'hybrid') resultMapInstance.current?.setMapTypeId('satellite');
+                      else setMapLabelsVisible((value) => !value);
+                    }}
+                  >
+                    <span>Labels</span><span className="rs-map-mini-switch" aria-hidden="true"><i /></span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`rs-map-theme-toggle${mapDarkMode ? ' is-dark' : ''}`}
+                    role="switch"
+                    aria-checked={mapDarkMode}
+                    onClick={() => setMapDarkMode((value) => !value)}
+                  >
+                    <span>{mapDarkMode ? 'Dark' : 'Light'}</span>
+                    <span className="rs-map-theme-track" aria-hidden="true"><i>☼</i></span>
+                  </button>
+                </div>
+              </div>
+              <div className={`rs-map${mapDarkMode ? ' is-imagery-dark' : ''}`} ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
+            </div>
             <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span></div>
             {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
               <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
