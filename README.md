@@ -4,6 +4,9 @@
 
 SARGuardian is a NISAR-powered surface-change intelligence platform. It brings AOI-driven displacement screening, focused known-place analysis and NISAR GCOV river-change screening into one traceable application experience.
 
+**Live application:** [Open SARGuardian](https://sar-guardian-monorepo-web.vercel.app/)  
+**Public submission repository:** [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian)
+
 Users choose an area of interest and observation window, explore compatible NISAR products, follow processing progress and review candidate changes with acquisition dates, source identity and quality evidence.
 
 ## What the platform offers
@@ -26,11 +29,15 @@ The workflow categories describe different user questions and evidence paths; th
 
 The current frontend includes a guided “How it works” journey, staged processing views, product counters, dedicated Known Place controls and a RiverShift results experience with map, summary, provenance and QA panels.
 
-## Demonstrated processing evidence
+## Try SARGuardian and inspect a live run
 
-[RiverShift Run #25 — 12 November 2026](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660) completed an end-to-end Jamuna–Chowhali request using 10 exact NISAR L2 GCOV P05023 products across 10 actual acquisition dates. All 10 first-attempt product workers passed; the result manifest validated 72 output entries and private result publication completed with 73 receipts.
+Reviewers are invited to open the live application, select an area of interest and observation window, and explore the available workflows. Where processing is enabled for the reviewer account and compatible NISAR products are available, submit a request and inspect the resulting observations and outputs directly in the application.
 
-The run connects catalogue discovery, authenticated product retrieval, HDF5/layer checks, AOI extraction, shared-grid assembly, provenance and private result publication.
+**GitHub Actions is central to SARGuardian's Scientific Core Engine implementation and execution.** It dispatches and coordinates workflow stages for catalogue discovery, exact-product retrieval, data/layer validation, scientific-engine execution, artifact retention, provenance checks and result delivery. The scientific algorithms themselves live in the version-controlled processing engines and NISAR science modules; Actions provides repeatable orchestration and execution. Each new request can create a fresh run, so reviewers are encouraged to inspect a current workflow rather than rely on one historical run link.
+
+- [Open the live SARGuardian application](https://sar-guardian-monorepo-web.vercel.app/)
+- [Inspect GitHub Actions workflow definitions](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows)
+- [Inspect scientific engines](https://github.com/shourov-04/SARGuardian/tree/main/engines)
 
 ## Product and presentation documents
 
@@ -39,11 +46,12 @@ The run connects catalogue discovery, authenticated product retrieval, HDF5/laye
 - [Application Experience and UI/UX Brief](docs/submission/APPLICATION_UX_BRIEF.md)
 - [RiverShift Judge Brief](docs/submission/RIVERSHIFT_2026_JUDGE_BRIEF.md)
 - [Judge Evidence Matrix](docs/submission/score-sheet-evidence-matrix.md)
+- [AI Usage Disclosure](docs/submission/AI_USAGE.md)
 
 ## Team and contributions
 
 - **Moshiur Rahman Sarker — Team Lead:** Scientific Core Engine and processing development; overall project development and integration; project coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh.
-- **Sagor Chandra Modak:** Scientific Core Engine implementation in GitHub Actions; UI/UX design; final project polishing and refinement. Department of Computer Science & Engineering, Shahjalal University of Science and Technology (SUST), Sylhet, Bangladesh.
+- **Sagor Chandra Modak:** Scientific Core Engine implementation and workflow integration through GitHub Actions; UI/UX design; final project polishing and refinement. Department of Computer Science & Engineering, Shahjalal University of Science and Technology (SUST), Sylhet, Bangladesh.
 - **MD Fahim:** River Shift module and initial prototype development; video editing. Department of Computer Science and Engineering, Islamic University, Kushtia, Bangladesh.
 - **Tasmia Binte Hasan:** Project storytelling, presentation development and communication of scientific impact. Department of Computer Science and Engineering, Islamic University, Kushtia, Bangladesh.
 
@@ -55,7 +63,7 @@ The run connects catalogue discovery, authenticated product retrieval, HDF5/laye
 - science/nisar-core — NISAR scientific processing components.
 - .github/workflows — automated processing and validation workflows.
 - docs/submission — judge-facing product, video, UI/UX and evidence documentation.
-- docs/migration — source-import and migration-history records.
+- docs/migration — concise source-import and migration-history records for the original application, backend processing and NISAR science components.
 
 ## Scientific interpretation
 
