@@ -46,7 +46,7 @@ These are explainable screening classes connected to the source observations and
 
 ## 5. Current application experience
 
-The active application interface is documented against the public [shourov-04/SARGuardian fork](https://github.com/shourov-04/SARGuardian), whose main branch was reviewed at commit eb5e7e4790847789daf426df5328ead2c8674398 on 13 November 2026.
+The active application is available at the [SARGuardian live website](https://sar-guardian-monorepo-web.vercel.app/), and its public-facing source is maintained in [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian). Reviewers are invited to use the site directly and explore its available AOI-driven workflows.
 
 The user journey combines a project home page, four-step “How it works” orientation, staged displacement processing, focused Known Place controls and a dedicated RiverShift processing and result experience. The displacement view presents separate GUNW and GOFF counters. Known Place supports a selected GOFF candidate hand-off into a Measurement Polygon and catalogue release/variant selection. RiverShift provides processing settings and counters, a result map, observed summary, granule provenance, SHA-256 integrity hashes, spatial QA and uncertainty/sensitivity panels.
 
@@ -62,37 +62,20 @@ See the [Application Experience and UI/UX Brief](APPLICATION_UX_BRIEF.md) for th
 6. **Review results.** Users inspect actual observation dates, candidate layers, geometry/overlap diagnostics and evidence reports.
 7. **Retain the result package.** The verified result package and manifest are retained through the configured private result-storage path.
 
-## 7. Latest live River Shift evidence — Run #25
+## 7. GitHub Actions and live reviewer experience
 
-**Run:** [RiverShift Run #25 — GitHub Actions](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660)  
-**Repository / branch:** shourov-04/SARGuardian, main  
-**Checked-out commit:** 8f9272adafc43ac080227083f12d122a8a271be8  
-**Run date:** 12 November 2026  
-**AOI case:** Jamuna–Chowhali demonstration request  
-**Collection:** NISAR L2 GCOV PROVISIONAL, CRID P05023  
-**Request window:** 12 November 2025–12 November 2026  
-**Catalogue qualification:** NASA CMR returned 68 candidates; the compatibility and support audit selected 10 exact granules across 10 actual acquisition dates.
+GitHub Actions plays a central role in implementing and running SARGuardian's Scientific Core Engine workflows. When a user submits an AOI and observation window, the application dispatches the relevant workflow. The workflow coordinates catalogue discovery, product selection, authenticated retrieval, native data and layer validation, scientific-engine execution, result assembly, provenance checks and delivery of the retained result package.
 
-### Acquisition dates
+The scientific calculations are implemented in the version-controlled processing engines and NISAR science modules. GitHub Actions provides repeatable execution, dependency coordination, job isolation, logs and artifact hand-off that connect those components into an operational system.
 
-| # | Acquisition date | # | Acquisition date |
-|---:|---|---:|---|
-| 1 | 18 June 2026 | 6 | 29 August 2026 |
-| 2 | 30 June 2026 | 7 | 10 September 2026 |
-| 3 | 12 July 2026 | 8 | 22 September 2026 |
-| 4 | 24 July 2026 | 9 | 4 October 2026 |
-| 5 | 17 August 2026 | 10 | 16 October 2026 |
+**Reviewers are warmly invited to test the application directly:**
 
-All 10 first-attempt product worker jobs passed. The workflow completed with 24 successful jobs and 6 intentionally skipped jobs; no job failed. Product retrieval, authenticated ASF byte-range access, HDF5 inspection, requested-layer checks, AOI raster extraction and per-product artifact preparation passed for the selected products.
+- **Live application:** [Open SARGuardian](https://sar-guardian-monorepo-web.vercel.app/)
+- **Public project repository:** [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian)
+- **GitHub Actions workflows:** [Inspect the workflow implementation](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows)
+- **Scientific engines:** [Inspect the processing code](https://github.com/shourov-04/SARGuardian/tree/main/engines)
 
-Ten date rasters were assembled and aligned to a shared observation grid. The source provenance manifest passed for all 10 products. The final result manifest validated **72 output entries**, and private result publication completed with **73 publication receipts**, followed by successful final assembly and signed callback.
-
-Traceability values from the run:
-
-- Source-granule provenance manifest SHA-256: 7c515d538024aaea176de2ac34e3d30360ce267bb56d46d6e1c8bce9e72de995
-- Final result-manifest SHA-256: ca8c77d68f42041e74d4cf97735aac10636fa9eead5ce7133bece165ce93b47a
-
-Run #25 is a complete end-to-end processing demonstration for its selected AOI, date window and compatible product series. It provides a reproducible record from catalogue discovery through private result publication.
+Choose a location and date window in the application, explore the workflow, and—where account access and currently released compatible NISAR products allow—submit a fresh analysis. Each processing request has its own execution record and result context. This is why the submission does not depend on one selected historical Actions run as its only validation evidence: judges are encouraged to inspect a current run generated through the application.
 
 ## 8. NISAR data: what is used and why
 
@@ -142,7 +125,7 @@ The team combined scientific processing, application design, river-change develo
 **Education:** Department of Computer Science & Engineering, Shahjalal University of Science and Technology (SUST), Sylhet, Bangladesh.
 
 **Responsibilities**
-- Scientific Core Engine implementation in GitHub Actions.
+- Scientific Core Engine implementation and workflow integration through GitHub Actions.
 - UI/UX design.
 - Final project polishing and refinement.
 
@@ -190,8 +173,8 @@ The message is that SARGuardian identifies radar-derived anomalies for investiga
 1. Read the project proposition and four workflow descriptions in this pack.
 2. Watch the [4:05 Full HD demonstration video](VIDEO_PRESENTATION_BRIEF.md).
 3. Follow the [application experience and UI/UX brief](APPLICATION_UX_BRIEF.md) to inspect the current interface and user journey.
-4. Open [RiverShift Run #25](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660) for the live ten-product processing record.
-5. Use the [RiverShift Judge Brief](RIVERSHIFT_2026_JUDGE_BRIEF.md) and linked source code for the acquisition, processing and interpretation details.
+4. Open the live application and explore the available workflows with a location and observation window of your choice.
+5. Inspect the [GitHub Actions workflows](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows) and [scientific engines](https://github.com/shourov-04/SARGuardian/tree/main/engines) to understand how the Scientific Core Engine is executed.
 
 ## 13. Primary references
 
@@ -202,5 +185,6 @@ The message is that SARGuardian identifies radar-derived anomalies for investiga
 - [NASA CMR Search API](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html)
 - [SARGuardian Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo)
 - [Active SARGuardian fork and application](https://github.com/shourov-04/SARGuardian)
-- [RiverShift Run #25 — 10-product end-to-end evidence](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660)
-- [Monorepo Snapshot Regression — 20/20 jobs passed](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/43243267939)
+- [SARGuardian live application](https://sar-guardian-monorepo-web.vercel.app/)
+- [SARGuardian public repository](https://github.com/shourov-04/SARGuardian)
+- [SARGuardian consolidated source history](https://github.com/moshiour0/SARGuardian-Monorepo)
