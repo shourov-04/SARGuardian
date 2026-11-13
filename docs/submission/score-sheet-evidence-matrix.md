@@ -3,24 +3,29 @@
 **Challenge:** Dancing with the SARs  
 **Category:** Earth Science  
 **Product:** SARGuardian — NISAR-powered surface-change intelligence  
-**Evidence update:** 13 November 2026
+**Evidence update:** 13 November 2026  
+**Local rubric maximum:** 118 points before any applicable women-participation bonus.
 
-This matrix guides reviewers to the product features and evidence that support each judging dimension.
+This matrix guides reviewers to the product features and evidence that support each judging dimension. The points column reproduces the weighting in the supplied local score sheet.
 
 ## Judging criteria and evidence
 
-| Criterion | What SARGuardian demonstrates | Evidence to inspect |
-|---|---|---|
-| **Impact** | AOI-driven screening for slope, glacier-terrain, known-place and river-change questions, illustrated through regional use cases. | Final submission pack, Bhote Koshi benchmark, RiverShift Run #25 and the demonstration video. |
-| **Creativity** | Target-free AOI-wide displacement discovery, candidate-to-Known-Place hand-off, separate two-polygon analysis and multi-date GCOV river screening. | Application Experience brief, Find Displacements and Known Place source, RiverShift guide. |
-| **Validity** | Exact NISAR product identity, acquisition dates, HDF5/layer checks, source manifests, checksums, common-grid alignment, spatial QA and reproducible processing records. | RiverShift Run #25, result manifests, engine tests and RiverShift Judge Brief. |
-| **Relevance** | NISAR data are the measurement inputs: GUNW phase, GOFF offsets and GCOV covariance observations serve distinct scientific roles. | NISAR data mapping in the Final Submission Pack, NISAR science core and processing engines. |
-| **Presentation** | A 4:05 Full HD demonstration video, guided product orientation, workflow screens, mapped results and a coherent scientific narrative. | Video Presentation Brief and Application Experience brief. |
-| **Teamwork** | Four complementary workstreams across scientific-core development, UI/UX, RiverShift module/prototype development, integration, storytelling and presentation. | Final Submission Pack — Team roles, contributions and collaboration. |
-| **User experience** | Map-first AOI selection, four-step orientation, staged processing, product counters, candidate-to-Known-Place hand-off, result navigation and evidence panels. | Application Experience and UI/UX Brief; current SARGuardian frontend. |
-| **NASA data usage** | NISAR products drive the core analysis; NASA CMR/ASF support product discovery and access; provenance is retained with results. | Product manifests, workflow implementations, Run #25 and NISAR data mapping. |
-| **Challenge category** | “Dancing with the SARs” and “Earth Science” are identified consistently across the submission materials. | README and Final Submission Pack. |
-| **Repository access** | Public source repositories provide access to the application, processing implementation and supporting judge documentation. | [SARGuardian Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo) and [active SARGuardian fork](https://github.com/shourov-04/SARGuardian). |
+| Criterion | Maximum points | What SARGuardian demonstrates | Evidence to inspect |
+|---|---:|---|---|
+| **Impact** | 20 | AOI-driven screening for slope, glacier-terrain, known-place and river-change questions, illustrated through regional use cases. | Final Submission Pack, Bhote Koshi benchmark, RiverShift Run #25 and the demonstration video. |
+| **Creativity** | 20 | Target-free AOI-wide displacement discovery, candidate-to-Known-Place hand-off, separate two-polygon analysis and multi-date GCOV river screening. | Application Experience brief, Find Displacements and Known Place source, RiverShift guide. |
+| **Validity** | 20 | Exact NISAR product identity, acquisition dates, HDF5/layer checks, source manifests, checksums, common-grid alignment, spatial QA and reproducible processing records. | RiverShift Run #25, result manifests, engine tests and RiverShift Judge Brief. |
+| **Relevance** | 20 | NISAR data are the measurement inputs: GUNW phase, GOFF offsets and GCOV covariance observations serve distinct scientific roles. | NISAR data mapping in the Final Submission Pack, NISAR science core and processing engines. |
+| **Presentation** | 20 | A 4:05 Full HD demonstration video, guided product orientation, workflow screens, mapped results and a coherent scientific narrative. | Video Presentation Brief and Application Experience brief. |
+| **Teamwork** | 5 | Four complementary workstreams across scientific-core development, UI/UX, RiverShift module/prototype development, integration, storytelling and presentation. | Final Submission Pack — Team roles, contributions and collaboration. |
+| **User experience** | 5 | Map-first AOI selection, four-step orientation, staged processing, product counters, candidate-to-Known-Place hand-off, result navigation and evidence panels. | Application Experience and UI/UX Brief; current SARGuardian frontend. |
+| **NASA data usage** | 5 | NISAR products drive the core analysis; NASA CMR/ASF support product discovery and access; provenance is retained with results. | Product manifests, workflow implementations, Run #25 and NISAR data mapping. |
+| **Challenge category identified** | 1 | “Dancing with the SARs” and “Earth Science” are identified consistently across the submission materials. | Project overview and official submission page. |
+| **Repository access** | 1 | Public source repositories provide access to the application, processing implementation and supporting judge documentation. | [SARGuardian Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo) and [active SARGuardian fork](https://github.com/shourov-04/SARGuardian). |
+| **Project page complete** | 1 | The official project page brings together the project description, team, challenge/category, media and source references. | Official NASA Space Apps project page. |
+| **Total** | **118** |  |  |
+
+The supplied local rubric also describes a **conditional +5% women-participation bonus**. It is additional to the 118-point base and applies only where the local organiser's eligibility requirements are met.
 
 ## The four workflow experiences
 
