@@ -2586,19 +2586,6 @@ def get_displacement_dashboard(
     html = html.replace("<head>", "<head>" + meta, 1)
     html = _apply_dashboard_presentation(html)
     html = _apply_google_maps_dashboard(html, google_maps_api_key)
-    screen = browser_screen
-    displayed = screen.get("candidate_features_displayed", 0)
-    total = screen.get("candidate_features_total", displayed)
-    note = (
-        f'<aside role="note" style="margin:18px auto;max-width:1200px;padding:12px 16px;'
-        f'border:1px solid rgba(255,207,120,.42);border-radius:12px;'
-        f'background:#2a2115;color:#ffe7b2;font:12px/1.6 system-ui">'
-        f'Browser-view note: {displayed} of {total} AOI-wide candidate region(s) are shown. '
-        f'The interactive viewer receives a compact display manifest; full pair-level screening receipts, '
-        f'detailed science diagnostics, source GeoJSON and native scientific artifacts remain in the '
-        f'checksum-verified saved result ZIP. This does not change the saved scientific analysis.</aside>'
-    )
-    html = html.replace("</body>", note + "</body>", 1) if "</body>" in html else html + note
     # Stream the bounded viewer shell and manifest to stay within Vercel's 4.5 MiB buffered-response limit.
     return StreamingResponse(_iter_response_bytes(html.encode("utf-8")), media_type="text/html", headers={
         "Cache-Control": "private, no-store",

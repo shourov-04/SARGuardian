@@ -368,7 +368,7 @@ class PrepareWebAssetsTests(unittest.TestCase):
             viewer = (root / "web-dashboard" / "index.html").read_text(encoding="utf-8")
             self.assertIn('id="derivedLayerSelect"', viewer)
             self.assertIn("function renderDerivedLayer()", viewer)
-            self.assertIn("AOI-derived background", viewer)
+            self.assertNotIn("AOI-derived background", viewer)
             self.assertEqual(hashlib.sha256(product_tif.read_bytes()).hexdigest(), product_before_hash)
             self.assertEqual(hashlib.sha256(pixel_tif.read_bytes()).hexdigest(), pixel_sha)
 
@@ -1098,7 +1098,7 @@ if (!hasRenderableFamily("GOFF")) throw new Error("GOFF_FALLBACK_NOT_FOUND");
         self.assertIn("GUNW LOS candidates require a separate LOS measurement workflow", viewer)
         self.assertIn("GOFF candidate has multiple polygon components or interior rings", viewer)
         self.assertIn("originalVertices>20000", viewer)
-        self.assertIn('id="pixelTimeseriesSummary"', viewer)
+        self.assertNotIn('id="pixelTimeseriesSummary"', viewer)
 
         if shutil.which("node"):
             helper_start = viewer.index("function simplifyCandidateOpenPath(points,tolerance)")
