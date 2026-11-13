@@ -581,7 +581,7 @@ def test_active_displacement_request_guard_migration_is_present() -> None:
 
 
 def test_displacement_workflow_declares_the_current_account_dispatch_contract() -> None:
-    workflow_path = (__import__("pathlib").Path(main_module.__file__).parents[2]
+    workflow_path = (__import__("pathlib").Path(main_module.__file__).parents[3]
                      / ".github" / "workflows" / "sarguardian-aoi-wkt-dashboard.yml")
     workflow = workflow_path.read_text(encoding="utf-8")
     assert "run-name: ${{ inputs.job_id && format('Displacement {0}', inputs.job_id)" in workflow
