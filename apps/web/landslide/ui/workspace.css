@@ -1319,7 +1319,7 @@
   line-height: 1.5;
 }
 .displacement-results-view-page .claude-nav-shell {
-  width: min(1470px, calc(100% - 72px));
+  width: min(980px, calc(100% - 24px));
 }
 .displacement-results-view-page .displacement-results-view-main {
   width: min(1770px, calc(100% - 64px));
