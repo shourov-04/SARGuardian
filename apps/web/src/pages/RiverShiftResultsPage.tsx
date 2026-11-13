@@ -259,11 +259,6 @@ function OverlapAuditPanel({ summary }: { summary: Record<string, unknown> }) {
           </tbody>
         </table>
       </div>
-      <p className="rs-overlay-note">
-        Erosion and deposition source masks must be disjoint on common valid pixels. New-water may legitimately
-        intersect a morphology class because it is derived from a different date comparison. Review the selected
-        dates before interpreting any intersection as a physical contradiction.
-      </p>
     </section>
   );
 }
@@ -559,7 +554,6 @@ function ScientificReadinessPanel({
           </div>
         ))}
       </div>
-      <p className="rs-overlay-note">A processing PASS and an overlap-audit PASS do not establish physical change or model accuracy. VERIFIED requires an eligible independent reference, complete provenance and a signed review record.</p>
     </section>
   );
 }
@@ -1008,7 +1002,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         zoom: 2,
         mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
         streetViewControl: false,
-        mapTypeControl: false,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: ['roadmap', 'satellite'],
+        },
         fullscreenControl: true,
         clickableIcons: false,
         gestureHandling: 'greedy',
@@ -1220,7 +1219,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         onSignIn={onSignIn}
         onSignOut={onSignOut}
         isArchivePage
-        hideProfile={false}
+        hideProfile
         showPageTitle
         pageTitle="River Shift Results"
       />
