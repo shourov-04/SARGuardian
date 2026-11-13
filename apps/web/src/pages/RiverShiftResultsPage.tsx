@@ -24,6 +24,129 @@ type LoadedJobFrame = { jobId: string; date: string; data: RiverShiftGeoJSON };
 const GOOGLE_MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 let mapsConfigured = false;
 
+const RIVER_SHIFT_RASTER_SIZE = 1200;
+
+type CoordinatePair = [number, number];
+type RasterBounds = { north: number; south: number; east: number; west: number };
+
+function collectRiverShiftCoordinates(value: unknown, output: CoordinatePair[]): void {
+  if (!Array.isArray(value)) return;
+  if (value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
+    if (Number.isFinite(value[0]) && Number.isFinite(value[1])) output.push([value[0], value[1]]);
+    return;
+  }
+  value.forEach((child) => collectRiverShiftCoordinates(child, output));
+}
+
+function riverShiftRasterColour(properties?: Record<string, unknown>): string {
+  const labels = [properties?.river_shift_layer, properties?.class, properties?.change_class,
+    properties?.change_type, properties?.candidate_type]
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.toLowerCase().replace(/[\s-]+/g, '_')).join('_');
+  if (labels.includes('erosion')) return '#f06a6a';
+  if (labels.includes('deposition') || labels.includes('accretion')) return '#48c774';
+  if (labels.includes('new_water') || labels.includes('newly_water') || labels.includes('water_covered')) return '#4ea8de';
+  if (labels.includes('open_water') || labels.includes('water')) return '#73b3df';
+  return '#9aafbb';
+}
+
+function riverShiftRasterAlpha(properties?: Record<string, unknown>): number {
+  return properties?.preview_sparse_marker === true ? 0.9 : 0.5;
+}
+
+function drawRiverShiftRasterGeometry(
+  context: CanvasRenderingContext2D,
+  geometry: RiverShiftGeoJSON['features'][number]['geometry'],
+  properties: Record<string, unknown> | undefined,
+  project: (pair: CoordinatePair) => [number, number],
+): void {
+  const colour = riverShiftRasterColour(properties);
+  const alpha = riverShiftRasterAlpha(properties);
+  const drawPoint = (pair: CoordinatePair, radius = 2.5) => {
+    const [x, y] = project(pair);
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fillStyle = colour;
+    context.globalAlpha = alpha;
+    context.fill();
+  };
+  const drawRing = (ring: unknown, fill: boolean) => {
+    if (!Array.isArray(ring)) return;
+    const pairs: CoordinatePair[] = [];
+    ring.forEach((pair) => {
+      if (Array.isArray(pair) && typeof pair[0] === 'number' && typeof pair[1] === 'number') {
+        pairs.push([pair[0], pair[1]]);
+      }
+    });
+    if (pairs.length < 2) return;
+    context.beginPath();
+    pairs.forEach((pair, index) => {
+      const [x, y] = project(pair);
+      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    context.closePath();
+    context.globalAlpha = fill ? alpha * 0.65 : alpha;
+    context.fillStyle = colour;
+    context.strokeStyle = colour;
+    context.lineWidth = 1.2;
+    if (fill) context.fill();
+    context.stroke();
+  };
+
+  context.globalAlpha = 1;
+  if (geometry.type === 'Point') {
+    const points: CoordinatePair[] = [];
+    collectRiverShiftCoordinates(geometry.coordinates, points);
+    points.forEach((pair) => drawPoint(pair, 3));
+  } else if (geometry.type === 'MultiPoint') {
+    const points: CoordinatePair[] = [];
+    collectRiverShiftCoordinates(geometry.coordinates, points);
+    points.forEach((pair) => drawPoint(pair));
+  } else if (geometry.type === 'Polygon') {
+    (Array.isArray(geometry.coordinates) ? geometry.coordinates : []).forEach((ring) => drawRing(ring, true));
+  } else if (geometry.type === 'MultiPolygon') {
+    (Array.isArray(geometry.coordinates) ? geometry.coordinates : []).forEach((polygon) => {
+      if (Array.isArray(polygon)) polygon.forEach((ring) => drawRing(ring, true));
+    });
+  } else if (geometry.type === 'LineString' || geometry.type === 'MultiLineString') {
+    const lines = geometry.type === 'LineString' ? [geometry.coordinates] : geometry.coordinates;
+    (Array.isArray(lines) ? lines : []).forEach((line) => drawRing(line, false));
+  }
+  context.globalAlpha = 1;
+}
+
+function renderRiverShiftRaster(layers: RiverShiftGeoJSON[]): {
+  url: string;
+  bounds: RasterBounds;
+} | null {
+  const coordinates: CoordinatePair[] = [];
+  layers.forEach((layer) => layer.features.forEach((feature) => collectRiverShiftCoordinates(feature.geometry.coordinates, coordinates)));
+  if (!coordinates.length) return null;
+  const west = Math.min(...coordinates.map(([longitude]) => longitude));
+  const east = Math.max(...coordinates.map(([longitude]) => longitude));
+  const south = Math.min(...coordinates.map(([, latitude]) => latitude));
+  const north = Math.max(...coordinates.map(([, latitude]) => latitude));
+  const longitudeSpan = Math.max(east - west, 0.000001);
+  const latitudeSpan = Math.max(north - south, 0.000001);
+  const rasterScale = RIVER_SHIFT_RASTER_SIZE / Math.max(longitudeSpan, latitudeSpan);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.ceil(longitudeSpan * rasterScale));
+  canvas.height = Math.max(1, Math.ceil(latitudeSpan * rasterScale));
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  const project = ([longitude, latitude]: CoordinatePair): [number, number] => [
+    ((longitude - west) / longitudeSpan) * canvas.width,
+    ((north - latitude) / latitudeSpan) * canvas.height,
+  ];
+  layers.forEach((layer) => layer.features.forEach((feature) => {
+    drawRiverShiftRasterGeometry(context, feature.geometry, feature.properties, project);
+  }));
+  return {
+    url: canvas.toDataURL('image/png'),
+    bounds: { north, south, east, west },
+  };
+}
+
 function metricLabel(key: string): string {
   const names: Record<string, string> = {
     baseline_water_area_km2: 'Baseline water area',
@@ -341,6 +464,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const resultMapInstance = useRef<google.maps.Map | null>(null);
   const resultMapFitKey = useRef('');
   const resultAoiPolygon = useRef<google.maps.Polygon | null>(null);
+  const resultRasterOverlay = useRef<google.maps.GroundOverlay | null>(null);
 
   // Restore or load the latest job
   useEffect(() => {
@@ -710,7 +834,8 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     if (!mapReady) return;
     const map = resultMapInstance.current;
     if (!map) return;
-    map.data.forEach((feature) => map.data.remove(feature));
+    resultRasterOverlay.current?.setMap(null);
+    resultRasterOverlay.current = null;
     const displayLayers = hasJobPreviewOverlay && jobPreview && riverJobId && jobPreview.jobId === riverJobId
       ? [
         jobPreview.changeLayer
@@ -721,9 +846,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       : currentTimeSeriesFrame
         ? (showObservedWaterExtent ? [currentTimeSeriesFrame.data] : [])
         : verifiedGeoJSONFiles.map((file) => filterRiverShiftCandidateGeoJSON(file.data, candidateOverlayVisibility));
-    displayLayers.forEach((layer) => map.data.addGeoJson(limitRiverShiftDisplayGeoJSON(layer) as unknown as object));
+    const rasterLayers = displayLayers.map((layer) => limitRiverShiftDisplayGeoJSON(layer));
     if (isGeneralScanJob && showGeneralChangeMarkers && generalChangeMarkers.length > 0) {
-      map.data.addGeoJson({
+      rasterLayers.push({
         type: 'FeatureCollection',
         features: generalChangeMarkers.map((marker) => ({
           type: 'Feature',
@@ -734,68 +859,19 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           },
           geometry: { type: 'Point', coordinates: [marker.longitude, marker.latitude] },
         })),
-      } as unknown as object);
+      });
     }
-    map.data.setStyle((feature) => {
-      const geometryType = feature.getGeometry()?.getType();
-      const rawName = String(feature.getProperty('layer_name') || feature.getProperty('name') || '');
-      const name = rawName.toLowerCase();
-      const isObservedOpenWater = feature.getProperty('observed_open_water') === true
-        || feature.getProperty('water_body') === true
-        || /water_\d{4}-\d{2}-\d{2}/.test(name)
-        || name.includes('open_water');
-      const changeClass = String(feature.getProperty('change_class') || feature.getProperty('class') || '').toLowerCase();
-      const markerType = String(feature.getProperty('marker_change_type') || '');
-      const colour = markerType === 'erosion' ? '#ff6b6b'
-        : markerType === 'deposition' ? '#51cf66'
-        : markerType === 'new_water' ? '#339af0'
-        : changeClass === 'erosion' ? '#f06a6a'
-        : changeClass === 'deposition' ? '#48c774'
-        : changeClass === 'new_water' ? '#4ea8de'
-        : name.includes('erosion') ? '#e76f51'
-        : name.includes('deposition') ? '#2a9d8f'
-        : name.includes('new_water') || name.includes('newly_water') || name.includes('water_covered') ? '#53b9f4'
-        : isObservedOpenWater ? '#73b3df' : '#9aafbb';
-      if ((geometryType === 'Point' || geometryType === 'MultiPoint')
-        && feature.getProperty('preview_sparse_marker') === true) {
-        return {
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 3.5,
-            fillColor: colour,
-            fillOpacity: 0.95,
-            strokeColor: '#ffffff',
-            strokeWeight: 0.8,
-          },
-          zIndex: 900,
-        };
-      }
-      if (geometryType === 'Point' && feature.getProperty('general_change_marker') === true) {
-        return {
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7.5,
-            fillColor: colour,
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 1.5,
-          },
-          zIndex: 1000,
-        };
-      }
-      return {
-        fillColor: colour,
-        strokeColor: colour,
-        fillOpacity: isObservedOpenWater ? 0.14 : isGeneralScanJob ? 0.42 : 0.34,
-        strokeOpacity: isObservedOpenWater ? 0.72 : 0.95,
-        strokeWeight: isObservedOpenWater ? 1.2 : isGeneralScanJob ? 2.4 : 2,
-      };
-    });
+    const raster = renderRiverShiftRaster(rasterLayers);
     const bounds = new google.maps.LatLngBounds();
-    map.data.forEach((feature) => {
-      const geometry = feature.getGeometry();
-      if (geometry) geometry.forEachLatLng((point) => bounds.extend(point));
-    });
+    if (raster) {
+      resultRasterOverlay.current = new google.maps.GroundOverlay(raster.url, raster.bounds, {
+        clickable: false,
+        opacity: 1,
+      });
+      resultRasterOverlay.current.setMap(map);
+      bounds.extend({ lat: raster.bounds.south, lng: raster.bounds.west });
+      bounds.extend({ lat: raster.bounds.north, lng: raster.bounds.east });
+    }
     if (isGeneralScanJob && riverJob?.aoi_wkt) {
       try {
         parseWktPolygon(riverJob.aoi_wkt).slice(0, -1)
@@ -811,6 +887,10 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       map.fitBounds(bounds);
       resultMapFitKey.current = overlayFitKey;
     }
+    return () => {
+      resultRasterOverlay.current?.setMap(null);
+      resultRasterOverlay.current = null;
+    };
   }, [
     mapReady,
     hasJobPreviewOverlay,
