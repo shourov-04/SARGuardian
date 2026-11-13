@@ -26,6 +26,10 @@ This index is the navigation layer for human reviewers, developers, and AI-assis
 | RiverShift engine | [RiverShift README](../engines/river-shift/tools/river_shift/README.md) |
 | Known Place engine | [Known Place README](../engines/known-place/README.md) |
 
+## Supplementary scientific research
+
+- [NISAR detectability study](../science/nisar-core/README.md) — a self-contained, reproducible Langtang Lirung research analysis. It provides additional scientific context and reproducibility material; it is not a runtime dependency of Find Displacements, Glacier Movement, Known Place Analysis, or RiverShift.
+
 ## Historical records
 
 - [Migration archive index](migration/README.md) describes the dated source-import and migration records under this directory.

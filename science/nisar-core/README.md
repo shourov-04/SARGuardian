@@ -1,4 +1,7 @@
-# SARGuardian
+# Supplementary NISAR Detectability Research
+
+> **Research context:** This directory contains a self-contained, reproducible detectability study focused on the Langtang Lirung event. It is supplementary scientific research in the SARGuardian repository, not a runtime processing engine or software dependency of the four live application workflows. The primary SARGuardian application is available at https://sarguardian.vercel.app/.
+
 
 **Could NASA's NISAR satellite have warned before the Langtang Lirung collapse?**
 We measured the answer instead of assuming it. NISAR's offset-tracking product

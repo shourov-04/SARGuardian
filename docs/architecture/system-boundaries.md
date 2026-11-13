@@ -14,7 +14,7 @@ SARGuardian is organised as a web application, an authenticated API/orchestratio
 | Find Displacements | `engines/find-displacements/` | AOI-wide displacement candidate screening, product processing, dashboards and science diagnostics |
 | Known Place | `engines/known-place/` | Focused AOI analysis, two-polygon measurement/reference workflow, and research reproduction tools |
 | RiverShift | `engines/river-shift/` | Multi-date NISAR GCOV processing, water/change screening, raster QA, manifests and result packaging |
-| Shared NISAR science | `science/nisar-core/` | Reusable NISAR readers and scientific analysis modules |
+| Supplementary research | `science/nisar-core/` | Standalone, reproducible NISAR detectability study; separate from the four application processing workflows |
 | Automation | `.github/workflows/` and engine-local workflow directories | Processing workers, orchestration, validation, retries, callbacks and artifact handling |
 | Documentation | `docs/` and engine-local docs | Reviewer guides, methods, operational instructions and historical lineage |
 
@@ -64,5 +64,5 @@ RiverShift is an independent GCOV-oriented workflow. It discovers eligible acqui
 - [Find Displacements](../../engines/find-displacements/)
 - [Known Place](../../engines/known-place/)
 - [RiverShift](../../engines/river-shift/)
-- [Shared science](../../science/nisar-core/)
+- [Supplementary NISAR detectability research](../../science/nisar-core/)
 - [Root Actions workflows](../../.github/workflows/)

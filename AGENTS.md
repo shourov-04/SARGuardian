@@ -33,7 +33,7 @@ When reviewing the project, use the current default branch and cite exact file p
 
 ## Implementation and security
 
-- Keep browser code in `apps/web/`, API code in `apps/api/`, processing engines in `engines/`, shared NISAR science modules in `science/nisar-core/`, and automated workflows in `.github/workflows/` or engine-local workflow directories.
+- Keep browser code in `apps/web/`, API code in `apps/api/`, runtime processing engines in `engines/`, and automated workflows in `.github/workflows/` or engine-local workflow directories. `science/nisar-core/` is a supplementary reproducible detectability research study, not an imported runtime dependency of the four user-facing workflows.
 - The web client obtains a Firebase ID token and sends authenticated requests through the configured API origin. Do not expose server credentials in browser code.
 - GitHub Actions workers receive their credentials from repository/environment secret stores. Never commit tokens, passwords, service-account JSON, callback secrets, private result URLs, or raw private user data.
 - Do not change production routing, callback destinations, database schema, or secret names as incidental documentation or UI cleanup.

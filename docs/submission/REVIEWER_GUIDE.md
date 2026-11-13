@@ -55,7 +55,7 @@ Use the acquisition selector/playback to move between actual observation dates a
 | How displacement analysis is implemented | [Find Displacements engine](../../engines/find-displacements/) |
 | How Known Place analysis is implemented | [Known Place engine](../../engines/known-place/) |
 | How RiverShift is implemented | [RiverShift engine](../../engines/river-shift/) |
-| Shared NISAR methods | [science/nisar-core](../../science/nisar-core/) |
+| Supplementary NISAR detectability research | [Research README](../../science/nisar-core/README.md), [reproduction guide](../../science/nisar-core/REPRODUCE_RESULTS.md) — a separate research study, not a dependency of the four live workflows |
 | Automated processing and validation | [GitHub Actions workflows](../../.github/workflows/) |
 
 ## D. Inspect automated processing

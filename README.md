@@ -12,7 +12,7 @@ SARGuardian brings NISAR-based surface-change exploration into one interactive a
 
 **GitHub Actions — processing and validation history:** https://github.com/shourov-04/SARGuardian/actions
 
-Reviewers are invited to use the live application, select their own AOI and observation window, and explore the available analysis workflows. The repository contains the web application, API implementation, processing engines, scientific modules, automated workflows, tests, and reviewer documentation.
+Reviewers are invited to use the live application, select their own AOI and observation window, and explore the available analysis workflows. The repository contains the web application, API implementation, product-specific processing engines, automated workflows, tests, reviewer documentation, and a supplementary reproducible NISAR detectability study.
 
 ## What SARGuardian does
 
@@ -57,7 +57,7 @@ These distinctions make the outputs easier to interpret, compare, and review.
 
 ## Processing architecture
 
-The web application is in `apps/web/`; the FastAPI API implementation and request adapters are in `apps/api/`. Scientific processing components are organised under `engines/` and `science/nisar-core/`. GitHub Actions workflows coordinate product workers, automated checks, provenance handling, result assembly, and delivery.
+The web application is in `apps/web/`; the FastAPI API implementation and request adapters are in `apps/api/`. Runtime scientific processing components are organised under `engines/` and their workflow-specific tools. GitHub Actions workflows coordinate product workers, automated checks, provenance handling, result assembly, and delivery. The separate `science/nisar-core/` directory contains a reproducible NISAR detectability research study; it is supplementary scientific context, not a runtime dependency of the four application workflows.
 
 Useful implementation locations:
 
@@ -66,7 +66,7 @@ Useful implementation locations:
 - [Find Displacements engine](engines/find-displacements/)
 - [Known Place engine](engines/known-place/)
 - [RiverShift engine](engines/river-shift/)
-- [NISAR scientific modules](science/nisar-core/)
+- [Supplementary NISAR detectability research](science/nisar-core/)
 - [GitHub Actions workflows](.github/workflows/)
 - [Automated tests and validation suites](engines/)
 
