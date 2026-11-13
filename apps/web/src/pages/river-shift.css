@@ -166,8 +166,8 @@
 .rs-map-theme-toggle.is-dark .rs-map-theme-track { border-color: rgba(178,208,246,.36); background: #17243d; }.rs-map-theme-toggle.is-dark .rs-map-theme-track i { background: #8faee8; color: #10203a; transform: translateX(25px); }
 .rs-map { width: 100%; height: min(66vh, 640px); min-height: 390px; overflow: hidden; background: #1b3443; }
 .rs-map.is-imagery-dark { filter: brightness(.46) contrast(1.22) saturate(.68); }
-.rs-aoi-draw, .rs-timeseries { display: grid; gap: 10px; padding: 15px; border: 1px solid rgba(103, 201, 198, .2); border-radius: 12px; background: rgba(32, 116, 120, .06); }
-.rs-aoi-draw h3, .rs-timeseries h3 { margin: 0; color: #edf9fc; font: 700 17px 'Manrope', sans-serif; letter-spacing: -.035em; }
+.rs-aoi-draw { display: grid; gap: 10px; padding: 15px; border: 1px solid rgba(103, 201, 198, .2); border-radius: 12px; background: rgba(32, 116, 120, .06); }
+.rs-aoi-draw h3 { margin: 0; color: #edf9fc; font: 700 17px 'Manrope', sans-serif; letter-spacing: -.035em; }
 .rs-aoi-map { min-height: 310px; }
 .rs-map-search-control {
   display: grid;
@@ -202,12 +202,10 @@
     margin: 8px 0 0 8px;
   }
 }
-.rs-aoi-controls, .rs-playback-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rs-aoi-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .rs-aoi-controls > span { color: #91acbb; font-size: 10px; }
 .rs-secondary-button { padding: 9px 12px; border: 1px solid rgba(142, 190, 207, .24); border-radius: 8px; color: #cce6ee; background: #09283a; font-size: 10px; font-weight: 700; cursor: pointer; }
 .rs-secondary-button:disabled { cursor: not-allowed; opacity: .5; }
-.rs-date-slider { display: grid; flex: 1; min-width: 180px; gap: 4px; color: #b4cbd4; font-size: 10px; }
-.rs-date-slider input { width: 100%; accent-color: #6de2d4; }
 .rs-legend { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 10px; color: #a9c2cc; font-size: 10px; }
 .rs-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .rs-swatch { width: 11px; height: 11px; border-radius: 3px; }.rs-erosion { background: #f07462; }.rs-deposition { background: #5fd7a5; }.rs-water { background: #53b9f4; }
@@ -372,7 +370,6 @@
   gap: 16px;
   margin-top: 14px;
 }
-.rs-unified-dashboard .rs-timeseries,
 .rs-unified-dashboard .rs-overlap-audit,
 .rs-unified-dashboard .rs-readiness-panel,
 .rs-unified-dashboard .rs-map-section {
@@ -384,7 +381,6 @@
   -webkit-backdrop-filter: blur(18px) saturate(135%);
   color: #0f2236;
 }
-.rs-unified-dashboard .rs-timeseries h3,
 .rs-unified-dashboard .rs-overlap-audit h3,
 .rs-unified-dashboard .rs-readiness-panel h3,
 .rs-unified-dashboard .rs-map-section h3,
@@ -432,16 +428,6 @@
 .rs-unified-dashboard .rs-primary-button:hover:not(:disabled) {
   background: linear-gradient(180deg, #5bc5f4, #1689df);
 }
-.rs-unified-dashboard .rs-date-slider {
-  color: #0f2236;
-}
-.rs-unified-dashboard .rs-info-banner {
-  background: rgba(10, 132, 224, .1);
-  border: 1px solid rgba(10, 132, 224, .25);
-  border-radius: 10px;
-  color: #054c7f;
-}
-
 /* Acquisition pair dropdown heading (matching Known Place 1:1 design) */
 .rs-unified-dashboard .known-place-map-heading {
   display: flex;
@@ -506,25 +492,6 @@
   backdrop-filter: blur(20px) saturate(145%);
   -webkit-backdrop-filter: blur(20px) saturate(145%);
   color: #0f2236;
-}
-.rs-unified-dashboard .rs-overlay-controls.is-dark {
-  border-color: rgba(150, 190, 226, 0.35) !important;
-  background: rgba(17, 27, 48, 0.65) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 16px 34px rgba(0, 0, 0, 0.35) !important;
-  color: #eaf3fb;
-}
-.rs-unified-dashboard .rs-overlay-controls.is-dark .rs-overlay-toggle strong {
-  color: #ffffff;
-}
-.rs-unified-dashboard .rs-overlay-controls.is-dark .rs-overlay-toggle small,
-.rs-unified-dashboard .rs-overlay-controls.is-dark .rs-overlay-note {
-  color: rgba(255, 255, 255, 0.75);
-}
-.rs-unified-dashboard .rs-overlay-controls.is-dark .rs-overlay-toggle-all {
-  border-bottom-color: rgba(255, 255, 255, 0.18);
-}
-.rs-unified-dashboard .rs-overlay-controls.is-dark .rs-overlay-observed {
-  border-top-color: rgba(255, 255, 255, 0.18);
 }
 .rs-unified-dashboard .rs-overlay-toggle strong {
   color: #0f2236;

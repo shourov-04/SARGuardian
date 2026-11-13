@@ -567,7 +567,6 @@ function ScientificReadinessPanel({
 function ObservedDateSummaryPanel({ report }: { report: RiverShiftReport | null }) {
   if (!report || report.analysis_type !== 'water_timeseries_screening') return null;
   const metrics = report.metrics;
-  const source = report.source;
   const value = (key: string) => {
     const candidate = metrics[key];
     return typeof candidate === 'number' && Number.isFinite(candidate) ? candidate : null;
@@ -582,14 +581,6 @@ function ObservedDateSummaryPanel({ report }: { report: RiverShiftReport | null 
         <div>
           <p className="rs-kicker">OBSERVED-DATE WATER TIME SERIES</p>
           <h2>Observed-date water time series</h2>
-          <div className="rs-observed-summary-meta">
-            <span>Mission: <strong>{String(source.mission || 'NISAR')}</strong></span>
-            <span>Product: <strong>{String(source.product || 'GCOV')}</strong></span>
-            <span>Maturity: <strong>{String(source.maturity || 'PROVISIONAL')}</strong></span>
-            <span>Frequency: <strong>{String(source.frequency || 'frequencyA')}</strong></span>
-            <span>Term: <strong>{String(source.covariance_term || 'HHHH')}</strong></span>
-          </div>
-          <p className="rs-observed-summary-release">Release status: <strong>{String(report.quality.release_status || 'PROVISIONAL')}</strong> · The metrics and map are provisional evidence, not independently validated findings.</p>
         </div>
       </div>
       <div className="rs-observed-summary-metrics">
@@ -626,6 +617,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [showMapLabels, setShowMapLabels] = useState(false);
   const [isMapDark, setIsMapDark] = useState(false);
+  const [mapTypeMode, setMapTypeMode] = useState<'map' | 'satellite'>('satellite');
 
 
   const resultMapElement = useRef<HTMLDivElement>(null);
@@ -1017,7 +1009,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         zoom: 2,
         mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
         streetViewControl: false,
-        mapTypeControl: false,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+        },
         fullscreenControl: true,
         clickableIcons: false,
         gestureHandling: 'greedy',
@@ -1027,8 +1024,13 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         resultMapInstance.current = instance;
         instance.addListener('maptypeid_changed', () => {
           const type = String(instance.getMapTypeId() || 'satellite');
-          if (type === 'satellite') setShowMapLabels(false);
-          if (type === 'hybrid') setShowMapLabels(true);
+          if (type === 'roadmap' || type === 'terrain') {
+            setMapTypeMode('map');
+          } else {
+            setMapTypeMode('satellite');
+            if (type === 'satellite') setShowMapLabels(false);
+            if (type === 'hybrid') setShowMapLabels(true);
+          }
         });
         setMapReady(true);
       }
@@ -1252,50 +1254,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
 
               <div className="rs-view-panel">
                 <ObservedDateSummaryPanel report={jobPreview?.report || report} />
-                {riverJob && jobPreview?.jobId === riverJob.id && jobPreview.report && jobTimeSeriesFrames.length > 0 && (
-                  <section className="rs-timeseries" aria-label="Provisional observed acquisition playback">
-                    <div className="rs-section-heading">
-                      <div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>River change playback</h3></div>
-                      <span className="rs-chip">PROVISIONAL · NO DAILY INTERPOLATION</span>
-                    </div>
-                    <p className="rs-warning-inline">Each step is an actual NISAR acquisition date. The blue layer shows open-water candidates; the red and green layers show persistent erosion and deposition candidates. These are radar screening results, not field-confirmed change.</p>
-                    <div className="rs-playback-controls">
-                      <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index - 1 + jobTimeSeriesFrames.length) % jobTimeSeriesFrames.length)}>Previous</button>
-                      <button className="rs-primary-button" type="button" disabled={jobTimeSeriesFrames.length < 2} onClick={() => setJobTimeSeriesPlaying((value) => !value)}>{jobTimeSeriesPlaying ? 'Pause' : 'Play'}</button>
-                      <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index + 1) % jobTimeSeriesFrames.length)}>Next</button>
-                      <label className="rs-date-slider"><span>Observed date</span>
-                        <input type="range" min={0} max={jobTimeSeriesFrames.length - 1} value={jobTimeSeriesIndex}
-                          onChange={(event) => { setJobTimeSeriesPlaying(false); setJobTimeSeriesIndex(Number(event.target.value)); }} />
-                      </label>
-                    </div>
-                  </section>
-                )}
-
-                {report?.analysis_type === 'water_timeseries_screening' && (
-                  <section className="rs-timeseries" aria-label="Observed acquisition playback">
-                    <div className="rs-section-heading"><div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>Water change playback</h3></div>
-                      <span className="rs-chip">NO DAILY INTERPOLATION</span></div>
-                    {report.quality.release_status !== 'VERIFIED'
-                      ? <p className="rs-warning-inline">Playback and map layers stay hidden until the report is independently reviewed and marked VERIFIED.</p>
-                      : playbackFrames.length !== (report.time_series || []).length
-                        ? <p className="rs-warning-inline">Import every report-listed GeoJSON file in one selection. Each filename and SHA-256 must match before playback starts.</p>
-                        : playbackFrames.length < 2
-                          ? <p className="rs-warning-inline">At least two verified observation frames are required to play this time series.</p>
-                          : <>
-                            <div className="rs-playback-controls">
-                              <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index - 1 + playbackFrames.length) % playbackFrames.length)}>Previous</button>
-                              <button className="rs-primary-button" type="button" onClick={() => setTimeSeriesPlaying((value) => !value)}>{timeSeriesPlaying ? 'Pause' : 'Play'}</button>
-                              <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index + 1) % playbackFrames.length)}>Next</button>
-                              <label className="rs-date-slider"><span>Acquisition date</span>
-                                <input type="range" min={0} max={playbackFrames.length - 1} value={timeSeriesIndex}
-                                  onChange={(event) => { setTimeSeriesPlaying(false); setTimeSeriesIndex(Number(event.target.value)); }} />
-                              </label>
-                            </div>
-                            {currentTimeSeriesFrame && <p className="rs-info-banner">Observed {currentTimeSeriesFrame.date} · candidate open-water area {currentTimeSeriesFrame.water_area_km2.toFixed(3)} km² · valid samples {(currentTimeSeriesFrame.valid_pixel_fraction * 100).toFixed(1)}%</p>}
-                          </>}
-                  </section>
-                )}
-
                 <section className="rs-map-section">
                   <div className={`known-place-section-heading known-place-map-heading${isMapDark ? ' is-dark' : ''}`}>
                     <label>
@@ -1321,6 +1279,30 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                         <span>{mapMetadata.subtitle}</span>
                       </div>
                       <div className="known-place-map-toolbar-actions">
+                        <div className="known-place-map-type-toggle" role="group" aria-label="Map type">
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'map' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'map'}
+                            onClick={() => {
+                              setMapTypeMode('map');
+                              resultMapInstance.current?.setMapTypeId('roadmap');
+                            }}
+                          >
+                            Map
+                          </button>
+                          <button
+                            type="button"
+                            className={mapTypeMode === 'satellite' ? 'is-active' : ''}
+                            aria-pressed={mapTypeMode === 'satellite'}
+                            onClick={() => {
+                              setMapTypeMode('satellite');
+                              resultMapInstance.current?.setMapTypeId(showMapLabels ? 'hybrid' : 'satellite');
+                            }}
+                          >
+                            Satellite
+                          </button>
+                        </div>
                         <button
                           type="button"
                           className={`known-place-map-label-toggle${showMapLabels ? ' is-on' : ''}`}
@@ -1370,7 +1352,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                     </div>
                   </div>
                   {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
-                    <div className={`rs-overlay-controls${isMapDark ? ' is-dark' : ''}`} aria-label="RiverShift map overlay visibility">
+                    <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
                       {hasCandidateOverlaySource && (
                         <>
                           <label className="rs-overlay-toggle rs-overlay-toggle-all">
