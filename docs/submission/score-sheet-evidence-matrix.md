@@ -5,7 +5,7 @@
 **Primary repository:** [shourov-04/SARGuardian](https://github.com/shourov-04/SARGuardian)  
 **Live application:** https://sarguardian.vercel.app/
 
-This matrix follows the supplied local judging score sheet. The five headline criteria total 100 points. Teamwork, User Experience, NASA Data Usage, Challenge Category, Repository Access, and Project Page Completion make up the additional 18 points before any applicable local participation bonus.
+This matrix follows the supplied local judging score sheet. The five headline criteria total 100 points. Teamwork, User Experience, and NASA Data Usage contribute 15 points; Challenge Category, Repository Access, and Project Page Completion contribute 3 more, for 18 additional points. The score sheet also specifies a +5% aggregate bonus for teams with one or more women members.
 
 ## Headline criteria — 100 points
 
@@ -27,6 +27,8 @@ This matrix follows the supplied local judging score sheet. The five headline cr
 | **Challenge category identified** | 1 | “Dancing with the SARs” and “Earth Science” are identified in the root README and project documents. |
 | **Repository access** | 1 | Public source repository is accessible without authentication. [Primary repository](https://github.com/shourov-04/SARGuardian) |
 | **Project page complete** | 1 | Review the submitted NASA Space Apps project page and its links/media in the official submission interface. |
+
+**Women participation bonus:** The supplied score sheet specifies **+5% on the aggregate** for teams with one or more women members. Apply this only where the official team roster meets the score sheet's eligibility condition.
 
 ## Scientific evidence presentation
 
