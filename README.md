@@ -1,105 +1,101 @@
-# SARGuardian Monorepo
+# SARGuardian
+### NISAR-Powered Surface Change Intelligence
+**NASA Space Apps Challenge 2026 · Dancing with the SARs · Earth Science**
 
-A controlled consolidation of SARGuardian's web application, active API, independent processing engines, NISAR science source, and GitHub Actions workflows.
+SARGuardian is a NISAR-powered platform for exploring and investigating changes across Earth's surface. It connects area-of-interest (AOI) selection, NISAR product discovery, automated scientific processing, and interactive geospatial results in one workflow.
 
-> **Migration status: source import and first code promotion are complete on an isolated migration branch.** The original repositories remain authoritative and unchanged. No production deployment, secret transfer, live processing, or workflow cutover has been performed.
+**Explore the live platform:** https://sarguardian.vercel.app/
 
-## Source systems
+Reviewers, researchers, and interested users are invited to select an area and observation period, run an available analysis, and examine the resulting maps, measurements, acquisition information, and processing provenance. Results depend on compatible NISAR observations and products released for the selected place and time.
 
-| Source | Responsibility | Audited baseline |
+---
+
+## What you can explore
+
+| Workflow | What it helps investigate | Main NISAR evidence |
 |---|---|---|
-| [SARGuardian_Dynamic](https://github.com/moshiour0/SARGuardian_Dynamic) | React/Vite web app, active Firebase-authenticated FastAPI API, Supabase job persistence, deployment adapters | `dd64b7adc90594f1d7f316b352e39fbac2013cb6` |
-| [SARGuardian-backend](https://github.com/moshiour0/SARGuardian-backend) | Scientific processing workers, RiverShift GCOV engine, Find Displacements diagnostics, reusable Actions workflows | `97d849454918b1425ac41bb70e7a32d11cfd3833` |
-| [SARGuardian](https://github.com/moshiour0/SARGuardian) | NISAR science source used by pinned processing workflows | Current main at audit: `9fcb543ef28a7f6fe70a379aed9cfe3e43e277ec` |
+| **Find Displacements** | AOI-wide, target-free discovery of potential surface-displacement signals, including landslide-oriented screening | GOFF offset observations and separately presented GUNW phase/Line-of-Sight (LOS) diagnostics |
+| **Glacier Movement** | Candidate surface-change and movement signals in glacier environments | The shared displacement workflow, with GOFF and GUNW kept as distinct evidence families |
+| **Known Place Analysis** | Focused investigation of a user-selected location using separate Measurement and Reference Polygons | Compatible NISAR products selected for the analysis; includes a separately gated author-exact P05023 research path |
+| **RiverShift** | River and water/land transition screening across a selected reach and observation window | NISAR L-band Level-2 GCOV observations |
 
-The exact source trees have been imported under `migration/source-snapshots/` with their source commit histories preserved. See the [source-pin manifest](docs/migration/source-pins.json) and [source import report](docs/migration/source-import-report.md).
+### How it works
 
-## Engine boundaries
+1. **Choose an area:** Search for a place or define an AOI on the map.
+2. **Set the observation window:** Select the period to investigate.
+3. **Discover compatible data:** Search available NISAR acquisitions and products for that request.
+4. **Run the analysis:** The scientific processing workflows execute through the platform's processing infrastructure.
+5. **Explore the result:** Review spatial layers, acquisition dates, product provenance, quality information, and available measurements.
 
-- **Find Displacements:** target-free AOI-wide candidate discovery. GOFF offsets and GUNW LOS diagnostics remain separate measurement families.
-- **Known Place Analysis:** a current API-connected generic two-polygon workflow pinned to Backend's active reusable workflow/source revision 0e0611c12913044787ee84a39fa60a81d30ae516; the original feat/know-place-analysis branch was not merged into Backend main and PR #85 remains Draft/Open. Its PR #85 lineage is preserved separately. Author-exact P05023 replay remains a distinct manual-consent-gated path.
-- **River Shift:** an independent NISAR GCOV engine with ASF acquisition discovery, processing, overlap diagnostics, transects, and external validation.
-- **Glacier Movement:** currently a product/category route into the shared Find Displacements engine, not a separately proven processing engine.
+The platform presents actual observations and available processing outputs. It does not fabricate missing acquisitions or treat unobserved periods as measured change.
 
-## Active runtime scope (evidence-based)
+## Scientific processing and GitHub Actions
 
-The migration preserves all **82 historical source workflow instances** without activating them indiscriminately. The current API application graph contains two primary processing paths—**Find Displacements** and the generic two-polygon **Known Place Analysis** workflow—and two separately gated paths: **RiverShift GCOV** and author-exact **P05023** reproduction.
+The **Scientific Core Engine** is the processing foundation behind SARGuardian. It contains the scientific and geospatial workflows that transform compatible NISAR products into analysis outputs.
 
-- **Find Displacements:** target-free AOI discovery and the separate GOFF/GUNW diagnostics remain isolated. Backend run [42097077601](https://github.com/moshiour0/SARGuardian-backend/actions/runs/42097077601) completed its processing chain, recovered one failed GUNW product through a failed-only retry, assembled the dashboard and reported a terminal callback. A Monorepo live pilot is still pending.
-- **Known Place Analysis:** the generic dispatcher uses Backend main's active reusable workflow/source pin `0e0611c12913044787ee84a39fa60a81d30ae516`; successful Backend runs [41533701551](https://github.com/moshiour0/SARGuardian-backend/actions/runs/41533701551) and [41533582770](https://github.com/moshiour0/SARGuardian-backend/actions/runs/41533582770) retained result artifacts. Its Monorepo dispatcher and engine are imported and tested, but the Monorepo dispatch gate remains off. The separate PR #85 research lineage is preserved; it was not merged into Backend main.
-- **RiverShift:** it remains an independent NISAR GCOV engine, not part of Landslide/Find Displacements. The prior run [42089984247](https://github.com/moshiour0/SARGuardian-backend/actions/runs/42089984247) matched 14/14 catalogue granules but stopped safely at `EVENT_WINDOW_NOT_BRACKETED`; a positive-case Monorepo pilot is still required.
-- **Author-exact P05023:** kept separate and manual-consent-gated. The prior run [41423614257](https://github.com/moshiour0/SARGuardian-backend/actions/runs/41423614257) did not pass source-manifest completeness, so it is not a complete successful reproduction.
-- **Glacier Movement:** currently a product/category route into the shared Find Displacements engine, not a separately promoted processing engine.
+**GitHub Actions plays a central engineering role** in implementing and operating these workflows. It provides automated workflow execution and orchestration for processing workers, product handling, quality checks, provenance, result assembly, and delivery.
 
-The [active runtime scope and run evidence](docs/migration/active-runtime-scope-2026-11-06.md) records the source/workflow pins and gates. Historic diagnostics, alternate forks and unused worker variants remain preserved for provenance, not automatically activated.
+The repository is therefore more than the source code for a website: it also contains the processing engines and automation that make live analyses possible. Explore the workflow definitions in [`.github/workflows`](.github/workflows) and the processing components under [`engines/`](engines/).
 
-## Migration principles
+## Scientific interpretation
 
-1. Preserve the original repositories and immutable source SHAs until the monorepo passes acceptance.
-2. Import source snapshots with provenance before refactoring or relocating code.
-3. Keep the active Dynamic API distinct from the older backend `app/` service until a usage and contract review proves consolidation safe.
-4. Preserve all workflow triggers, permissions, artifacts, callbacks, retries, and retention behaviour.
-5. Never copy secret values into Git. Build an explicit secret-name mapping and configure target secrets separately.
-6. Validate in an isolated migration branch and Preview environment before any production cutover.
-7. No engine algorithm or scientific status semantics may change as a side effect of repository consolidation.
+SARGuardian is designed to help users investigate satellite-derived signals, not to overstate what those signals prove.
 
-## Current target layout
+- A GOFF anomaly is a candidate signal, not automatic proof of a landslide or confirmed ground movement.
+- GUNW phase/LOS diagnostics are distinct from GOFF offsets. Pairwise LOS observations are not automatically cumulative or three-dimensional displacement.
+- A RiverShift map class is a change-screening candidate, not by itself field-confirmed erosion, deposition, flood damage, or sediment volume.
+- A successful processing or structural QA status is not independent geophysical validation.
+- A missing or unavailable measurement must not be interpreted as zero.
+- Playback represents actual acquisition observations, not a forecast or interpolated time series.
 
-```text
-apps/
-  web/                 # React/Vite frontend, promoted and tested
-  api/                 # active Firebase/Supabase API, promoted and tested
-  tools/               # Dynamic API compatibility helpers
-engines/
-  find-displacements/  # AOI-wide candidate discovery and diagnostics
-  known-place/         # PR #85 research implementation
-  river-shift/         # independent GCOV engine
-science/
-  nisar-core/          # current NISAR science source
-migration/
-  source-snapshots/    # immutable source trees and historical pins
-.github/workflows/     # only reviewed central workflows become active here
-docs/
-  architecture/
-  migration/
-  scientific-validation/
-```
+For every analysis, interpretation depends on the selected AOI, product family, acquisition dates, compatibility, and usable pixel support.
 
-Source snapshots remain immutable, and promoted paths are exact copies. Original source paths remain available until deployment, workflow parity, and security/cutover checks complete. Nested `.github/workflows/` directories beneath `apps/`, `engines/`, and `migration/source-snapshots/` are inactive compatibility/archive paths; GitHub Actions only executes workflow files from the repository-root `.github/workflows/`.
+## Meet the team
 
-## Current verified migration state — 2026-11-06
+| Team member | Project contribution |
+|---|---|
+| **[Moshiur Rahman Sarker](https://github.com/moshiour0)** · Team Lead | Scientific Core Engine and processing development; overall project development and integration; project coordination; video editing. Department of Mathematics, Ananda Mohan College, Mymensingh, Bangladesh. |
+| **[Shagor Chandra Modak](https://github.com/Sagormodak)** | Scientific Core Engine implementation through GitHub Actions; UI/UX design; final project polishing and refinement. Computer Science and Engineering, Shahjalal University of Science and Technology (SUST), Bangladesh. |
+| **MD Fahim** | RiverShift development and video editing. Computer Science and Engineering, Islamic University, Kushtia, Bangladesh. |
+| **Tasmia Binte Hasan** | Project storytelling and presentation. |
 
-Verified source/workflow head: `9bd6858b7ea4e2500a531634e4a96f2d2288bf09`. The later branch commits through `9312ec5` are documentation-only.
+### GitHub contribution activity
 
-- [Snapshot Regression Tests 42187445481](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445481): **19/19 jobs passed**.
-- [Backend Source Snapshot Regression 42187445413](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445413): **2/2 jobs passed**, including the Known Place PR #85 source suite.
-- Migration Metadata [42187445630](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445630), Historical Secret Scan [42187445962](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445962), Runner Diagnostic [42187445578](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445578), Retention Archive [42187445646](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445646), Dashboard Assets [42187445703](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187445703), and AOI Dual-Pin Validation [42187446475](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/42187446475): all successful.
+GitHub calculates the repository's contributor graph from attributed commits. The graph is maintained by GitHub and can update as repository activity is processed; contributor profiles cannot be manually inserted into that generated panel.
 
-### Vercel Preview
+- [View contributor statistics](https://github.com/shourov-04/SARGuardian/graphs/contributors)
+- [Browse the commit history](https://github.com/shourov-04/SARGuardian/commits/main)
+- [Open the repository Insights](https://github.com/shourov-04/SARGuardian/pulse)
 
-The Web project (`apps/web`) and API project (`apps/api`) are separate Hobby/Free-plan projects linked to this repository. Latest inspected deployments are READY and Preview-only (`target=null`), with SSO protection and no Production aliases. The code-bearing commit deployed is `c246f3b16a5b7320ab97250f202847b9f4d5c8c2`; the diff from that commit to the current code head only changes docs/security validators, not Web/API runtime files. Web stable Preview root returned HTTP 200, and API stable Preview `/health` returned HTTP 200.
+The team table above records project responsibilities. The live GitHub contributor graph and commit history provide the repository-attributed development activity.
 
-Preview is not functionally complete: Web currently has only `VITE_SARGUARDIAN_API_URL`. It still needs `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`, optional `VITE_FIREBASE_MEASUREMENT_ID`, and `VITE_GOOGLE_MAPS_API_KEY`. These are browser-visible client configuration, not server secrets. Scope them to Preview/this branch and restrict the Maps key's HTTP referrers to the Monorepo Preview domain.
+## Repository structure
 
-API Preview has the Tokyo Supabase URL, CORS, callback bases and all four workflow destination names/refs. It lacks `SUPABASE_SERVICE_ROLE_KEY` (new key for the Monorepo project), `FIREBASE_SERVICE_ACCOUNT_JSON`, `GITHUB_ACTIONS_TOKEN`, `DISPLACEMENT_CALLBACK_SECRET`, `RIVERSHIFT_CALLBACK_SECRET`, and Google Drive result-read OAuth credentials. No Production credential was copied; the Vercel connector did not reveal the old project's sensitive values.
+- `apps/web/` — React/Vite web application.
+- `apps/api/` — application API and job orchestration.
+- `engines/` — displacement, Known Place, and RiverShift processing components.
+- `science/nisar-core/` — NISAR scientific processing source.
+- `.github/workflows/` — automated processing and validation workflows.
+- `docs/` — project, scientific, operational, and migration documentation.
 
-### Supabase Preview database
+## Brief repository history
 
-The Free Tokyo Supabase project `SARGuardian-Monorepo` (`qbmhpdprvxssqinnommz`) is `ACTIVE_HEALTHY`, with four empty RLS-enabled app tables and zero Security Advisor lints. The nine local migration filenames match the nine live remote version/name records in `migration/supabase-history-alignment.json`; CI verifies every path, version, name and Git blob SHA. The two Monorepo forward migrations are accounted for, including the applied default-privilege hardening migration and a successful transactional privilege probe. No `db push`, history repair, replay or reset was run. Dynamic Production Supabase remains a separate project and lineage.
+The current consolidated codebase brings together work from three earlier SARGuardian repositories:
 
-## Current readiness
+- [SARGuardian_Dynamic](https://github.com/moshiour0/SARGuardian_Dynamic) — web application and application API.
+- [SARGuardian-backend](https://github.com/moshiour0/SARGuardian-backend) — scientific processing workers and reusable GitHub Actions workflows.
+- [SARGuardian](https://github.com/moshiour0/SARGuardian) — NISAR science and processing source.
 
-- [x] Source snapshots preserve 1,685 tracked paths and original commit ancestry.
-- [x] Dynamic Web/API, Find Displacements, current generic Known Place pin, RiverShift GCOV and NISAR science paths are promoted separately.
-- [x] Active product scope is limited to 5 primary workflows (Find Displacements + generic Known Place), 3 gated feature workflows (RiverShift + author-exact P05023), and 7 migration CI workflows; all 82 historical source variants remain preserved.
-- [x] Current source/workflow CI passed: Snapshot Regression 19/19, Backend Source Snapshot Regression 2/2, metadata, secret scan, runner, retention, dashboard asset and AOI dual-pin checks.
-- [x] Web/API Preview builds are READY and Preview-only; root and health probes returned HTTP 200. Existing Production aliases were not changed.
-- [x] Supabase Tokyo project is active with four RLS-enabled tables; all nine local migration versions/names and blob hashes match the connected remote inventory/manifest.
-- [ ] Configure Web Preview Firebase client config and Google Maps key, with HTTP-referrer restriction.
-- [ ] Configure API Preview's new Supabase service key, Firebase Admin, GitHub dispatch token, callback HMAC values and Drive result-read OAuth.
-- [ ] Configure Monorepo Actions Secrets: Earthdata, Google Drive OAuth/refresh token/parent folder ID, and matching callback HMAC secrets.
-- [ ] Complete authenticated login, owner-scoped Supabase persistence/readback, mock dispatch, callback/status correlation, artifact access, and controlled Find Displacements + Known Place pilots.
-- [ ] Keep RiverShift gated until an eligible event date produces a successful positive-case GCOV pilot; keep author-exact P05023 separately consent-gated until source manifest, science, Drive and cleanup all pass.
-- [ ] Review Web dependency advisories/bundle size, licensing, science validity and rollback. Merge PR #1 then PR #2 only after acceptance and explicit owner approval.
+Their source history and migration records are retained in [`docs/migration/`](docs/migration/). This short note explains the origins; the main focus of this repository is the SARGuardian platform and its scientific capabilities.
 
-**Release boundary:** PR #1 and PR #2 remain Draft/Open and unmerged. Monorepo `main` is still the bootstrap state. Existing Dynamic + Backend Production, Production Vercel aliases, callbacks, dispatch targets and Supabase remain authoritative and unchanged.
+## Useful links
+
+- **Live application:** https://sarguardian.vercel.app/
+- **Source repository:** https://github.com/shourov-04/SARGuardian
+- **NASA NISAR mission:** https://science.nasa.gov/mission/nisar/mission-overview/
+- **ASF NISAR data availability:** https://nisar-docs.asf.alaska.edu/availability-overview/
+- **ASF NISAR product guide:** https://nisar-docs.asf.alaska.edu/products-overview/
+
+---
+
+**SARGuardian — explore real NISAR observations, run your own analysis, and investigate a changing Earth.**
