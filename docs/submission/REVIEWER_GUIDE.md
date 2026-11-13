@@ -44,7 +44,22 @@ Draw a river-reach AOI and choose a date window. RiverShift searches for compati
 
 Use the acquisition selector/playback to move between actual observation dates and inspect the source manifest and quality information.
 
-## C. Inspect the implementation in this repository
+## C. Exact active GitHub Actions entry points
+
+The files below are the root-level executable workflow entry points in this repository. They are distinct from any dated workflow source snapshots under `migration/source-snapshots/`.
+
+| User-facing workflow | Root-level entry point | Processing stage |
+|---|---|---|
+| Find Displacements | `.github/workflows/sarguardian-aoi-wkt-dashboard.yml` | `.github/workflows/sarguardian-aoi-dashboard-engine.yml` → `.github/workflows/sarguardian-aoi-product-worker.yml` |
+| Glacier Movement | Same Find Displacements entry point | Same AOI-wide displacement processing chain; this is a glacier-oriented application category, not a separate processing engine |
+| Known Place Analysis — user-defined polygons | `.github/workflows/know-place-aoi-dispatcher.yml` | `.github/workflows/know-place-aoi-analysis.yml` |
+| Known Place — author-exact P05023 replay | `.github/workflows/know-place-paper-reproduction-dispatcher.yml` | `.github/workflows/know-place-author-exact-replay.yml` |
+| RiverShift | `.github/workflows/river-shift-gcov-process.yml` | Dedicated GCOV processing workflow |
+
+For the account Find Displacements path, the API dispatches the declared input contract to the root dashboard workflow. The dashboard engine discovers compatible products, runs one product worker per selected granule, validates product and remote-retention receipts, retries only items selected by the retry plan, and assembles the result. Inspect those workflow files in the current default branch rather than treating historical snapshots as active workflows.
+
+```
+## D. Inspect the implementation in this repository
 
 | Review question | Source location |
 |---|---|
@@ -58,7 +73,7 @@ Use the acquisition selector/playback to move between actual observation dates a
 | Supplementary NISAR detectability research | [Research README](../../science/nisar-core/README.md), [reproduction guide](../../science/nisar-core/REPRODUCE_RESULTS.md) — a separate research study, not a dependency of the four live workflows |
 | Automated processing and validation | [GitHub Actions workflows](../../.github/workflows/) |
 
-## D. Inspect automated processing
+## E. Inspect automated processing
 
 Open the [GitHub Actions history](https://github.com/shourov-04/SARGuardian/actions). Select the workflow relevant to the engine or request type, then inspect:
 
@@ -70,7 +85,7 @@ Open the [GitHub Actions history](https://github.com/shourov-04/SARGuardian/acti
 
 This lets a reviewer move from the public interface to the workflow implementation and its processing record. The Actions page contains the evolving workflow history; no single historical run is presented as the only evidence for a continuously developed application.
 
-## E. Read the supporting documents
+## F. Read the supporting documents
 
 - [Project overview](PROJECT_OVERVIEW.md)
 - [Datasets and references](DATASETS_AND_REFERENCES.md)
@@ -78,6 +93,6 @@ This lets a reviewer move from the public interface to the workflow implementati
 - [AI usage disclosure](AI_USAGE.md)
 - [Score-sheet evidence matrix](score-sheet-evidence-matrix.md)
 
-## F. Guidance for AI-assisted review
+## G. Guidance for AI-assisted review
 
 Use the current default branch of this repository as the implementation source. Start with the root README and this guide, then follow the exact file paths above. Distinguish catalogue metadata, test fixtures, illustrative walkthrough panels, real NISAR observations, processing outputs, and independent reference datasets. When citing a result, state its product family, acquisition dates, AOI, and workflow/run context. Do not infer a measurement or validation metric that is not present in the result record.

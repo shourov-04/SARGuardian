@@ -57,6 +57,20 @@ RiverShift is an independent GCOV-oriented workflow. It discovers eligible acqui
 - GitHub Actions workers use server-side credentials and return status through the configured callback contract.
 - Result artifacts and manifests retain product identity and processing provenance. Private storage credentials are never sent to the browser.
 
+## Root-level processing workflow map
+
+The active workflow entry points are stored in the repository-root `.github/workflows/` directory:
+
+| User-facing path | Dispatcher | Reusable engine/worker |
+|---|---|---|
+| Find Displacements | `sarguardian-aoi-wkt-dashboard.yml` | `sarguardian-aoi-dashboard-engine.yml` → `sarguardian-aoi-product-worker.yml` |
+| Glacier Movement | Same as Find Displacements | Same AOI-wide displacement chain |
+| Known Place Analysis | `know-place-aoi-dispatcher.yml` | `know-place-aoi-analysis.yml` |
+| Known Place author-exact replay | `know-place-paper-reproduction-dispatcher.yml` | `know-place-author-exact-replay.yml` |
+| RiverShift | `river-shift-gcov-process.yml` | Dedicated GCOV job and raster/result stages |
+
+Glacier Movement is an application category on the shared displacement workflow. The author-exact P05023 replay is kept separate from generic Known Place AOI analysis. Historical workflow copies under `migration/source-snapshots/` are retained for lineage and are not the executable entry points above.
+
 ## Source navigation
 
 - [Web app](../../apps/web/)

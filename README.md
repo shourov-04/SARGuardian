@@ -59,6 +59,8 @@ These distinctions make the outputs easier to interpret, compare, and review.
 
 The web application is in `apps/web/`; the FastAPI API implementation and request adapters are in `apps/api/`. Runtime scientific processing components are organised under `engines/` and their workflow-specific tools. GitHub Actions workflows coordinate product workers, automated checks, provenance handling, result assembly, and delivery. The separate `science/nisar-core/` directory contains a reproducible NISAR detectability research study; it is supplementary scientific context, not a runtime dependency of the four application workflows.
 
+The account Find Displacements processing chain is dispatched through [the root AOI dispatcher](.github/workflows/sarguardian-aoi-wkt-dashboard.yml), which calls the [dashboard engine](.github/workflows/sarguardian-aoi-dashboard-engine.yml) and the [per-product worker](.github/workflows/sarguardian-aoi-product-worker.yml). Glacier Movement uses that same displacement chain. Known Place and RiverShift have their own root-level workflow entry points documented in the [reviewer guide](docs/submission/REVIEWER_GUIDE.md).
+
 Useful implementation locations:
 
 - [Web application](apps/web/)
