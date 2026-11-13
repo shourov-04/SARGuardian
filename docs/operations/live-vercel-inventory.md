@@ -1,4 +1,6 @@
-# Live Vercel inventory — read-only audit
+# Vercel inventory — historical read-only snapshot
+
+> **Historical record — 2026-11-05 only.** This document records a read-only inventory captured on 5 November 2026. It is not a statement of current Vercel connectivity, project ownership, production deployment, domain routing, or environment state. SARGuardian's canonical live application URL and source repository are maintained in the root [README](../../README.md). Do not use the project IDs, deployment IDs, repository links, environment names, or routing observations below as current deployment instructions without a separately authorized fresh audit. No current Vercel status was checked or changed while updating this documentation.
 
 **Audited:** 2026-11-05  
 **Team:** `moshiour-rahman-sarkers-projects-2cebe363`  
