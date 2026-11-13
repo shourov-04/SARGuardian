@@ -129,6 +129,14 @@ export function KnownPlaceResultsDashboard({
       ?? null,
     [allPairs, mapPairs, selectedMapPairKey],
   );
+  const dashboardHtml = results?.dashboard_html ?? '';
+  const reportUrl = useMemo(() => {
+    if (!dashboardHtml) return '';
+    return URL.createObjectURL(new Blob([dashboardHtml], { type: 'text/html' }));
+  }, [dashboardHtml]);
+  useEffect(() => () => {
+    if (reportUrl) URL.revokeObjectURL(reportUrl);
+  }, [reportUrl]);
   return (
     <section className={`known-place-results${loading ? ' is-loading' : ''}`} aria-label="Known Place scientific results dashboard">
       {loading && (
@@ -342,12 +350,14 @@ export function KnownPlaceResultsDashboard({
               )}
               <div className="known-place-chain-grid">
                 {result.pairwise_series_plan.chains.map((chain) => (
-                  <article key={chain.chain_id}>
+                  <details key={chain.chain_id}>
+                    <summary>
                     <span>{chain.direction === 'A' ? 'ASCENDING' : 'DESCENDING'} · TRACK {chain.track}</span>
                     <h4>{chain.pair_count} acquisition pairs</h4>
+                    </summary>
                     <p>{chain.release_id} · {chain.maturity} · {chain.polarization}</p>
                     <small>{chain.continuous_chain_eligible ? 'Contiguous within this track; cumulative output still requires separate review.' : 'Continuous chain eligibility not established.'}</small>
-                  </article>
+                  </details>
                 ))}
               </div>
 
@@ -397,11 +407,26 @@ export function KnownPlaceResultsDashboard({
 
           {view === 'scientific' && (
             <div className="known-place-scientific-view">
+              {/*
               <div className="known-place-gate-grid">
                 <article><span>Structural checks</span><strong>{result.structural_status}</strong><small>File and processing structure only; not geophysical validation.</small></article>
                 <article><span>Measurement state</span><strong>{result.measurement_status}</strong><small>{result.pair_measurement_counts.metrics_computed} measured pair(s); {result.pair_measurement_counts.insufficient_data} insufficient-data pair(s).</small></article>
                 <article><span>Paper reproduction</span><strong>{result.paper_reproduction_status}</strong><small>Generic AOI analysis is not the fixed author-exact benchmark.</small></article>
                 <article><span>Hazard detection</span><strong>{result.hazard_detection_status}</strong><small>No calibrated hazard model or alert was evaluated.</small></article>
+              </div>
+              */}
+
+              <div className="known-place-generated-report">
+                <span className="result-kicker">ADVANCED SCIENCE REPORT</span>
+                <a
+                  className="known-place-science-report-button"
+                  href={reportUrl || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!reportUrl}
+                >
+                  Open Advanced Science Report ↗
+                </a>
               </div>
 
               <div className="known-place-science-columns">
