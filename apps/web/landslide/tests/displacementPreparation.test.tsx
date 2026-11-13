@@ -61,7 +61,7 @@ describe('refresh-safe saved dashboard route', () => {
       '736bd4e6-8963-43be-a916-bc62336c8557',
       'evidence',
     ));
-    expect(url.origin).toBe('https://sar-guardian-dynamic-lilac.vercel.app');
+    expect(url.origin).toBe('https://sarguardian.vercel.app');
     expect(url.pathname).toBe('/dashboard');
     expect(url.searchParams.get('jobId')).toBe('736bd4e6-8963-43be-a916-bc62336c8557');
     expect(url.searchParams.get('view')).toBe('evidence');
@@ -70,8 +70,8 @@ describe('refresh-safe saved dashboard route', () => {
 
   it('pins relative dashboard assets and the Maps referrer to the first-party origin', () => {
     const html = '<!doctype html><html><head><title>Dashboard</title></head><body><main>Evidence</main></body></html>';
-    const prepared = withDashboardPreferredView(html, 'science', 'https://sar-guardian-dynamic-lilac.vercel.app/archive');
-    expect(prepared).toContain('<base href="https://sar-guardian-dynamic-lilac.vercel.app/">');
+    const prepared = withDashboardPreferredView(html, 'science', 'https://sarguardian.vercel.app/archive');
+    expect(prepared).toContain('<base href="https://sarguardian.vercel.app/">');
     expect(prepared).toContain('<meta name="referrer" content="origin">');
     expect(prepared).toContain("var preferredView = \"science\";");
     expect(prepared).toContain("data-sg-mode");
@@ -195,7 +195,7 @@ describe('displacement preparation route', () => {
     expect(runningHtml).not.toContain('>30<');
     expect(runningHtml).toContain('Cancel task');
     expect(runningHtml).not.toContain('View worker logs');
-    expect(runningHtml).not.toContain('https://github.com/shourov-04/SARGuardian_Dynamic/actions/runs/123');
+    expect(runningHtml).not.toContain('https://github.com/shourov-04/SARGuardian/actions/runs/123');
 
     const refreshingHtml = renderToStaticMarkup(<DisplacementJobStatus job={runningWithWorkerCounts as never} pendingAction="refresh"
       clock={Date.parse('2026-10-24T10:02:00Z')} granuleCounts={null} onCancel={() => {}} onRefresh={() => {}}

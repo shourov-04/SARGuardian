@@ -233,7 +233,7 @@ def test_refresh_workflow_state_persists_completed_product_progress_before_batch
         "stage": "hdf5_inspection_and_aoi_extraction",
         "callback_sequence": 3,
         "github_run_id": "123456789",
-        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "github_run_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "result_summary": {"expected_product_count": 10, "verified_product_count": 0},
         "updated_at": datetime(2026, 1, 1, tzinfo=UTC),
     })
@@ -340,7 +340,7 @@ def test_dispatch_payload_includes_exact_discovery_filters(monkeypatch) -> None:
     monkeypatch.setattr(river_module, "urlopen", fake_urlopen)
     settings = SimpleNamespace(
         river_shift_actions_enabled=True,
-        river_shift_github_actions_repository="moshiour0/SARGuardian-backend",
+        river_shift_github_actions_repository="shourov-04/SARGuardian",
         river_shift_github_actions_workflow="river-shift-gcov-process.yml",
         river_shift_github_actions_ref="main",
         river_shift_github_actions_token="server-token",
@@ -358,7 +358,7 @@ def test_dispatch_payload_includes_exact_discovery_filters(monkeypatch) -> None:
     inputs = captured["body"]["inputs"]
     assert captured["body"]["ref"] == "main"
     assert captured["url"] == (
-        "https://api.github.com/repos/moshiour0/SARGuardian-backend"
+        "https://api.github.com/repos/shourov-04/SARGuardian"
         "/actions/workflows/river-shift-gcov-process.yml/dispatches"
     )
     assert captured["timeout"] == 20
@@ -396,7 +396,7 @@ def test_dispatch_http_422_surfaces_only_bounded_public_validation_message(monke
 
     settings = SimpleNamespace(
         river_shift_actions_enabled=True,
-        river_shift_github_actions_repository="moshiour0/SARGuardian-backend",
+        river_shift_github_actions_repository="shourov-04/SARGuardian",
         river_shift_github_actions_workflow="river-shift-gcov-process.yml",
         river_shift_github_actions_ref="main",
         river_shift_github_actions_token="credential-that-must-never-appear",
@@ -444,7 +444,7 @@ def test_dispatch_http_422_without_json_message_remains_sanitized(monkeypatch) -
 
     settings = SimpleNamespace(
         river_shift_actions_enabled=True,
-        river_shift_github_actions_repository="moshiour0/SARGuardian-backend",
+        river_shift_github_actions_repository="shourov-04/SARGuardian",
         river_shift_github_actions_workflow="river-shift-gcov-process.yml",
         river_shift_github_actions_ref="main",
         river_shift_github_actions_token="server-token",
@@ -587,7 +587,7 @@ def test_signed_worker_callbacks_advance_only_the_river_shift_job(monkeypatch) -
         "sequence": 1,
         "stage": "worker_started",
         "github_run_id": "123456789",
-        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "github_run_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
     })
     assert running.status_code == 200, running.text
     assert running.json()["job_status"] == "running"
@@ -599,7 +599,7 @@ def test_signed_worker_callbacks_advance_only_the_river_shift_job(monkeypatch) -
         "sequence": 2,
         "stage": "observation_selection",
         "github_run_id": "123456789",
-        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "github_run_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "result_summary": {
             "expected_product_count": 8,
             "verified_product_count": 0,
@@ -625,7 +625,7 @@ def test_signed_worker_callbacks_advance_only_the_river_shift_job(monkeypatch) -
         "sequence": 3,
         "stage": "completed",
         "github_run_id": "123456789",
-        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "github_run_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "result_summary": {
             "schema_version": 1,
             "processing_status": "PASS",
@@ -1004,7 +1004,7 @@ def test_completed_github_run_without_signed_callback_marks_dispatch_failed(monk
     job_id = created["id"]
     run = {
         "id": 123456789,
-        "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "status": "completed",
         "conclusion": "success",
     }
@@ -1027,7 +1027,7 @@ def test_completed_failed_github_run_marks_running_job_failed(monkeypatch) -> No
     row.update({"state": river_module.JobState.RUNNING.value, "callback_sequence": 1, "github_run_id": "123456789"})
     run = {
         "id": 123456789,
-        "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "status": "completed",
         "conclusion": "failure",
     }

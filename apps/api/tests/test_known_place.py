@@ -169,7 +169,7 @@ def test_status_is_matched_by_random_request_id_and_workflow_identity(monkeypatc
                 {
                     "id": 12344,
                     "display_title": "Unrelated workflow",
-                    "path": ".github/workflows/sarguardian-displacement.yml",
+                    "path": ".github/workflows/river-shift-gcov-process.yml",
                     "head_branch": "main",
                     "event": "workflow_dispatch",
                     "status": "completed",
