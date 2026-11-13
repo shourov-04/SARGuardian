@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tools"))
+APP_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "engines" / "find-displacements" / "tools"))
 from prepare_aoi_drive_folders import prepare_drive_folders  # noqa: E402
 from write_no_valid_pixel_stats import write_no_valid_pixel_stats  # noqa: E402
 
-WORKFLOW_PATH = ROOT / ".github" / "workflows" / "sarguardian-aoi-wkt-dashboard.yml"
+WORKFLOW_PATH = ROOT / ".github" / "workflows" / "sarguardian-aoi-dashboard-engine.yml"
 WORKER_PATH = ROOT / ".github" / "workflows" / "sarguardian-aoi-product-worker.yml"
-BUILDER_SHA = "ecd125f68ed61c276406f73a1d77eb27979e204e"
-SCIENCE_ENGINE_SHA = "f038e4dfdb53c8d9793aaaefe173570a1032026c"
+SCIENCE_SOURCE_SHA = "006d4cd1485cf80e509eaf8717c12e9c6390ac09"
 
 
 def _job_block(workflow: str, job_id: str) -> str:
@@ -27,16 +27,22 @@ def _job_block(workflow: str, job_id: str) -> str:
     return match.group(1)
 
 
-def test_initial_product_pool_is_bounded_and_automatic_redownload_is_disabled() -> None:
+def test_initial_product_pool_is_bounded_and_retries_are_receipt_gated() -> None:
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
     block = _job_block(workflow, "process-products")
-    assert re.search(r"(?m)^\s{6}max-parallel:\s*15\s*$", block), "process-products"
+    retry_plan = _job_block(workflow, "retry-plan")
+    retry_products = _job_block(workflow, "retry-products")
+    dashboard = _job_block(workflow, "dashboard")
+
+    assert re.search(r"(?m)^\\s{6}max-parallel:\\s*15\\s*$", block), "process-products"
     assert "uses: ./.github/workflows/sarguardian-aoi-product-worker.yml" in block
-    assert "  retry-plan:\n" in workflow
     assert "sarguardian-aoi-retry-plan" in workflow
-    assert "  retry-products:\n" not in workflow
-    assert "needs: [manifest, process-products, retry-plan]" in workflow
-    assert "needs: [manifest, process-products, retry-plan]" in workflow
+    assert "needs: [manifest, process-products]" in retry_plan
+    assert "retry_count != '0'" in retry_products
+    assert "execution_label: retry-1" in retry_products
+    assert "needs: [manifest, process-products, retry-plan, retry-products]" in dashboard
+    assert "execution_label: retry-2" not in workflow
+
 
 
 def test_drive_folders_are_prepared_before_the_parallel_matrix_starts() -> None:
@@ -45,9 +51,10 @@ def test_drive_folders_are_prepared_before_the_parallel_matrix_starts() -> None:
     publish_manifest = workflow.index("Publish the selected-product manifest")
     worker_matrix = workflow.index("  process-products:")
     assert preflight < publish_manifest < worker_matrix
-    assert "python tools/prepare_aoi_drive_folders.py" in workflow
+    assert "python workflow-support/engines/find-displacements/tools/prepare_aoi_drive_folders.py" in workflow
     assert "DRIVE_VERSION_TAG: ${{ github.run_id }}-${{ github.run_attempt }}" in workflow
-    assert "GOOGLE_DRIVE_PARENT_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_PARENT_FOLDER_ID || secrets.GOOGLE_DRIVE_FOLDER_ID }}" in workflow
+    assert "GOOGLE_DRIVE_PARENT_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_PARENT_FOLDER_ID }}" in workflow
+    assert "GOOGLE_DRIVE_FOLDER_ID" not in workflow
 
 
 class FakeDrive:
@@ -123,32 +130,41 @@ def test_one_product_per_runner_and_cleanup_stays_gated_on_verified_retention() 
     assert "runner_raw_hdf5_deleted" in worker
 
 
-def test_reviewed_dashboard_builder_pin_and_exact_verification_remain() -> None:
+def test_dashboard_aggregator_is_pinned_to_the_manifest_orchestration_revision() -> None:
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
-    assert workflow.count(BUILDER_SHA) == 4
-    assert workflow.count('test "$actual" = "$expected"') == 2
-    assert SCIENCE_ENGINE_SHA in workflow
+    dashboard = _job_block(workflow, "dashboard")
+    assert "repository: moshiour0/SARGuardian-Monorepo" in dashboard
+    assert "ref: " + "${{ needs.manifest.outputs.orchestration_sha }}" in dashboard
+    assert "path: dashboard-source" in dashboard
+    assert "Verify aggregator and viewer match the dispatched revision" in dashboard
+    assert 'git -C dashboard-source rev-parse HEAD' in dashboard
+    assert 'test "$actual" = "' + "${EXPECTED_DASHBOARD_SHA:?}" + '"' in dashboard
 
 
-def test_manifest_stage_checks_out_the_pinned_retention_dependencies_before_install() -> None:
+def test_manifest_stage_verifies_source_pins_before_processing() -> None:
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
-    checkout = workflow.index("Checkout pinned dashboard retention dependencies for the manifest stage")
-    verification = workflow.index("Verify manifest-stage retention dependency revision")
-    install = workflow.index("Install pinned discovery and processing dependencies")
     manifest_job = _job_block(workflow, "manifest")
-    assert checkout < verification < install
-    assert "repository: moshiour0/SARGuardian-backend" in manifest_job
-    assert "ref: " + BUILDER_SHA in manifest_job
-    assert "path: dashboard-source" in manifest_job
-    assert 'git -C dashboard-source rev-parse HEAD' in manifest_job
-    assert 'test "$actual" = "$expected"' in manifest_job
+    checkout = manifest_job.index("Checkout backend orchestration tools at the dispatched workflow revision")
+    snapshot = manifest_job.index("Verify immutable NISAR source snapshot")
+    science_checkout = manifest_job.index("Checkout pinned NISAR science source for discovery")
+    science_verification = manifest_job.index("Verify pinned science checkout for discovery")
+    install = manifest_job.index("Install pinned discovery and processing dependencies")
+    drive_preflight = manifest_job.index("Prepare shared Drive folder hierarchy before parallel product workers")
+    publish_manifest = manifest_job.index("Publish the selected-product manifest")
+    assert checkout < snapshot < science_checkout < science_verification < install < drive_preflight < publish_manifest
+    assert "repository: moshiour0/SARGuardian" in manifest_job
+    assert "ref: " + SCIENCE_SOURCE_SHA in manifest_job
+    assert "path: science-source" in manifest_job
+    assert 'git -C science-source rev-parse HEAD' in manifest_job
+    assert 'test "$actual" = "' + "${EXPECTED_SCIENCE_COMMIT:?}" + '"' in manifest_job
+    assert "006d4cd/README.md" in manifest_job
 
 
 
 def test_worker_captures_reader_log_and_fails_closed_for_no_valid_pixel_diagnostic() -> None:
     worker = WORKER_PATH.read_text(encoding="utf-8")
     start = worker.index("Run the original single-product reader with dynamic WKT-AOI settings")
-    end = worker.index("Measure pair-local noise floor at the selected in-AOI target", start)
+    end = worker.index("Measure target-local detection floors from this pair's retained raster", start)
     reader = worker[start:end]
     assert 'reader_log="$CURATED_DIR/derived/science-reader.log"' in reader
     assert '2>&1 | tee "$reader_log"' in reader
