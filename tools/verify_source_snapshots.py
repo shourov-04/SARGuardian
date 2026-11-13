@@ -509,7 +509,19 @@ def main() -> int:
         "app/persistence.py", "tests/test_config.py", "tests/test_displacements.py",
         "tests/test_known_place.py",
     }
-    dynamic_api_destination_only = {"supabase/migrations/20261107120000_displacement_job_retention.sql"}
+    dynamic_api_destination_only = {
+        # Retention migration and retry feature are reviewed Monorepo-owned additions.
+        "supabase/migrations/20261107120000_displacement_job_retention.sql": "682fe1f67f1de10705010a1be0d9d45abecd9f3d",
+        "app/river_shift_retry.py": "0606f27361bc7b75195db892ac9f3bc107ce8f33",
+        "tests/test_river_shift_retry.py": "4afe5c809b688acdbe7b5d27115eca15b24dd6a8",
+    }
+    dynamic_api_changed_blob_pins = {
+        # Exact source/destination Git blob identities for the reviewed retry integration.
+        "app/river_shift_jobs.py": ("e3c702c854e8381d84d09a0db8b85fcaaa89328a", "9e2d21b6d74be563fe957e2088f64bfa895a3aef"),
+        "pytest.ini": ("3da0c0f7caa2b0bc0f2a0130542c0698a829f991", "f1fea8142b67d84e264e68a9a022990c378ca172"),
+        "tests/test_main.py": ("2bc956c3a4a5c2a347677b38772955283da70ea2", "64f19019ee750af10dddf97305424b14aebbe7b7"),
+        "tests/test_river_shift_jobs.py": ("fe9916362b343d14b9add6cb480c23496c10924c", "7bc621b17fce217a1f24946b49d0e0d8205ad689"),
+    }
     # Reviewed destination-only Known Place result route and the exact CSS
     # transformation already introduced by commits 72cc1dde and 978862c0.
     # Blob pins keep later edits visible to this provenance gate.
@@ -580,6 +592,12 @@ def main() -> int:
                 and path[len(destination_prefix) :] in dynamic_frontend_destination_only
             )
         }
+        if label == "Dynamic active API promotion":
+            for relative_path, expected_sha in dynamic_api_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed API destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_API_ADDITION_PASS apps/api/{relative_path}: {expected_sha}")
         if label == "Dynamic frontend promotion":
             for relative_path, expected_sha in dynamic_frontend_destination_only.items():
                 actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
@@ -597,6 +615,11 @@ def main() -> int:
         for relative_path in changed:
             override_key = f"{label}:{relative_path}"
             override = promotion_overrides.get(override_key)
+            if label == "Dynamic active API promotion" and relative_path in dynamic_api_changed_blob_pins:
+                source_sha, destination_sha = dynamic_api_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_API_TRANSFORMATION_PASS apps/api/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "Dynamic frontend promotion" and relative_path in dynamic_frontend_baseline_exceptions:
                 print(f"PROMOTED_FRONTEND_BASELINE_PASS apps/web/{relative_path}")
                 continue
