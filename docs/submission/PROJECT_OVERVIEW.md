@@ -40,6 +40,10 @@ GitHub Actions is an essential part of the scientific implementation: it execute
 - `.github/workflows/` — automated processing and validation.
 - `docs/submission/` — reviewer-oriented project and method documents.
 
+## Team and contributions
+
+The project's member roles and contribution evidence are documented in [Team & Contributions](TEAM_AND_CONTRIBUTIONS.md).
+
 ## Review invitation
 
 We invite judges and researchers to open the live application, choose an area and dates of interest, and explore an available workflow. The most direct way to understand SARGuardian is to run an analysis through the application and inspect the returned maps, source products, acquisition dates, and processing information.
