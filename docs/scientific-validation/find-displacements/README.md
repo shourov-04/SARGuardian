@@ -1,18 +1,24 @@
-# Find Displacements — science-script audit
+# Find Displacements — scientific interpretation and audit boundaries
 
-> **Monorepo audit provenance:** adapted from [SARGuardian PR #9](https://github.com/moshiour0/SARGuardian/pull/9), originally audited against `f038e4dfdb53c8d9793aaaefe173570a1032026c`. The active Backend worker pin is now `006d4cd1485cf80e509eaf8717c12e9c6390ac09`; the source-history comparison found a 13-commit delta affecting only `src/goff_reader.py`, `src/pixel_stack.py`, `tests/test_detectability.py`, and `tests/test_goff_reader.py`. This document is reviewed with that delta and is not evidence of independent geophysical validation.
+> **Document status (updated 2026-11-13):** This is a scoped scientific code-review and limitations record. The detailed module-level audit below was first conducted on 2026-10-30. It is not the active workflow configuration and must not be used to infer the current repository's dispatch target or a current deployment state. For the executable workflow map, use the [reviewer guide](../../submission/REVIEWER_GUIDE.md) and [system architecture](../../architecture/system-boundaries.md).
 
-**Audit date:** 2026-10-30  
+## Current source lineage
 
-> **Pin status:** The backend is currently configured to run the science revision at the head of [SARGuardian PR #8](https://github.com/moshiour0/SARGuardian/pull/8). Science `main` is still at `9fcb543`; the active worker intentionally pins `006d4cd`, which preserves the exact GUNW network/withheld-null changes. This is the head of open SARGuardian PR #11 and descends from PR #8 head `3b227f9`; both remain open. Do not replace this worker pin with `main` until the workflow and science changes are intentionally reconciled.
+- **Active application dispatch:** the root-level `.github/workflows/sarguardian-aoi-wkt-dashboard.yml` dispatches the dashboard engine and per-product worker. The exact active chain is documented in the [reviewer guide](../../submission/REVIEWER_GUIDE.md).
+- **GOFF/GUNW reader and discovery source:** the workflow uses the immutable science pin `moshiour0/SARGuardian@006d4cd1485cf80e509eaf8717c12e9c6390ac09`, preserved in this repository under `migration/source-snapshots/nisar-pins/006d4cd/`.
+- **Dashboard aggregation source:** the account pipeline checks out `moshiour0/SARGuardian-Monorepo` at the exact `orchestration_sha` recorded in the product manifest and verifies the checked-out SHA. This is a per-run manifest pin, not the retired static Backend aggregator SHA from the earlier audit.
+- **Historical audit baseline:** the original module-level review was adapted from [SARGuardian PR #9](https://github.com/moshiour0/SARGuardian/pull/9) and compared against science commit `f038e4dfdb53c8d9793aaaefe173570a1032026c`; the science reader pin above was subsequently checked as a 13-commit delta affecting `src/goff_reader.py`, `src/pixel_stack.py`, `tests/test_detectability.py`, and `tests/test_goff_reader.py`. Historical PR references describe the audit's origin only; they are not current merge or dispatch instructions.
 
-**Runtime science pin:** `moshiour0/SARGuardian@006d4cd1485cf80e509eaf8717c12e9c6390ac09` (current Backend product-worker pin; head of open PR #11, based on PR #8's `3b227f9` line)  
-**Backend aggregator pin:** `moshiour0/SARGuardian-backend@ecd125f68ed61c276406f73a1d77eb27979e204e`  
-**Scope:** target-free `Find Displacements` only. `Known Place Analysis` is explicitly out of scope and must remain a separate target-selected workflow.
+**Detailed module-audit date:** 2026-10-30  
+**Scope:** target-free Find Displacements only. Known Place Analysis is a separate target-selected workflow and is outside this audit.
+
+## Latest linked processing evidence
+
+The [Find Displacements example run](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) completed with 16/16 selected products validated. Its output included 697 spatial candidate features and 27 AOI-wide screening candidates. The workflow explicitly did **not** confirm movement or a hazard, and the common GUNW temporal inversion was withheld because the configured science support gates were not met. This is a per-AOI processing example, not independent validation or a universal performance result.
 
 ## Executive finding
 
-The code path is real and target-free, but it currently produces **exploratory GOFF offset-anomaly candidates**, plus a separate **relative GUNW LOS-rate diagnostic** when the GUNW stack has sufficient support. It does not yet constitute a validated AOI-wide displacement/velocity detector, and the viewer does not yet expose all derived scientific raster outputs as selectable PNG/map layers.
+The reviewed code path is target-free and produces **exploratory GOFF offset-anomaly candidates**. Separate **relative GUNW LOS diagnostics** are available only where the required support gates pass; the latest linked example withheld common GUNW temporal inversion. These results do not constitute a validated AOI-wide displacement/velocity detector. Dashboard assembly success must not be interpreted as proof that every intermediate scientific raster is exposed as a selectable user-facing map layer; inspect the result manifest and rendered UI for the exact run.
 
 Three distinctions are mandatory:
 
@@ -46,7 +52,7 @@ Do not change a target-gated module into a centroid-based substitute. A centroid
 - **Spatial scale:** the 41-pixel local background subtraction suppresses broad or slowly varying AOI-scale motion. Sensitivity to feature size and to the detrending window needs injection tests.
 - **Temporal support:** two compatible pair hits are enough for an exploratory persistence candidate, but not a redundant displacement time-series network or independent velocity validation.
 - **GUNW datum/atmosphere:** GUNW pair auto-reference is not by itself a common stable datum across pairs. External tropospheric corrections are not applied by default in the NISAR product. The target-free common-reference route is currently withheld.
-- **Presentation:** the viewer currently loads product-preview layers and candidate GeoJSON polygons. The AOI screen’s count/persistent-mask/coherence GeoTIFFs and the GUNW pixel-stack velocity GeoTIFF are not currently published as map overlays.
+- **Presentation:** the 2026-10-30 module audit did not establish that every AOI screening raster (for example, support counts, persistent masks, coherence, or GUNW diagnostics) is available as a selectable user-facing map overlay. Confirm the exact artifact manifest and UI layer list for each run before claiming that an intermediate raster is directly viewable.
 - **Validation:** synthetic/unit tests prove code invariants; no held-out positive and null scenes or independent field/GNSS validation establish operational sensitivity, precision, or false-alarm rate.
 
 ## Required release gates
@@ -83,4 +89,4 @@ Do not change a target-gated module into a centroid-based substitute. A centroid
 - Wright, Parsons & Lu (2004), [Toward mapping surface deformation in three dimensions using InSAR](https://doi.org/10.1029/2003GL018827): one interferogram measures LOS only; near-polar satellite geometry weakly resolves north motion even with multiple looks.
 - Fukuzono (1985), [Inverse velocity method](https://doi.org/10.3313/jls1964.22.2_8): derived from controlled slope-model failure experiments; it is not a general AOI discovery method or an unconditional forecast.
 
-**Evidence level:** source-code review + repository regression-test inventory + literature/documentation comparison. This document does not claim a new live NISAR AOI run or independent geophysical validation.
+**Evidence level:** dated source-code review + repository regression-test inventory + literature/documentation comparison, supplemented by the linked 2026-11-13 processing-run summary. The example run is real processing evidence for its AOI and inputs, but it is not an independent geophysical validation dataset or a measurement of detector sensitivity/precision/false-alarm rate.
