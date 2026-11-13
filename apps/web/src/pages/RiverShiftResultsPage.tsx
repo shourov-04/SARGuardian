@@ -323,7 +323,6 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
     <section className="rs-panel">
       <div className="rs-section-heading">
         <div><p className="rs-kicker">RIVER SHIFT SCIENTIFIC RESULT</p><h2>{title}</h2></div>
-        <span className="rs-quality">{report.quality.status.replace(/_/g, ' ')}</span>
       </div>
       <div className="rs-metric-grid">
         {Object.entries(report.metrics).map(([key, value]) => (
@@ -340,12 +339,6 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
           <p>Evidence: {String(verificationRecord.evidence_reference)}</p>
         </div>
       )}
-      <div className="rs-warning-list">
-        <strong>Input provenance</strong>
-        <p>Granules: {Array.isArray(source.granule_names) && source.granule_names.length ? source.granule_names.join(', ') : 'No NISAR granule IDs recorded'}</p>
-        <p>Source checksums: {Array.isArray(source.source_granule_sha256) && source.source_granule_sha256.length ? source.source_granule_sha256.join(', ') : 'No source product checksums recorded'}</p>
-        {report.inputs && <p>Input checksums: {JSON.stringify(report.inputs.input_sha256 || 'Not recorded')}</p>}
-      </div>
       {report.reference && (
         <div className="rs-reference">
           Reference: <strong>{String(report.reference.source || 'Not stated')}</strong>
@@ -1018,7 +1011,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           )}
 
           <section className="rs-map-section">
-            <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
             {mapError && <p className="rs-warning-inline">{mapError}</p>}
             <div className={`rs-map-shell${mapDarkMode ? ' is-dark' : ''}`}>
               <div className={`rs-map-toolbar${mapDarkMode ? ' is-dark' : ''}`}>
@@ -1112,6 +1104,15 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
             {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
             {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
           </section>
+
+          {explorerReport && (
+            <div className="rs-warning-list">
+              <strong>Input provenance</strong>
+              <p>Granules: {Array.isArray(explorerReport.source.granule_names) && explorerReport.source.granule_names.length ? explorerReport.source.granule_names.join(', ') : 'No NISAR granule IDs recorded'}</p>
+              <p>Source checksums: {Array.isArray(explorerReport.source.source_granule_sha256) && explorerReport.source.source_granule_sha256.length ? explorerReport.source.source_granule_sha256.join(', ') : 'No source product checksums recorded'}</p>
+              {explorerReport.inputs && <p>Input checksums: {JSON.stringify(explorerReport.inputs.input_sha256 || 'Not recorded')}</p>}
+            </div>
+          )}
 
           {/*
             <div className="rs-section-heading">
