@@ -1,6 +1,6 @@
 # RiverShift — NASA Space Apps 2026 Judge Brief
 
-**Recommended first read for the RiverShift workstream.** This brief presents the global AOI-driven proposition, current application experience, processing evidence and the source records that support the Jamuna–Chowhali demonstration.
+**Recommended first read for the RiverShift workstream.** This brief presents the global AOI-driven proposition, current application experience, processing architecture and the source code behind the Jamuna–Chowhali demonstration.
 
 ## The central proposition
 
@@ -19,7 +19,7 @@ The mission observation plan and public catalogue help users explore the global 
 
 ## Current application experience
 
-The public [shourov-04/SARGuardian application](https://github.com/shourov-04/SARGuardian) has a dedicated RiverShift setup, processing and result journey.
+The live [SARGuardian application](https://sar-guardian-monorepo-web.vercel.app/) has a dedicated RiverShift setup, processing and result journey. Reviewers are invited to open it and explore the workflow using a location and observation window of their choice.
 
 - **Setup:** the user draws/selects an AOI and date window, then chooses general-scan or event-based analysis and the relevant processing settings.
 - **Processing:** the job view displays processing stages, AOI/job details, GCOV product counts and processed-product counts, with task controls and result navigation.
@@ -62,44 +62,36 @@ There is no daily interpolation. Map previews support exploration; full-resoluti
 
 These are explainable screening indicators connected to the source observations.
 
-## Demonstrated evidence
+## Live review and processing architecture
 
-### Current live end-to-end run — Run #25 (12 November 2026)
+The most useful way to validate RiverShift is to use the live application rather than rely on one frozen processing run. Reviewers are invited to open [SARGuardian](https://sar-guardian-monorepo-web.vercel.app/), define a river-reach AOI and observation window, and explore the available setup, processing and results views.
 
-[Open the successful RiverShift Run #25](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660).
+Where the account has processing access and the selected AOI/date window has compatible released NISAR GCOV observations, submit a fresh request. The application connects that request to an actual GitHub Actions workflow execution and displays the resulting job and evidence context.
 
-- AOI case: Jamuna–Chowhali demonstration request.
-- Request window: 12 November 2025–12 November 2026. NASA CMR returned 68 catalogue candidates; the compatibility/support audit selected 10 exact granules across 10 actual acquisition dates.
-- Ten exact NISAR L2 GCOV PROVISIONAL P05023 granules were processed on 18 June, 30 June, 12 July, 24 July, 17 August, 29 August, 10 September, 22 September, 4 October and 16 October 2026.
-- All **10/10 first-attempt product worker jobs passed**; the whole workflow completed with 24 successful jobs and 6 intentionally skipped jobs, with no failed jobs.
-- Detailed worker logs show authenticated product retrieval, HTTP 206 range support, native HDF5 inspection, requested-layer validation, AOI raster extraction and product-artifact preparation.
-- Ten date rasters passed assembly and shared-grid alignment; the 10-product source-provenance manifest passed validation.
-- The result manifest validated **72 output entries**. Private result publication passed with 73 publication receipts, followed by successful final assembly and signed callback.
+**GitHub Actions is a core part of the Scientific Core Engine execution architecture.** The workflow layer coordinates NASA CMR/ASF catalogue discovery, exact-granule selection, product workers, native HDF5/layer validation, the RiverShift processing engine, result assembly, provenance verification and artifact delivery. The processing algorithms are implemented in the repository's RiverShift engine code; workflow YAML provides repeatable orchestration and job execution.
 
-This is an end-to-end processing demonstration for the selected AOI and date window. The live record connects catalogue discovery, authenticated retrieval, native data checks, processing, provenance and result publication.
+Review the implementation directly:
 
-### Historical retained Jamuna reproducibility case — Run #36
+- [Live SARGuardian application](https://sar-guardian-monorepo-web.vercel.app/)
+- [Public SARGuardian repository](https://github.com/shourov-04/SARGuardian)
+- [GitHub Actions workflows](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows)
+- [RiverShift processing engine](https://github.com/shourov-04/SARGuardian/tree/main/engines/river-shift)
+- [Monorepo source and API history](https://github.com/moshiour0/SARGuardian-Monorepo)
 
-The retained Jamuna case provides an additional reproducibility example. Six actual NISAR GCOV acquisition dates were retained from 30 June to 10 September 2026; source-COG SHA-256 values matched their sidecars in the retrospective replay, and the reported change-area outputs were reproduced. Comparison metrics are published only when the independent source, temporal alignment, data definition and common spatial support meet the matching requirements.
-
-### Code and regression evidence
-
-- [SARGuardian Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo) — application, API, RiverShift engine and NISAR science source.
-- [Monorepo Snapshot Regression run 43243267939](https://github.com/moshiour0/SARGuardian-Monorepo/actions/runs/43243267939) — **20/20 jobs passed**, including the promoted RiverShift engine tests (276 passed), archived OPERA reference tests (20 passed) and RiverShift worker tests (259 passed).
-- [Full SARGuardian submission pack](SPACE_APPS_2026_FINAL_SUBMISSION_PACK.md) — project story, workflows, run evidence, team contributions and demonstration-video guide.
+A fresh run is tied to the request actually submitted. This avoids presenting one selected historical run as a permanent or exhaustive validation of a continuously evolving application.
 
 ## Where the rubric evidence lives
 
-| Judging dimension | Evidence to inspect |
+| Judging dimension | What a reviewer can inspect live |
 |---|---|
-| Impact | Global AOI applicability, Jamuna regional example and mapped river-change screening |
-| Creativity | User-defined AOI, multi-date radar workflow and separate new-water/erosion/deposition layers |
-| Validity | Product manifests, SHA-256 provenance, compatibility/coverage gates, native HDF5 checks and spatial QA |
-| Relevance | NISAR L2 GCOV is the primary measurement input for the river-change workflow |
-| Presentation | Full HD demonstration video, map-first experience, observed-date exploration and source-aware result panels |
+| Impact | User-selected river reaches, AOI/date exploration and mapped river-change screening |
+| Creativity | AOI-driven multi-date radar workflow with separate new-water, erosion-screening and deposition-screening layers |
+| Validity | Compatible product selection, acquisition dates, native data checks, source manifests, checksums, spatial support and QA visible through the job and result experience |
+| Relevance | NISAR L2 GCOV as the primary measurement input, with NASA CMR/ASF discovery |
+| Presentation | Full HD demonstration video, map-first experience and source-aware result panels |
 | User experience | AOI drawing, setup controls, processing stages, product counters and dedicated results navigation |
 | NASA data usage | NISAR GCOV measurement source and NASA/ASF catalogue discovery |
-| Reproducibility | Public source code, automated tests, retained example run and checksummed result records |
+| Reproducibility | Public source code, versioned workflows and a fresh request-specific execution record |
 
 ## Scientific interpretation
 
@@ -116,8 +108,8 @@ RiverShift keeps the relationship between observation, map class and interpretat
 1. Read this brief for the global AOI-driven proposition and the NISAR GCOV workflow.
 2. Review the [4:05 demonstration-video brief](VIDEO_PRESENTATION_BRIEF.md).
 3. Follow the [application experience and UI/UX brief](APPLICATION_UX_BRIEF.md) to inspect RiverShift setup, processing and result panels.
-4. Open [RiverShift Run #25](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660) for the 10-product processing record.
-5. Inspect the [Monorepo RiverShift engine](https://github.com/moshiour0/SARGuardian-Monorepo/tree/main/engines/river-shift/tools/river_shift) and [application API](https://github.com/moshiour0/SARGuardian-Monorepo/tree/main/apps/api).
+4. Use the live application to submit a fresh AOI/date-window request where compatible products are available.
+5. Inspect the [GitHub Actions workflows](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows) and [RiverShift engine](https://github.com/shourov-04/SARGuardian/tree/main/engines/river-shift).
 
 ## Core references
 

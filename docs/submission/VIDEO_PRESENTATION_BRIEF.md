@@ -51,15 +51,24 @@ The representative result view highlights approximately **17.67 km²** of new-wa
 
 The closing returns to the platform's AOI-driven approach: users select locations and observation windows within the global NISAR observation programme, while the compatible products actually released for each place and period determine the analysis series.
 
-## Traceable supporting evidence
+## Reviewer invitation and processing implementation
 
-The video is the guided presentation of the product. The separately linked [RiverShift Run #25](https://github.com/shourov-04/SARGuardian/actions/runs/43260188660) provides the detailed, independently inspectable processing record for its 10-product Jamuna–Chowhali demonstration request, including acquisition dates, product provenance, result manifest and publication receipts.
+The video is the guided presentation; the live application is where reviewers can explore the workflows and initiate a fresh AOI/date-window request. Open the [SARGuardian application](https://sar-guardian-monorepo-web.vercel.app/) and follow the available steps. Where account access and compatible released NISAR observations permit, reviewers can submit their own analysis and inspect the resulting evidence in the application.
 
-The video includes both mission/context visuals and product demonstrations. Reviewers can use the [Application Experience and UI/UX Brief](APPLICATION_UX_BRIEF.md) to locate the corresponding interface implementation and the [RiverShift Judge Brief](RIVERSHIFT_2026_JUDGE_BRIEF.md) to inspect the live processing evidence.
+GitHub Actions is a central part of the Scientific Core Engine implementation and execution: it coordinates catalogue discovery, product workers, processing-engine jobs, validation, artifact hand-off and result delivery. The scientific algorithms remain in the version-controlled engine and NISAR science source code. Reviewers can inspect the [workflow definitions](https://github.com/shourov-04/SARGuardian/tree/main/.github/workflows) and [scientific engines](https://github.com/shourov-04/SARGuardian/tree/main/engines), and the [Application Experience and UI/UX Brief](APPLICATION_UX_BRIEF.md) explains where these capabilities appear in the interface.
 
 ## Copy-ready video description
 
 **SARGuardian is a NISAR-powered surface-change intelligence platform built for NASA Space Apps 2026 — Dancing with the SARs.** This demonstration follows the journey from AOI-wide displacement screening to focused Known Place Analysis and RiverShift. It highlights NISAR GOFF, GUNW and GCOV observations, the Bhote Koshi P05023 benchmark, mapped river-change candidates and source-aware evidence review. SARGuardian helps users explore where surface change may be occurring and trace the radar observations behind each result.
+
+**Try the application:** https://sar-guardian-monorepo-web.vercel.app/  
+**Public GitHub repository:** https://github.com/shourov-04/SARGuardian
+
+Reviewers are invited to explore the live application with their own area of interest and observation window. GitHub Actions coordinates SARGuardian's Scientific Core Engine workflows and processing jobs; the scientific processing code is available in the public repository. Each new request can generate a fresh execution record, so the demonstration is not limited to a single historical run.
+
+## AI-assisted media disclosure
+
+AI-assisted tools were used for supporting presentation media: Google AI Studio was used to prepare the voice-over, Google Flow generated illustrative video clips, and CapCut was used to assemble, synchronize and finalize the edit. The website recordings, NISAR workflow screens, maps and analysis outputs shown in the demonstration come from the SARGuardian application and its project processing; generated clips are illustrative context, not scientific evidence.
 
 ## Closing message
 
