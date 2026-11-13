@@ -306,7 +306,6 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
   const verificationRecord = verification && typeof verification === 'object'
     ? verification as Record<string, unknown>
     : null;
-  const warnings = report.quality.warnings || [];
   const title = report.analysis_type === 'river_change_scan'
     ? 'General river change scan'
     : report.analysis_type === 'flood_inundation_screening'
@@ -344,12 +343,6 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
           Reference: <strong>{String(report.reference.source || 'Not stated')}</strong>
           <span>{String(report.reference.date || 'Date not stated')}</span>
           <p>{String(report.reference.method || 'Reference method not stated')}</p>
-        </div>
-      )}
-      {warnings.length > 0 && (
-        <div className="rs-warning-list">
-          <strong>Scientific interpretation and limitations</strong>
-          {warnings.map((warning, index) => <p key={index}>• {warning}</p>)}
         </div>
       )}
     </section>
@@ -407,11 +400,11 @@ function ScientificReadinessPanel({
     },
   ];
   return (
-    <section className="rs-readiness-panel" aria-label="Scientific validation readiness">
-      <div className="rs-section-heading">
+    <details className="rs-readiness-panel" aria-label="Scientific validation readiness">
+      <summary className="rs-section-heading">
         <div><p className="rs-kicker">VALIDATION READINESS</p><h3>What has passed — and what has not</h3></div>
         <span className="rs-chip">{releaseStatus}</span>
-      </div>
+      </summary>
       <div className="rs-readiness-list">
         {rows.map((row) => (
           <div className="rs-readiness-row" key={row.label}>
@@ -421,7 +414,7 @@ function ScientificReadinessPanel({
         ))}
       </div>
       <p className="rs-overlay-note">A processing PASS and an overlap-audit PASS do not establish physical change or model accuracy. VERIFIED requires an eligible independent reference, complete provenance and a signed review record.</p>
-    </section>
+    </details>
   );
 }
 
@@ -1184,6 +1177,13 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           )}
         </section>
       </main>
+
+      {explorerReport && explorerReport.quality.warnings && explorerReport.quality.warnings.length > 0 && (
+        <div className="rs-warning-list rs-limitations-bottom">
+          <strong>Scientific interpretation and limitations</strong>
+          {explorerReport.quality.warnings.map((warning, index) => <p key={index}>â€¢ {warning}</p>)}
+        </div>
+      )}
 
       <footer className="rs-footer" style={{ marginTop: '40px' }}>
         <span>SARGuardian · RiverShift</span>
