@@ -236,7 +236,7 @@ def test_author_exact_paper_reproduction_dispatches_immutable_backend_pin_and_ex
     assert response.execute_downloads is True
     assert observed["method"] == "POST"
     assert observed["path"] == (
-        "/repos/moshiour0/SARGuardian-backend/actions/workflows/"
+        "/repos/shourov-04/SARGuardian/actions/workflows/"
         "know-place-paper-reproduction-dispatcher.yml/dispatches"
     )
     assert observed["body"]["ref"] == "main"
@@ -264,7 +264,7 @@ def test_author_exact_paper_reproduction_status_is_matched_by_request_and_workfl
                     "event": "workflow_dispatch",
                     "status": "completed",
                     "conclusion": "success",
-                    "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/54321",
+                    "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/54321",
                     "created_at": "2026-11-02T00:00:00Z",
                     "updated_at": "2026-11-02T00:30:00Z",
                 },
@@ -336,7 +336,7 @@ def test_generic_and_author_exact_known_place_workflows_use_current_repository()
     assert known_place.KNOWN_PLACE_REPOSITORY == "shourov-04/SARGuardian"
     assert known_place.KNOWN_PLACE_WORKFLOW == "know-place-aoi-dispatcher.yml"
     assert known_place.KNOWN_PLACE_REF == "main"
-    assert known_place.KNOWN_PLACE_PAPER_REPOSITORY == "moshiour0/SARGuardian-backend"
+    assert known_place.KNOWN_PLACE_PAPER_REPOSITORY == "shourov-04/SARGuardian"
     assert known_place.KNOWN_PLACE_PAPER_WORKFLOW == "know-place-paper-reproduction-dispatcher.yml"
     assert known_place.KNOWN_PLACE_PAPER_REF == "main"
     assert known_place.KNOWN_PLACE_PAPER_WORKFLOW != known_place.KNOWN_PLACE_WORKFLOW
@@ -511,7 +511,7 @@ def test_known_place_result_parser_preserves_separate_chains_and_claim_gates() -
         "id": 77,
         "status": "completed",
         "conclusion": "success",
-        "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/77",
+        "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/77",
         "created_at": "2026-11-02T14:00:00Z",
         "updated_at": "2026-11-02T14:30:00Z",
         "head_sha": "a" * 40,
@@ -553,7 +553,7 @@ def test_known_place_result_lookup_requires_exact_generic_workflow_identity(monk
                     "event": "workflow_dispatch",
                     "status": "completed",
                     "conclusion": "success",
-                    "html_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/77",
+                    "html_url": "https://github.com/shourov-04/SARGuardian/actions/runs/77",
                     "created_at": "2026-11-02T14:00:00Z",
                     "updated_at": "2026-11-02T14:30:00Z",
                     "head_sha": "a" * 40,
@@ -694,18 +694,18 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
     )
 
     assert requests[0]["path"] == (
-        "/repos/moshiour0/SARGuardian-Monorepo/actions/workflows/know-place-aoi-dispatcher.yml/dispatches"
+        "/repos/shourov-04/SARGuardian/actions/workflows/know-place-aoi-dispatcher.yml/dispatches"
     )
     assert requests[0]["body"]["ref"] == "main"
     assert generic.github_run_url == (
-        "https://github.com/moshiour0/SARGuardian-Monorepo/actions/workflows/know-place-aoi-dispatcher.yml"
+        "https://github.com/shourov-04/SARGuardian/actions/workflows/know-place-aoi-dispatcher.yml"
     )
     assert requests[1]["path"] == (
-        "/repos/moshiour0/SARGuardian-Monorepo/actions/workflows/know-place-paper-reproduction-dispatcher.yml/dispatches"
+        "/repos/shourov-04/SARGuardian/actions/workflows/know-place-paper-reproduction-dispatcher.yml/dispatches"
     )
     assert requests[1]["body"]["ref"] == "main"
     assert paper.github_run_url == (
-        "https://github.com/moshiour0/SARGuardian-Monorepo/actions/workflows/known-place-author-exact.yml"
+        "https://github.com/shourov-04/SARGuardian/actions/workflows/know-place-paper-reproduction-dispatcher.yml"
     )
 
     request_id = "c19a7630-9f19-4b38-ae0e-88d53ad7c8f2"
@@ -722,12 +722,12 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
                 "status": "completed",
                 "conclusion": "success",
             }]}
-        if "known-place-author-exact.yml/runs" in path:
+        if "know-place-paper-reproduction-dispatcher.yml/runs" in path:
             return 200, {"workflow_runs": [{
                 "id": 70002,
                 "display_title": f"Known Place Paper Reproduction {request_id}",
-                "path": ".github/workflows/known-place-author-exact.yml",
-                "head_branch": "migration/author-exact",
+                "path": ".github/workflows/know-place-paper-reproduction-dispatcher.yml",
+                "head_branch": "main",
                 "event": "workflow_dispatch",
                 "status": "completed",
                 "conclusion": "success",
@@ -735,16 +735,16 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
         raise AssertionError(f"Unexpected Known Place status path: {path}")
 
     monkeypatch.setattr(known_place, "_github_request", fake_status_request)
-    generic_status = known_place.get_known_place_analysis_status(settings_with_monorepo_targets, request_id)
-    paper_status = known_place.get_known_place_paper_reproduction_status(settings_with_monorepo_targets, request_id)
+    generic_status = known_place.get_known_place_analysis_status(settings_with_current_repository_targets, request_id)
+    paper_status = known_place.get_known_place_paper_reproduction_status(settings_with_current_repository_targets, request_id)
     assert generic_status.github_run_id == "70001"
     assert paper_status.github_run_id == "70002"
 
 
 def test_known_place_artifact_download_uses_configured_repository(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings_with_monorepo_target = SimpleNamespace(
+    settings_with_current_repository_target = SimpleNamespace(
         github_actions_token="test-token",
-        known_place_github_actions_repository="moshiour0/SARGuardian-Monorepo",
+        known_place_github_actions_repository="shourov-04/SARGuardian",
         known_place_github_actions_workflow="know-place-aoi-dispatcher.yml",
         known_place_github_actions_ref="main",
     )
@@ -761,8 +761,8 @@ def test_known_place_artifact_download_uses_configured_repository(monkeypatch: p
         return FakeOpener()
 
     monkeypatch.setattr(known_place, "build_opener", fake_build_opener)
-    result = known_place._download_known_place_artifact(settings_with_monorepo_target, 12345)
+    result = known_place._download_known_place_artifact(settings_with_current_repository_target, 12345)
     assert result == b"artifact-zip-bytes"
     assert observed["url"] == (
-        "https://api.github.com/repos/moshiour0/SARGuardian-Monorepo/actions/artifacts/12345/zip"
+        "https://api.github.com/repos/shourov-04/SARGuardian/actions/artifacts/12345/zip"
     )
