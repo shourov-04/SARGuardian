@@ -8,7 +8,31 @@ import { parseWktPolygon, type Wgs84Point } from '../riverShift/aoi';
 import { deriveGeneralChangeMarkers } from '../riverShift/generalChangeMarkers';
 import { deriveImpactMapPoints, parseImpactExposureGeoJSON, parseOpenStreetMapImpactResponse, summarizeImpactExposure, type ImpactExposurePointCollection } from '../riverShift/impactContext';
 import { Header } from '../components/Header';
+import '../../landslide/ui/knownPlaceResults.css';
 import './river-shift.css';
+
+type AudienceView = 'map' | 'qa' | 'context';
+
+const views: Array<{ id: AudienceView; title: string; audience: string; summary: string }> = [
+  {
+    id: 'map',
+    title: 'Interactive Map & Playback',
+    audience: 'Visual Discovery',
+    summary: 'Explore observed NISAR radar water extents, candidate transitions (erosion, deposition, new water), and acquisition playback.',
+  },
+  {
+    id: 'qa',
+    title: 'Spatial QA & Overlap Audit',
+    audience: 'Quality Assurance',
+    summary: 'Authoritative full-resolution source masks compared against majority-occupancy preview polygons. Diagnostic checks, not geophysical validation.',
+  },
+  {
+    id: 'context',
+    title: 'Validation Readiness & Context',
+    audience: 'Reviewers & Planners',
+    summary: 'Review validation readiness checklist, local exposure screening, and inspect reproducible outputs.',
+  },
+];
 
 type Props = {
   user: User;
@@ -318,6 +342,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [riverJob, setRiverJob] = useState<RiverShiftJob | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
+  const [activeView, setActiveView] = useState<AudienceView>('map');
   const [report, setReport] = useState<RiverShiftReport | null>(null);
   const [reportError, setReportError] = useState('');
   const [geoJSONFiles, setGeoJSONFiles] = useState<LoadedGeoJSON[]>([]);
@@ -981,7 +1006,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const resultType = explorerReport ? explorerReport.analysis_type.replace(/_/g, ' ') : 'No result loaded';
 
   return (
-    <div className="home-page claude-home river-shift-page">
+    <div className="home-page claude-home claude-how-page known-place-results-shell river-shift-results-shell">
       <div className="claude-background" aria-hidden="true"><i /><i /><i /></div>
       <Header
         user={user}
@@ -994,289 +1019,365 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         pageTitle="River Shift Results"
       />
 
-      <div style={{ maxWidth: 1440, margin: '20px auto 0', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button type="button" className="rs-secondary-button" onClick={onBack} style={{ cursor: 'pointer' }}>
-          ← Back to processing
-        </button>
-        {riverJob && (
-          <span className="rs-chip">
-            JOB: {riverJob.id.slice(0, 8)}… · {riverJob.state.toUpperCase()}
-          </span>
-        )}
-      </div>
+      <main className="nisar-results-main displacement-preparation known-place-analysis known-place-results-page river-shift-results-page">
+        <section className={`known-place-results rs-unified-dashboard${jobLoading ? ' is-loading' : ''}`} aria-label="River Shift scientific results dashboard">
+          {jobLoading && (
+            <div className="known-place-results-loading" role="status" aria-live="polite">
+              <div className="known-place-results-loading-track" role="progressbar" aria-label="Loading result dashboard">
+                <span />
+              </div>
+            </div>
+          )}
 
-      <main className="rs-workspace-grid" style={{ marginTop: '16px' }}>
-        {jobLoading && (
-          <section className="rs-panel" role="status">
-            <p className="rs-muted">Loading River Shift results…</p>
-          </section>
-        )}
+          {jobError && !jobLoading && (
+            <div className="known-place-results-message is-error" role="alert">
+              <strong>Could not load River Shift results</strong>
+              <p>{jobError}</p>
+              <button type="button" onClick={onBack}>Back to processing</button>
+            </div>
+          )}
 
-        {jobError && (
-          <section className="rs-panel" role="alert">
-            <p className="rs-error">{jobError}</p>
-          </section>
-        )}
-
-        {riverJob?.state === 'succeeded' && (
-          <section className="rs-panel rs-job-panel" aria-live="polite">
-            {riverJob.result_summary && (
-              <>
-                <OverlapAuditPanel summary={riverJob.result_summary} />
-                <ScientificReadinessPanel
-                  summary={riverJob.result_summary}
-                  report={jobPreview?.report || null}
-                  jobState={riverJob.state}
-                  artifactCount={riverJob.artifact_manifest?.length || 0}
-                />
-              </>
-            )}
-
-            {jobPreview?.jobId === riverJob.id && jobPreview.report && jobTimeSeriesFrames.length > 0 && (
-              <section className="rs-timeseries" aria-label="Provisional observed acquisition playback">
-                <div className="rs-section-heading">
-                  <div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>River change playback</h3></div>
-                  <span className="rs-chip">PROVISIONAL · NO DAILY INTERPOLATION</span>
+          <div className="known-place-results-heading">
+                <div>
+                  <span className="result-kicker">RIVER SHIFT SCIENTIFIC RESULT</span>
+                  <h2>River Shift Results</h2>
+                  <p>
+                    NASA–ISRO NISAR Level-2 GCOV radar observations drive the water and land-transition screening.
+                    Authoritative full-resolution source masks, diagnostic candidate overlap, and verification readiness.
+                  </p>
                 </div>
-                <p className="rs-warning-inline">Each step is an actual NISAR acquisition date. The blue layer shows open-water candidates; the red and green layers show persistent erosion and deposition candidates. These are radar screening results, not field-confirmed change.</p>
-                <div className="rs-playback-controls">
-                  <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index - 1 + jobTimeSeriesFrames.length) % jobTimeSeriesFrames.length)}>Previous</button>
-                  <button className="rs-primary-button" type="button" disabled={jobTimeSeriesFrames.length < 2} onClick={() => setJobTimeSeriesPlaying((value) => !value)}>{jobTimeSeriesPlaying ? 'Pause' : 'Play'}</button>
-                  <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index + 1) % jobTimeSeriesFrames.length)}>Next</button>
-                  <label className="rs-date-slider"><span>Observed date</span>
-                    <input type="range" min={0} max={jobTimeSeriesFrames.length - 1} value={jobTimeSeriesIndex}
-                      onChange={(event) => { setJobTimeSeriesPlaying(false); setJobTimeSeriesIndex(Number(event.target.value)); }} />
-                  </label>
+                <div className="known-place-result-actions">
+                  <button type="button" onClick={onBack}>
+                    ← Back to processing
+                  </button>
+                  {riverJob && (
+                    <span className="rs-chip" style={{ margin: 0 }}>
+                      JOB: {riverJob.id.slice(0, 8)}… · {riverJob.state.toUpperCase()}
+                    </span>
+                  )}
                 </div>
-                {riverJob.analysis_mode === 'general_scan' && (
-                  <div className="rs-marker-control">
-                    <label className="rs-marker-toggle">
-                      <input
-                        type="checkbox"
-                        checked={showGeneralChangeMarkers}
-                        disabled={generalChangeMarkers.length === 0}
-                        onChange={(event) => setShowGeneralChangeMarkers(event.target.checked)}
-                      />
-                      <span>
-                        <strong>Show change-candidate markers during playback</strong>
-                        <small>Markers use the retained erosion, deposition and new-water candidate footprints.</small>
-                      </span>
-                    </label>
-                    <p className="rs-marker-note">{generalChangeMarkers.length > 0
-                      ? `${generalChangeMarkers.length} representative marker(s) shown (up to 24 per class). They remain visible across observed-date steps; they are window-level candidates, not date-specific measurements.`
-                      : 'No erosion, deposition or new-water candidate footprints are available for markers in this result.'}</p>
+              </div>
+
+              <div className="known-place-results-meta">
+                <span>
+                  <b>Job / Request</b>
+                  {riverJob ? `${riverJob.id.slice(0, 8)}…` : 'Manual / External'}
+                </span>
+                <span>
+                  <b>Analysis Mode</b>
+                  {riverJob?.analysis_mode ? riverJob.analysis_mode.replace(/_/g, ' ') : report?.analysis_type?.replace(/_/g, ' ') || 'GCOV Screening'}
+                </span>
+                <span>
+                  <b>Observations</b>
+                  {jobTimeSeriesFrames.length > 0
+                    ? `${jobTimeSeriesFrames.length} NISAR dates`
+                    : playbackFrames.length > 0
+                      ? `${playbackFrames.length} verified dates`
+                      : 'Provisional frame'}
+                </span>
+                <span>
+                  <b>Release Status</b>
+                  {report && isRiverShiftReportVerified(report) ? 'VERIFIED' : 'PROVISIONAL'}
+                </span>
+              </div>
+
+              <nav className="known-place-audience-tabs" aria-label="Choose result detail level">
+                {views.map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={activeView === item.id ? 'is-active' : ''}
+                    aria-pressed={activeView === item.id}
+                    onClick={() => setActiveView(item.id)}
+                  >
+                    <span className="known-place-audience-copy">
+                      <strong>{item.title}</strong>
+                      <small>{item.audience}</small>
+                    </span>
+                  </button>
+                ))}
+              </nav>
+              <p className="known-place-audience-description">
+                {views.find((item) => item.id === activeView)?.summary}
+              </p>
+
+              {/* View 1: Interactive Change Map & Playback */}
+              <div className="rs-view-panel" style={{ display: activeView === 'map' ? 'block' : 'none' }}>
+                {riverJob && jobPreview?.jobId === riverJob.id && jobPreview.report && jobTimeSeriesFrames.length > 0 && (
+                  <section className="rs-timeseries" aria-label="Provisional observed acquisition playback">
+                    <div className="rs-section-heading">
+                      <div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>River change playback</h3></div>
+                      <span className="rs-chip">PROVISIONAL · NO DAILY INTERPOLATION</span>
+                    </div>
+                    <p className="rs-warning-inline">Each step is an actual NISAR acquisition date. The blue layer shows open-water candidates; the red and green layers show persistent erosion and deposition candidates. These are radar screening results, not field-confirmed change.</p>
+                    <div className="rs-playback-controls">
+                      <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index - 1 + jobTimeSeriesFrames.length) % jobTimeSeriesFrames.length)}>Previous</button>
+                      <button className="rs-primary-button" type="button" disabled={jobTimeSeriesFrames.length < 2} onClick={() => setJobTimeSeriesPlaying((value) => !value)}>{jobTimeSeriesPlaying ? 'Pause' : 'Play'}</button>
+                      <button className="rs-secondary-button" type="button" onClick={() => setJobTimeSeriesIndex((index) => (index + 1) % jobTimeSeriesFrames.length)}>Next</button>
+                      <label className="rs-date-slider"><span>Observed date</span>
+                        <input type="range" min={0} max={jobTimeSeriesFrames.length - 1} value={jobTimeSeriesIndex}
+                          onChange={(event) => { setJobTimeSeriesPlaying(false); setJobTimeSeriesIndex(Number(event.target.value)); }} />
+                      </label>
+                    </div>
+                    {riverJob?.analysis_mode === 'general_scan' && (
+                      <div className="rs-marker-control">
+                        <label className="rs-marker-toggle">
+                          <input
+                            type="checkbox"
+                            checked={showGeneralChangeMarkers}
+                            disabled={generalChangeMarkers.length === 0}
+                            onChange={(event) => setShowGeneralChangeMarkers(event.target.checked)}
+                          />
+                          <span>
+                            <strong>Show change-candidate markers during playback</strong>
+                            <small>Markers use the retained erosion, deposition and new-water candidate footprints.</small>
+                          </span>
+                        </label>
+                        <p className="rs-marker-note">{generalChangeMarkers.length > 0
+                          ? `${generalChangeMarkers.length} representative marker(s) shown (up to 24 per class). They remain visible across observed-date steps; they are window-level candidates, not date-specific measurements.`
+                          : 'No erosion, deposition or new-water candidate footprints are available for markers in this result.'}</p>
+                      </div>
+                    )}
+                    {riverJob?.analysis_mode === 'general_scan' && (
+                      <>
+                        <div className="rs-change-legend" aria-label="General Scan candidate map legend">
+                          <span><i className="rs-change-swatch rs-change-swatch-erosion" aria-hidden="true" />Erosion candidate</span>
+                          <span><i className="rs-change-swatch rs-change-swatch-deposition" aria-hidden="true" />Deposition candidate</span>
+                          <span><i className="rs-change-swatch rs-change-swatch-new-water" aria-hidden="true" />New-water candidate</span>
+                        </div>
+                        <p className="rs-change-legend-note">Translucent areas show the retained date-window candidate footprints. The AOI remains outline-only; candidate colours do not imply field confirmation.</p>
+                      </>
+                    )}
+                    {currentJobFrameMetadata && <p className="rs-info-banner">NISAR observation {currentJobFrameMetadata.date} · frame {jobTimeSeriesIndex + 1}/{jobTimeSeriesFrames.length} · open-water candidate area {currentJobFrameMetadata.water_area_km2.toFixed(3)} km² · valid common-support pixels {(currentJobFrameMetadata.valid_pixel_fraction * 100).toFixed(1)}% · source {currentJobFrameMetadata.granule_name || 'granule ID recorded in source report'}{!currentJobFrame ? ' · loading checksum-verified map layer…' : ''}</p>}
+                  </section>
+                )}
+
+                {report?.analysis_type === 'water_timeseries_screening' && (
+                  <section className="rs-timeseries" aria-label="Observed acquisition playback">
+                    <div className="rs-section-heading"><div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>Water change playback</h3></div>
+                      <span className="rs-chip">NO DAILY INTERPOLATION</span></div>
+                    {report.quality.release_status !== 'VERIFIED'
+                      ? <p className="rs-warning-inline">Playback and map layers stay hidden until the report is independently reviewed and marked VERIFIED.</p>
+                      : playbackFrames.length !== (report.time_series || []).length
+                        ? <p className="rs-warning-inline">Import every report-listed GeoJSON file in one selection. Each filename and SHA-256 must match before playback starts.</p>
+                        : playbackFrames.length < 2
+                          ? <p className="rs-warning-inline">At least two verified observation frames are required to play this time series.</p>
+                          : <>
+                            <div className="rs-playback-controls">
+                              <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index - 1 + playbackFrames.length) % playbackFrames.length)}>Previous</button>
+                              <button className="rs-primary-button" type="button" onClick={() => setTimeSeriesPlaying((value) => !value)}>{timeSeriesPlaying ? 'Pause' : 'Play'}</button>
+                              <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index + 1) % playbackFrames.length)}>Next</button>
+                              <label className="rs-date-slider"><span>Acquisition date</span>
+                                <input type="range" min={0} max={playbackFrames.length - 1} value={timeSeriesIndex}
+                                  onChange={(event) => { setTimeSeriesPlaying(false); setTimeSeriesIndex(Number(event.target.value)); }} />
+                              </label>
+                            </div>
+                            {currentTimeSeriesFrame && <p className="rs-info-banner">Observed {currentTimeSeriesFrame.date} · candidate open-water area {currentTimeSeriesFrame.water_area_km2.toFixed(3)} km² · valid samples {(currentTimeSeriesFrame.valid_pixel_fraction * 100).toFixed(1)}%</p>}
+                          </>}
+                  </section>
+                )}
+
+                <section className="rs-map-section">
+                  <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
+                  {mapError && <p className="rs-warning-inline">{mapError}</p>}
+                  <div className="rs-map-shell">
+                    <div className="rs-map" ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
+                  </div>
+                  <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span>{impactExposure && safeImpactSourceUrl && <span><i className="rs-swatch rs-impact-point" />Mapped exposure point</span>}</div>
+                  {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
+                    <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
+                      {hasCandidateOverlaySource && (
+                        <>
+                          <label className="rs-overlay-toggle rs-overlay-toggle-all">
+                            <input
+                              type="checkbox"
+                              checked={allCandidateLayersVisible}
+                              onChange={(event) => {
+                                setShowErosionOverlay(event.target.checked);
+                                setShowDepositionOverlay(event.target.checked);
+                                setShowNewWaterOverlay(event.target.checked);
+                              }}
+                            />
+                            <span><strong>All candidate overlays</strong><small>Show or hide all implemented change classes.</small></span>
+                          </label>
+                          <div className="rs-overlay-class-grid">
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showErosionOverlay} disabled={candidateOverlayCounts.erosion === 0}
+                                onChange={(event) => setShowErosionOverlay(event.target.checked)} />
+                              <span><strong>Erosion</strong><small>{candidateOverlayCounts.erosion} feature(s)</small></span>
+                            </label>
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showDepositionOverlay} disabled={candidateOverlayCounts.deposition === 0}
+                                onChange={(event) => setShowDepositionOverlay(event.target.checked)} />
+                              <span><strong>Deposition</strong><small>{candidateOverlayCounts.deposition} feature(s)</small></span>
+                            </label>
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showNewWaterOverlay} disabled={candidateOverlayCounts.newWater === 0}
+                                onChange={(event) => setShowNewWaterOverlay(event.target.checked)} />
+                              <span><strong>New water</strong><small>{candidateOverlayCounts.newWater} feature(s)</small></span>
+                            </label>
+                            <label className="rs-overlay-toggle rs-overlay-unavailable">
+                              <input type="checkbox" disabled />
+                              <span><strong>Exposed bar / char</strong><small>Unavailable — detection method not yet validated or implemented.</small></span>
+                            </label>
+                          </div>
+                        </>
+                      )}
+                      {hasObservedWaterFrames && (
+                        <label className="rs-overlay-toggle rs-overlay-observed">
+                          <input type="checkbox" checked={showObservedWaterExtent}
+                            onChange={(event) => setShowObservedWaterExtent(event.target.checked)} />
+                          <span><strong>Observed-date open-water extent</strong><small>{candidateOverlayCounts.observedWater > 0 ? `${candidateOverlayCounts.observedWater} feature(s) in the result layer; ` : ''}Current acquired-date water layer; separate from date-window change candidates.</small></span>
+                        </label>
+                      )}
+                      <p className="rs-overlay-note">Visibility controls affect the map only. Full-resolution masks and scientific metrics are unchanged. Preview polygons require more than 50% sub-cell occupancy; sparser candidates are approximate point markers, not area fills. Different classes may share a coarse preview cell.</p>
+                    </div>
+                  )}
+                  <div className="rs-data-sources" aria-label="RiverShift data sources and roles">
+                    <div><strong>NASA measurement data</strong><span>NASA–ISRO NISAR Level-2 GCOV radar observations drive the water and land-transition screening.</span></div>
+                    <div><strong>NASA data access</strong><span>NASA Earthdata and ASF DAAC provide the exact NISAR granules; product identities and checksums are retained with the result.</span></div>
+                    <div><strong>Third-party map context only</strong><span>Google Maps Satellite imagery helps orient the result geographically. Basemap imagery is not used by the analysis and is not an independent validation layer.</span></div>
+                    <div><strong>Optional independent agency comparison</strong><span>Copernicus Sentinel-2 L2A can be compared with a supplied NISAR water mask using clear-sky SCL and B03/B11 MNDWI. This optional screen is not run for this result unless a comparison report is attached, and it is not ground truth.</span></div>
+                  </div>
+                  {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
+                  {hasJobPreviewOverlay && !hasVerifiedOverlay && <p className="rs-warning-inline">Provisional map preview uses majority-occupancy polygons plus small markers for sparse sub-cell candidates. Sparse marker centres are approximate and may coincide when different classes occupy separate parts of one coarse cell. The map is for visual orientation only; full-resolution masks and measurements remain authoritative and PROVISIONAL.</p>}
+                  {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
+                </section>
+              </div>
+
+              {/* View 2: Spatial QA & Overlap Audit */}
+              <div className="rs-view-panel" style={{ display: activeView === 'qa' ? 'block' : 'none' }}>
+                {riverJob?.result_summary ? (
+                  <>
+                    <OverlapAuditPanel summary={riverJob.result_summary} />
+                    <ScientificReadinessPanel
+                      summary={riverJob.result_summary}
+                      report={jobPreview?.report || null}
+                      jobState={riverJob.state}
+                      artifactCount={riverJob.artifact_manifest?.length || 0}
+                    />
+                  </>
+                ) : (
+                  <section className="rs-overlap-audit">
+                    <div className="rs-section-heading">
+                      <div><p className="rs-kicker">SPATIAL INTEGRITY</p><h3>Candidate overlap and verification</h3></div>
+                    </div>
+                    <p className="rs-muted">Run a RiverShift job or attach a verified validation report to inspect candidate overlap and QA receipts.</p>
+                  </section>
+                )}
+
+                {!!riverJob?.artifact_manifest?.length && (
+                  <div className="rs-artifact-list">
+                    <strong>Private result files · upload checksum verified</strong>
+                    <p className="rs-muted">Upload receipts preserve the original size and checksum. In-app downloads and previews are checked again before use.</p>
+                    {riverJob.artifact_manifest.map((artifact, index) => artifact.bytes <= 4_000_000
+                      ? <button className="rs-secondary-button" key={`${artifact.path}-${index}`} type="button" onClick={() => void saveRiverArtifact(index, artifact.name)}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB</button>
+                      : <span className="rs-muted" key={`${artifact.path}-${index}`}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB · stored privately; too large for in-app download</span>)}
                   </div>
                 )}
-                {riverJob.analysis_mode === 'general_scan' && (
-                  <>
-                    <div className="rs-change-legend" aria-label="General Scan candidate map legend">
-                      <span><i className="rs-change-swatch rs-change-swatch-erosion" aria-hidden="true" />Erosion candidate</span>
-                      <span><i className="rs-change-swatch rs-change-swatch-deposition" aria-hidden="true" />Deposition candidate</span>
-                      <span><i className="rs-change-swatch rs-change-swatch-new-water" aria-hidden="true" />New-water candidate</span>
-                    </div>
-                    <p className="rs-change-legend-note">Translucent areas show the retained date-window candidate footprints. The AOI remains outline-only; candidate colours do not imply field confirmation.</p>
-                  </>
-                )}
-                {currentJobFrameMetadata && <p className="rs-info-banner">NISAR observation {currentJobFrameMetadata.date} · frame {jobTimeSeriesIndex + 1}/{jobTimeSeriesFrames.length} · open-water candidate area {currentJobFrameMetadata.water_area_km2.toFixed(3)} km² · valid common-support pixels {(currentJobFrameMetadata.valid_pixel_fraction * 100).toFixed(1)}% · source {currentJobFrameMetadata.granule_name || 'granule ID recorded in source report'}{!currentJobFrame ? ' · loading checksum-verified map layer…' : ''}</p>}
-              </section>
-            )}
-
-            {jobPreview?.jobId === riverJob.id && jobPreview.error && <p className="rs-warning-inline" role="status">{jobPreview.error}</p>}
-
-            {!!riverJob.artifact_manifest?.length && (
-              <div className="rs-artifact-list">
-                <strong>Private result files · upload checksum verified</strong>
-                <p className="rs-muted">Upload receipts preserve the original size and checksum. In-app downloads and previews are checked again before use.</p>
-                {riverJob.artifact_manifest.map((artifact, index) => artifact.bytes <= 4_000_000
-                  ? <button className="rs-secondary-button" key={`${artifact.path}-${index}`} type="button" onClick={() => void saveRiverArtifact(index, artifact.name)}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB</button>
-                  : <span className="rs-muted" key={`${artifact.path}-${index}`}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB · stored privately; too large for in-app download</span>)}
               </div>
-            )}
-          </section>
-        )}
 
-        <section className="rs-panel rs-results-panel">
-          <div className="rs-section-heading">
-            <div><p className="rs-kicker">03 · RESULTS EXPLORER</p><h2>Inspect reproducible outputs</h2></div>
-            <span className="rs-chip">NO SYNTHETIC METRICS</span>
-          </div>
-          <p className="rs-muted">
-            Live RiverShift jobs load their checksum-checked report and map previews here automatically.
-            The import controls below are optional and are intended for external or offline research results.
-            Catalogue rows are never presented as measured flood or erosion results.
-          </p>
-          <p className="rs-kicker">OPTIONAL MANUAL / RESEARCH IMPORT</p>
-          <div className="rs-upload-grid">
-            <label className="rs-upload"><span>Import result JSON</span><small>Flood, morphology or validation report</small>
-              <input type="file" accept=".json,application/json" onChange={(event) => void loadReport(event.target.files?.[0])} />
-            </label>
-            <label className="rs-upload"><span>Import change GeoJSON layer(s)</span><small>For playback, select every `water_YYYY-MM-DD.geojson` named in the report</small>
-              <input type="file" multiple accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadGeoJSONFiles(event.target.files || undefined)} />
-            </label>
-          </div>
-          {reportError && <p className="rs-error" role="alert">{reportError}</p>}
-          {geoJSONError && <p className="rs-error" role="alert">{geoJSONError}</p>}
-          {explorerReport && <ReportPanel report={explorerReport} />}
-          {report?.analysis_type === 'water_timeseries_screening' && (
-            <section className="rs-timeseries" aria-label="Observed acquisition playback">
-              <div className="rs-section-heading"><div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>Water change playback</h3></div>
-                <span className="rs-chip">NO DAILY INTERPOLATION</span></div>
-              {report.quality.release_status !== 'VERIFIED'
-                ? <p className="rs-warning-inline">Playback and map layers stay hidden until the report is independently reviewed and marked VERIFIED.</p>
-                : playbackFrames.length !== (report.time_series || []).length
-                  ? <p className="rs-warning-inline">Import every report-listed GeoJSON file in one selection. Each filename and SHA-256 must match before playback starts.</p>
-                  : playbackFrames.length < 2
-                    ? <p className="rs-warning-inline">At least two verified observation frames are required to play this time series.</p>
-                    : <>
-                      <div className="rs-playback-controls">
-                        <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index - 1 + playbackFrames.length) % playbackFrames.length)}>Previous</button>
-                        <button className="rs-primary-button" type="button" onClick={() => setTimeSeriesPlaying((value) => !value)}>{timeSeriesPlaying ? 'Pause' : 'Play'}</button>
-                        <button className="rs-secondary-button" type="button" onClick={() => setTimeSeriesIndex((index) => (index + 1) % playbackFrames.length)}>Next</button>
-                        <label className="rs-date-slider"><span>Acquisition date</span>
-                          <input type="range" min={0} max={playbackFrames.length - 1} value={timeSeriesIndex}
-                            onChange={(event) => { setTimeSeriesPlaying(false); setTimeSeriesIndex(Number(event.target.value)); }} />
-                        </label>
-                      </div>
-                      {currentTimeSeriesFrame && <p className="rs-info-banner">Observed {currentTimeSeriesFrame.date} · candidate open-water area {currentTimeSeriesFrame.water_area_km2.toFixed(3)} km² · valid samples {(currentTimeSeriesFrame.valid_pixel_fraction * 100).toFixed(1)}%</p>}
-                    </>}
-            </section>
-          )}
-
-          <section className="rs-map-section">
-            <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
-            {mapError && <p className="rs-warning-inline">{mapError}</p>}
-            <div className="rs-map" ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
-            <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span>{impactExposure && safeImpactSourceUrl && <span><i className="rs-swatch rs-impact-point" />Mapped exposure point</span>}</div>
-            {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
-              <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
-                {hasCandidateOverlaySource && (
-                  <>
-                    <label className="rs-overlay-toggle rs-overlay-toggle-all">
-                      <input
-                        type="checkbox"
-                        checked={allCandidateLayersVisible}
-                        onChange={(event) => {
-                          setShowErosionOverlay(event.target.checked);
-                          setShowDepositionOverlay(event.target.checked);
-                          setShowNewWaterOverlay(event.target.checked);
-                        }}
-                      />
-                      <span><strong>All candidate overlays</strong><small>Show or hide all implemented change classes.</small></span>
+              {/* View 3: Validation Readiness & Context */}
+              <div className="rs-view-panel" style={{ display: activeView === 'context' ? 'block' : 'none' }}>
+                <section className="rs-impact-panel" aria-label="Impact context screening">
+                  <div className="rs-section-heading">
+                    <div><p className="rs-kicker">04 · LOCAL EXPOSURE CONTEXT</p><h3>Put candidate zones in context</h3></div>
+                    <span className="rs-chip">OPTIONAL · SOURCE-ATTRIBUTED</span>
+                  </div>
+                  <p className="rs-muted">Import a point/centroid GeoJSON layer for buildings, settlements, public facilities or population-grid cells. RiverShift will count representative points inside the retained candidate preview polygons and can sum one numeric attribute such as population. The file is analysed locally in this browser and is not uploaded.</p>
+                  <div className="rs-impact-osm-action">
+                    <button className="rs-secondary-button" type="button" disabled={impactFetchBusy || !impactCandidateLayers.length || !riverJob?.aoi_wkt} onClick={() => void fetchOpenStreetMapImpactContext()}>
+                      {impactFetchBusy ? 'Querying one AOI-bounded OSM extract…' : 'Fetch OSM buildings & public facilities for this AOI'}
+                    </button>
+                    <small>One read-only query against the completed result AOI for mapped buildings and selected public facilities. The shared service may be busy; an attributed GeoJSON import remains available.</small>
+                  </div>
+                  <div className="rs-impact-upload-grid">
+                    <label className="rs-upload"><span>Exposure points GeoJSON</span><small>Point or MultiPoint features · maximum 20 MB</small>
+                      <input type="file" accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadImpactExposure(event.target.files?.[0])} />
                     </label>
-                    <div className="rs-overlay-class-grid">
-                      <label className="rs-overlay-toggle">
-                        <input type="checkbox" checked={showErosionOverlay} disabled={candidateOverlayCounts.erosion === 0}
-                          onChange={(event) => setShowErosionOverlay(event.target.checked)} />
-                        <span><strong>Erosion</strong><small>{candidateOverlayCounts.erosion} feature(s)</small></span>
-                      </label>
-                      <label className="rs-overlay-toggle">
-                        <input type="checkbox" checked={showDepositionOverlay} disabled={candidateOverlayCounts.deposition === 0}
-                          onChange={(event) => setShowDepositionOverlay(event.target.checked)} />
-                        <span><strong>Deposition</strong><small>{candidateOverlayCounts.deposition} feature(s)</small></span>
-                      </label>
-                      <label className="rs-overlay-toggle">
-                        <input type="checkbox" checked={showNewWaterOverlay} disabled={candidateOverlayCounts.newWater === 0}
-                          onChange={(event) => setShowNewWaterOverlay(event.target.checked)} />
-                        <span><strong>New water</strong><small>{candidateOverlayCounts.newWater} feature(s)</small></span>
-                      </label>
-                      <label className="rs-overlay-toggle rs-overlay-unavailable">
-                        <input type="checkbox" disabled />
-                        <span><strong>Exposed bar / char</strong><small>Unavailable — detection method not yet validated or implemented.</small></span>
-                      </label>
+                    <label className="rs-field"><span>Dataset / layer name</span><input value={impactSourceName} onChange={(event) => setImpactSourceName(event.target.value)} placeholder="e.g. OSM building centroids" /></label>
+                    <label className="rs-field"><span>Public source URL (required)</span><input type="url" value={impactSourceUrl} onChange={(event) => setImpactSourceUrl(event.target.value)} placeholder="https://…" /></label>
+                    <label className="rs-field"><span>Dataset vintage / date</span><input value={impactSourceVintage} onChange={(event) => setImpactSourceVintage(event.target.value)} placeholder="e.g. downloaded 2026-11-05" /></label>
+                    <label className="rs-field"><span>Optional numeric property to sum</span><input value={impactValueField} onChange={(event) => setImpactValueField(event.target.value)} placeholder="e.g. population" /></label>
+                  </div>
+                  {impactExposure && impactMapPoints.length > 0 && safeImpactSourceUrl && (
+                    <label className="rs-impact-map-toggle">
+                      <input type="checkbox" checked={showImpactMapMarkers} onChange={(event) => setShowImpactMapMarkers(event.target.checked)} />
+                      <span><strong>Show mapped exposure points on the map</strong><small>{impactMapPoints.length.toLocaleString()} representative point(s) shown in gold; {impactMapOmittedPoints.toLocaleString()} additional point(s) omitted from map rendering when above the 2,000-point display cap. The screening count still uses the full imported layer.</small></span>
+                    </label>
+                  )}
+                  {impactExposure && <p className="rs-info-banner">Loaded {impactExposure.fileName} · {impactExposure.data.features.length.toLocaleString()} point feature(s). The source attribution fields must contain a dataset name and HTTPS URL before results are calculated.</p>}
+                  {impactFetchError && <p className="rs-error" role="alert">{impactFetchError}</p>}
+                  {impactFetchNotice && <p className="rs-info-banner" role="status">{impactFetchNotice}</p>}
+                  {impactExposureError && <p className="rs-error" role="alert">{impactExposureError}</p>}
+                  {impactExposure && (!impactSourceName.trim() || !safeImpactSourceUrl) && <p className="rs-warning-inline">Add a dataset name and a valid HTTPS source URL to make this exposure context attributable.</p>}
+                  {impactSummary && (
+                    <>
+                      {impactSummary.candidatePolygonCount === 0
+                        ? <p className="rs-warning-inline">No candidate preview polygons are available to compare. Sparse marker points are deliberately excluded from this area-intersection screen.</p>
+                        : <div className="rs-impact-results">
+                          <article className="rs-impact-total"><span>Unique points inside any candidate preview polygon</span><strong>{impactSummary.uniqueFeaturesInsideAnyCandidate.toLocaleString()}</strong><small>of {impactSummary.exposureFeatureCount.toLocaleString()} uploaded point feature(s)</small></article>
+                          {impactSummary.populationField && <article className="rs-impact-total"><span>Sum of “{impactSummary.populationField}” inside candidate preview polygons</span><strong>{impactSummary.populationValueSum?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? 'Not available'}</strong><small>{impactSummary.featuresMissingPopulationValue.toLocaleString()} matched feature(s) had no valid non-negative numeric value</small></article>}
+                          {(['erosion', 'deposition', 'newWater'] as const).map((category) => (
+                            <article className="rs-impact-class" key={category}>
+                              <span>{category === 'newWater' ? 'New-water candidate' : category[0].toUpperCase() + category.slice(1) + ' candidate'}</span>
+                              <strong>{impactSummary.byClass[category].featureCount.toLocaleString()} point feature(s)</strong>
+                              {impactSummary.populationField && <small>Attribute sum: {impactSummary.byClass[category].populationValueSum?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? 'Not available'}</small>}
+                            </article>
+                          ))}
+                          <div className="rs-impact-source">Source: <strong>{impactSourceName.trim()}</strong>{impactSourceVintage.trim() ? ' · ' + impactSourceVintage.trim() : ''} · <a href={safeImpactSourceUrl || undefined} target="_blank" rel="noreferrer">Open dataset source ↗</a></div>
+                        </div>}
+                      <p className="rs-impact-caveat">Interpretation boundary: these are potential exposure-context counts, not damaged or confirmed affected assets. Counts use point locations inside coarse display-preview polygons only; sparse candidate markers, building footprints, road lengths and points outside the visible polygons are not measured. Do not add class counts together when one point lies in more than one class.</p>
+                    </>
+                  )}
+                  {!impactExposure && <p className="rs-impact-help">Useful inputs: building or facility centroids, settlement points, or population-grid centroids with a numeric population property. Record the provider and data vintage. No source data is bundled or assumed.</p>}
+                  {impactSourceName.startsWith('OpenStreetMap') && <p className="rs-impact-caveat">Open data attribution: © OpenStreetMap contributors · ODbL. This is a mapped-feature inventory, not an authoritative building census or damage assessment.</p>}
+                  {impactExposure && impactSummary && <p className="rs-impact-caveat">{impactSummary.sparseMarkerFeaturesExcluded.toLocaleString()} sparse marker feature(s) excluded from the polygon intersection. Multi-class matches: {impactSummary.featuresMatchingMultipleClasses.toLocaleString()} point feature(s).</p>}
+                </section>
+
+                <section className="rs-results-panel">
+                  <div className="rs-section-heading">
+                    <div><p className="rs-kicker">03 · RESULTS EXPLORER</p><h2>Inspect reproducible outputs</h2></div>
+                    <span className="rs-chip">NO SYNTHETIC METRICS</span>
+                  </div>
+                  <p className="rs-muted">
+                    Live RiverShift jobs load their checksum-checked report and map previews here automatically.
+                    The import controls below are optional and are intended for external or offline research results.
+                    Catalogue rows are never presented as measured flood or erosion results.
+                  </p>
+                  <p className="rs-kicker">OPTIONAL MANUAL / RESEARCH IMPORT</p>
+                  <div className="rs-upload-grid">
+                    <label className="rs-upload"><span>Import result JSON</span><small>Flood, morphology or validation report</small>
+                      <input type="file" accept=".json,application/json" onChange={(event) => void loadReport(event.target.files?.[0])} />
+                    </label>
+                    <label className="rs-upload"><span>Import change GeoJSON layer(s)</span><small>For playback, select every `water_YYYY-MM-DD.geojson` named in the report</small>
+                      <input type="file" multiple accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadGeoJSONFiles(event.target.files || undefined)} />
+                    </label>
+                  </div>
+                  {reportError && <p className="rs-error" role="alert">{reportError}</p>}
+                  {geoJSONError && <p className="rs-error" role="alert">{geoJSONError}</p>}
+                  {explorerReport && <ReportPanel report={explorerReport} />}
+
+                  {!report && !hasLiveJobResult && (
+                    <div className="rs-empty-state">
+                      <strong>{hasLiveJobResultPending ? 'Live processing finished · preview not loaded' : resultType}</strong>
+                      <p>{hasLiveJobResultPending
+                        ? 'A successful live job and its private result files are on record, but the automatic preview has not loaded. See the storage message above; manual import is not required for a live job.'
+                        : 'No live result or external report is loaded yet. Start the live processing workflow above; manual JSON and GeoJSON import is optional.'}</p>
                     </div>
-                  </>
-                )}
-                {hasObservedWaterFrames && (
-                  <label className="rs-overlay-toggle rs-overlay-observed">
-                    <input type="checkbox" checked={showObservedWaterExtent}
-                      onChange={(event) => setShowObservedWaterExtent(event.target.checked)} />
-                    <span><strong>Observed-date open-water extent</strong><small>{candidateOverlayCounts.observedWater > 0 ? `${candidateOverlayCounts.observedWater} feature(s) in the result layer; ` : ''}Current acquired-date water layer; separate from date-window change candidates.</small></span>
-                  </label>
-                )}
-                <p className="rs-overlay-note">Visibility controls affect the map only. Full-resolution masks and scientific metrics are unchanged. Preview polygons require more than 50% sub-cell occupancy; sparser candidates are approximate point markers, not area fills. Different classes may share a coarse preview cell.</p>
+                  )}
+                  {hasLiveJobResult && !report && (
+                    <p className="rs-info-banner" role="status">
+                      Live NISAR result loaded automatically from the completed job. No CLI run or manual file import is needed. The preview remains PROVISIONAL until independent validation is attached.
+                    </p>
+                  )}
+                </section>
               </div>
-            )}
-            <div className="rs-data-sources" aria-label="RiverShift data sources and roles">
-              <div><strong>NASA measurement data</strong><span>NASA–ISRO NISAR Level-2 GCOV radar observations drive the water and land-transition screening.</span></div>
-              <div><strong>NASA data access</strong><span>NASA Earthdata and ASF DAAC provide the exact NISAR granules; product identities and checksums are retained with the result.</span></div>
-              <div><strong>Third-party map context only</strong><span>Google Maps Satellite imagery helps orient the result geographically. Basemap imagery is not used by the analysis and is not an independent validation layer.</span></div>
-              <div><strong>Optional independent agency comparison</strong><span>Copernicus Sentinel-2 L2A can be compared with a supplied NISAR water mask using clear-sky SCL and B03/B11 MNDWI. This optional screen is not run for this result unless a comparison report is attached, and it is not ground truth.</span></div>
-            </div>
-            {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
-            {hasJobPreviewOverlay && !hasVerifiedOverlay && <p className="rs-warning-inline">Provisional map preview uses majority-occupancy polygons plus small markers for sparse sub-cell candidates. Sparse marker centres are approximate and may coincide when different classes occupy separate parts of one coarse cell. The map is for visual orientation only; full-resolution masks and measurements remain authoritative and PROVISIONAL.</p>}
-            {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
-          </section>
-
-          <section className="rs-impact-panel" aria-label="Impact context screening">
-            <div className="rs-section-heading">
-              <div><p className="rs-kicker">04 · LOCAL EXPOSURE CONTEXT</p><h3>Put candidate zones in context</h3></div>
-              <span className="rs-chip">OPTIONAL · SOURCE-ATTRIBUTED</span>
-            </div>
-            <p className="rs-muted">Import a point/centroid GeoJSON layer for buildings, settlements, public facilities or population-grid cells. RiverShift will count representative points inside the retained candidate preview polygons and can sum one numeric attribute such as population. The file is analysed locally in this browser and is not uploaded.</p>
-            <div className="rs-impact-osm-action">
-              <button className="rs-secondary-button" type="button" disabled={impactFetchBusy || !impactCandidateLayers.length || !riverJob?.aoi_wkt} onClick={() => void fetchOpenStreetMapImpactContext()}>
-                {impactFetchBusy ? 'Querying one AOI-bounded OSM extract…' : 'Fetch OSM buildings & public facilities for this AOI'}
-              </button>
-              <small>One read-only query against the completed result AOI for mapped buildings and selected public facilities. The shared service may be busy; an attributed GeoJSON import remains available.</small>
-            </div>
-            <div className="rs-impact-upload-grid">
-              <label className="rs-upload"><span>Exposure points GeoJSON</span><small>Point or MultiPoint features · maximum 20 MB</small>
-                <input type="file" accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadImpactExposure(event.target.files?.[0])} />
-              </label>
-              <label className="rs-field"><span>Dataset / layer name</span><input value={impactSourceName} onChange={(event) => setImpactSourceName(event.target.value)} placeholder="e.g. OSM building centroids" /></label>
-              <label className="rs-field"><span>Public source URL (required)</span><input type="url" value={impactSourceUrl} onChange={(event) => setImpactSourceUrl(event.target.value)} placeholder="https://…" /></label>
-              <label className="rs-field"><span>Dataset vintage / date</span><input value={impactSourceVintage} onChange={(event) => setImpactSourceVintage(event.target.value)} placeholder="e.g. downloaded 2026-11-05" /></label>
-              <label className="rs-field"><span>Optional numeric property to sum</span><input value={impactValueField} onChange={(event) => setImpactValueField(event.target.value)} placeholder="e.g. population" /></label>
-            </div>
-            {impactExposure && impactMapPoints.length > 0 && safeImpactSourceUrl && (
-              <label className="rs-impact-map-toggle">
-                <input type="checkbox" checked={showImpactMapMarkers} onChange={(event) => setShowImpactMapMarkers(event.target.checked)} />
-                <span><strong>Show mapped exposure points on the map</strong><small>{impactMapPoints.length.toLocaleString()} representative point(s) shown in gold; {impactMapOmittedPoints.toLocaleString()} additional point(s) omitted from map rendering when above the 2,000-point display cap. The screening count still uses the full imported layer.</small></span>
-              </label>
-            )}
-            {impactExposure && <p className="rs-info-banner">Loaded {impactExposure.fileName} · {impactExposure.data.features.length.toLocaleString()} point feature(s). The source attribution fields must contain a dataset name and HTTPS URL before results are calculated.</p>}
-            {impactFetchError && <p className="rs-error" role="alert">{impactFetchError}</p>}
-            {impactFetchNotice && <p className="rs-info-banner" role="status">{impactFetchNotice}</p>}
-            {impactExposureError && <p className="rs-error" role="alert">{impactExposureError}</p>}
-            {impactExposure && (!impactSourceName.trim() || !safeImpactSourceUrl) && <p className="rs-warning-inline">Add a dataset name and a valid HTTPS source URL to make this exposure context attributable.</p>}
-            {impactSummary && (
-              <>
-                {impactSummary.candidatePolygonCount === 0
-                  ? <p className="rs-warning-inline">No candidate preview polygons are available to compare. Sparse marker points are deliberately excluded from this area-intersection screen.</p>
-                  : <div className="rs-impact-results">
-                    <article className="rs-impact-total"><span>Unique points inside any candidate preview polygon</span><strong>{impactSummary.uniqueFeaturesInsideAnyCandidate.toLocaleString()}</strong><small>of {impactSummary.exposureFeatureCount.toLocaleString()} uploaded point feature(s)</small></article>
-                    {impactSummary.populationField && <article className="rs-impact-total"><span>Sum of “{impactSummary.populationField}” inside candidate preview polygons</span><strong>{impactSummary.populationValueSum?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? 'Not available'}</strong><small>{impactSummary.featuresMissingPopulationValue.toLocaleString()} matched feature(s) had no valid non-negative numeric value</small></article>}
-                    {(['erosion', 'deposition', 'newWater'] as const).map((category) => (
-                      <article className="rs-impact-class" key={category}>
-                        <span>{category === 'newWater' ? 'New-water candidate' : category[0].toUpperCase() + category.slice(1) + ' candidate'}</span>
-                        <strong>{impactSummary.byClass[category].featureCount.toLocaleString()} point feature(s)</strong>
-                        {impactSummary.populationField && <small>Attribute sum: {impactSummary.byClass[category].populationValueSum?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? 'Not available'}</small>}
-                      </article>
-                    ))}
-                    <div className="rs-impact-source">Source: <strong>{impactSourceName.trim()}</strong>{impactSourceVintage.trim() ? ' · ' + impactSourceVintage.trim() : ''} · <a href={safeImpactSourceUrl || undefined} target="_blank" rel="noreferrer">Open dataset source ↗</a></div>
-                  </div>}
-                <p className="rs-impact-caveat">Interpretation boundary: these are potential exposure-context counts, not damaged or confirmed affected assets. Counts use point locations inside coarse display-preview polygons only; sparse candidate markers, building footprints, road lengths and points outside the visible polygons are not measured. Do not add class counts together when one point lies in more than one class.</p>
-              </>
-            )}
-            {!impactExposure && <p className="rs-impact-help">Useful inputs: building or facility centroids, settlement points, or population-grid centroids with a numeric population property. Record the provider and data vintage. No source data is bundled or assumed.</p>}
-            {impactSourceName.startsWith('OpenStreetMap') && <p className="rs-impact-caveat">Open data attribution: © OpenStreetMap contributors · ODbL. This is a mapped-feature inventory, not an authoritative building census or damage assessment.</p>}
-            {impactExposure && impactSummary && <p className="rs-impact-caveat">{impactSummary.sparseMarkerFeaturesExcluded.toLocaleString()} sparse marker feature(s) excluded from the polygon intersection. Multi-class matches: {impactSummary.featuresMatchingMultipleClasses.toLocaleString()} point feature(s).</p>}
-          </section>
-
-          {!report && !hasLiveJobResult && (
-            <div className="rs-empty-state">
-              <strong>{hasLiveJobResultPending ? 'Live processing finished · preview not loaded' : resultType}</strong>
-              <p>{hasLiveJobResultPending
-                ? 'A successful live job and its private result files are on record, but the automatic preview has not loaded. See the storage message above; manual import is not required for a live job.'
-                : 'No live result or external report is loaded yet. Start the live processing workflow above; manual JSON and GeoJSON import is optional.'}</p>
-            </div>
-          )}
-          {hasLiveJobResult && !report && (
-            <p className="rs-info-banner" role="status">
-              Live NISAR result loaded automatically from the completed job. No CLI run or manual file import is needed. The preview remains PROVISIONAL until independent validation is attached.
-            </p>
-          )}
         </section>
+
+        <button type="button" className="workspace-nav-link known-place-back" onClick={onBack} style={{ marginTop: '20px' }}>
+          ← Back to processing
+        </button>
       </main>
 
       <footer className="rs-footer" style={{ marginTop: '40px' }}>

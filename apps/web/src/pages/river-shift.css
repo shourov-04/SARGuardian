@@ -425,3 +425,124 @@
 .rs-impact-map-toggle strong { color: #e7e5d4; font-size: 11px; }
 .rs-impact-map-toggle small { color: #91acbb; font-size: 10px; line-height: 1.5; }
 .rs-swatch.rs-impact-point { background: #ffd166; border: 1px solid #263238; border-radius: 50%; }
+
+/* Unified Known Place Dashboard container for RiverShift */
+.river-shift-results-shell {
+  min-height: 100vh;
+  position: relative;
+}
+.river-shift-results-shell .river-shift-results-page {
+  width: min(1320px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 16px 0 54px;
+}
+.rs-unified-dashboard {
+  width: 100%;
+  margin-top: 18px;
+}
+.rs-unified-dashboard .rs-view-panel {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+.rs-unified-dashboard .rs-timeseries,
+.rs-unified-dashboard .rs-overlap-audit,
+.rs-unified-dashboard .rs-readiness-panel,
+.rs-unified-dashboard .rs-results-panel,
+.rs-unified-dashboard .rs-map-section,
+.rs-unified-dashboard .rs-impact-panel,
+.rs-unified-dashboard .rs-report-panel,
+.rs-unified-dashboard .rs-artifact-list,
+.rs-unified-dashboard .rs-upload-grid {
+  border-color: rgba(255, 255, 255, .3);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 14px 34px rgba(4, 24, 39, .14);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-timeseries h3,
+.rs-unified-dashboard .rs-overlap-audit h3,
+.rs-unified-dashboard .rs-readiness-panel h3,
+.rs-unified-dashboard .rs-map-section h3,
+.rs-unified-dashboard .rs-impact-panel h3,
+.rs-unified-dashboard .rs-results-panel h2 {
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-kicker {
+  color: #0a84e0;
+}
+.rs-unified-dashboard .rs-muted,
+.rs-unified-dashboard .rs-warning-inline,
+.rs-unified-dashboard p {
+  color: #29465a;
+}
+.rs-unified-dashboard .rs-overlap-table-wrap {
+  border-radius: 12px;
+  border-color: rgba(15, 34, 54, .12);
+  background: rgba(255, 255, 255, .6);
+}
+.rs-unified-dashboard .rs-overlap-table th {
+  background: rgba(218, 238, 248, .5);
+  color: #0f2236;
+  font-weight: 750;
+}
+.rs-unified-dashboard .rs-overlap-table td {
+  border-top-color: rgba(15, 34, 54, .08);
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-secondary-button {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .55);
+  background: linear-gradient(180deg, #e8f8ff, #b9e3f2);
+  color: #0f2236;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .52), 0 6px 14px rgba(8, 104, 190, .2);
+  font-weight: 750;
+}
+.rs-unified-dashboard .rs-secondary-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f4fcff, #c8ebf7);
+}
+.rs-unified-dashboard .rs-primary-button {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .55);
+  background: linear-gradient(180deg, #43b9ee, #0875c7);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .48), 0 8px 20px rgba(8, 104, 190, .24);
+  font-weight: 750;
+}
+.rs-unified-dashboard .rs-primary-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5bc5f4, #1689df);
+}
+.rs-unified-dashboard .rs-date-slider {
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-info-banner {
+  background: rgba(10, 132, 224, .1);
+  border: 1px solid rgba(10, 132, 224, .25);
+  border-radius: 10px;
+  color: #054c7f;
+}
+.rs-unified-dashboard .rs-data-sources {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .42);
+}
+.rs-unified-dashboard .rs-data-sources strong {
+  color: #087bd3;
+}
+.rs-unified-dashboard .rs-data-sources span {
+  color: #29465a;
+}
+.rs-unified-dashboard .rs-overlay-controls {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .42);
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-overlay-toggle strong {
+  color: #0f2236;
+}
+.rs-unified-dashboard .rs-overlay-toggle small {
+  color: #3d5368;
+}
