@@ -9,23 +9,6 @@ import { Header } from '../components/Header';
 import '../../landslide/ui/knownPlaceResults.css';
 import './river-shift.css';
 
-type AudienceView = 'map' | 'qa';
-
-const views: Array<{ id: AudienceView; title: string; audience: string; summary: string }> = [
-  {
-    id: 'map',
-    title: 'Interactive Map & Playback',
-    audience: 'Visual Discovery',
-    summary: 'Explore observed NISAR radar water extents, candidate transitions (erosion, deposition, new water), and acquisition playback.',
-  },
-  {
-    id: 'qa',
-    title: 'Spatial QA & Overlap Audit',
-    audience: 'Quality Assurance',
-    summary: 'Authoritative full-resolution source masks compared against majority-occupancy preview polygons. Diagnostic checks, not geophysical validation.',
-  },
-];
-
 type Props = {
   user: User;
   authState: 'idle' | 'loading' | 'ready' | 'error';
@@ -239,13 +222,8 @@ function OverlapAuditPanel({ summary }: { summary: Record<string, unknown> }) {
     <section className="rs-overlap-audit" aria-label="RiverShift candidate overlap audit">
       <div className="rs-section-heading">
         <div><p className="rs-kicker">SPATIAL QA</p><h3>Candidate overlap audit</h3></div>
-        <span className="rs-chip">DIAGNOSTIC · NOT ACCURACY</span>
+        <span className="rs-chip">PROVISIONAL · REVIEW REQUIRED</span>
       </div>
-      <p className="rs-muted">
-        Full-resolution source masks are compared separately from majority-occupancy preview polygons.
-        Sparse sub-cell candidates are rendered as small MultiPoint markers and excluded from preview area/Jaccard.
-        Neither preview geometry type is a measurement; source masks remain authoritative.
-      </p>
       <div className="rs-overlap-table-wrap">
         <table className="rs-table rs-overlap-table">
           <thead>
@@ -606,7 +584,6 @@ function ObservedDateSummaryPanel({ report }: { report: RiverShiftReport | null 
           </div>
           <p className="rs-observed-summary-release">Release status: <strong>{String(report.quality.release_status || 'PROVISIONAL')}</strong> · The metrics and map are provisional evidence, not independently validated findings.</p>
         </div>
-        <span className="rs-observed-summary-status">OBSERVED DATE SCREENING NOT INDEPENDENTLY VALIDATED</span>
       </div>
       <div className="rs-observed-summary-metrics">
         <article><span>Comparison Valid Pixel Count</span><strong>{format('comparison_valid_pixel_count', 0)}</strong></article>
@@ -623,7 +600,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [riverJob, setRiverJob] = useState<RiverShiftJob | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
-  const [activeView, setActiveView] = useState<AudienceView>('map');
   const [report, setReport] = useState<RiverShiftReport | null>(null);
   const [reportError, setReportError] = useState('');
   const [geoJSONFiles, setGeoJSONFiles] = useState<LoadedGeoJSON[]>([]);
@@ -1178,28 +1154,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
             </div>
           )}
 
-              <nav className="known-place-audience-tabs" aria-label="Choose result detail level">
-                {views.map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={activeView === item.id ? 'is-active' : ''}
-                    aria-pressed={activeView === item.id}
-                    onClick={() => setActiveView(item.id)}
-                  >
-                    <span className="known-place-audience-copy">
-                      <strong>{item.title}</strong>
-                      <small>{item.audience}</small>
-                    </span>
-                  </button>
-                ))}
-              </nav>
-              <p className="known-place-audience-description">
-                {views.find((item) => item.id === activeView)?.summary}
-              </p>
-
-              {/* View 1: Interactive Change Map & Playback */}
-              <div className="rs-view-panel" style={{ display: activeView === 'map' ? 'block' : 'none' }}>
+              <div className="rs-view-panel">
                 <ObservedDateSummaryPanel report={jobPreview?.report || report} />
                 {riverJob && jobPreview?.jobId === riverJob.id && jobPreview.report && jobTimeSeriesFrames.length > 0 && (
                   <section className="rs-timeseries" aria-label="Provisional observed acquisition playback">
@@ -1382,26 +1337,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                     </>
                   )}
                 </section>
-              </div>
-
-              {/* View 2: Spatial QA & Overlap Audit */}
-              <div className="rs-view-panel" style={{ display: activeView === 'qa' ? 'block' : 'none' }}>
-                {riverJob?.result_summary ? (
-                  <section className="rs-overlap-audit">
-                    <div className="rs-section-heading">
-                      <div><p className="rs-kicker">SPATIAL INTEGRITY</p><h3>Review the map QA below the map</h3></div>
-                    </div>
-                    <p className="rs-muted">The overlap audit and validation readiness are available on the Visual Discovery map tab.</p>
-                  </section>
-                ) : (
-                  <section className="rs-overlap-audit">
-                    <div className="rs-section-heading">
-                      <div><p className="rs-kicker">SPATIAL INTEGRITY</p><h3>Candidate overlap and verification</h3></div>
-                    </div>
-                    <p className="rs-muted">Run a RiverShift job or attach a verified validation report to inspect candidate overlap and QA receipts.</p>
-                  </section>
-                )}
-
               </div>
 
         </section>
