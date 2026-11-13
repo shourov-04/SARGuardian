@@ -34,6 +34,8 @@ This index is the navigation layer for human reviewers, developers, and AI-assis
 ## Historical records
 
 - [Migration archive index](migration/README.md) describes the dated source-import and migration records under this directory.
+- [Historical Vercel inventory](operations/live-vercel-inventory.md) is a read-only snapshot from 2026-11-05, not current deployment status.
+- [Historical Supabase inventory](operations/live-supabase-inventory.md) is a read-only database snapshot from 2026-11-05, not current database status.
 - `docs/migration/` contains historical audit snapshots, import maps, source pins, and migration-era deployment inventories.
 - `migration/source-snapshots/` preserves source snapshots for lineage and reproducibility.
 - Dated workflow evidence and per-run research records remain in their engine-specific evidence directories.
