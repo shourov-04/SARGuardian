@@ -58,4 +58,4 @@ Never commit actual values in `.env`, source files, logs, artifacts, or document
 python -m pytest -q
 ```
 
-Use the relevant GitHub Actions workflow tests when changing dispatch payloads, callback signatures, workflow names, result manifests, retention behavior, or authentication contracts. See [repository operations guidance](../../docs/operations/active-api-monorepo-runbook.md).
+Use the relevant GitHub Actions workflow tests when changing dispatch payloads, callback signatures, workflow names, result manifests, retention behavior, or authentication contracts. See [repository operations guidance](../../docs/operations/api-and-processing-runbook.md).
