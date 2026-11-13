@@ -93,6 +93,8 @@ The documentation is organised so that a human reviewer or AI-assisted reviewer 
 | **MD Fahim** | RiverShift development and video editing. CSE, Islamic University, Kushtia, Bangladesh. |
 | **Tasmia Binte Hasan** | Project storytelling and presentation. |
 
+For fuller role descriptions and contribution evidence, see [Team & Contributions](docs/submission/TEAM_AND_CONTRIBUTIONS.md).
+
 [View live contributor activity](https://github.com/shourov-04/SARGuardian/graphs/contributors) · [View commit history](https://github.com/shourov-04/SARGuardian/commits/main)
 
 ## Project history
