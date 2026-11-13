@@ -298,7 +298,10 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
             setRiverJob(existing);
             if (!setup || activeRiverShiftStates.has(existing.state)) {
               const restoredSetup = setupForJob(existing);
-              setSetup(restoredSetup);
+              const setupAlreadyMatches = setup
+                && riverShiftSignature(setup.aoiWkt, setup.startDate, setup.endDate)
+                  === riverShiftSignature(restoredSetup.aoiWkt, restoredSetup.startDate, restoredSetup.endDate);
+              if (!setupAlreadyMatches) setSetup(restoredSetup);
               window.sessionStorage.setItem(RIVER_SHIFT_SETUP_STORAGE_KEY, JSON.stringify(restoredSetup));
             }
           }
@@ -314,7 +317,7 @@ export function RiverShiftProcessingPage({ user, authState, onSignIn, onSignOut,
 
     void initialize();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, setup]);
 
   useEffect(() => {
     if (!user || !riverJob || !['queued', 'dispatching', 'running'].includes(riverJob.state)) return undefined;

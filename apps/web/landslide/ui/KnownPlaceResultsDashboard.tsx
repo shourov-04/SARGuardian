@@ -201,33 +201,6 @@ export function KnownPlaceResultsDashboard({
                 </article>
               </div>
 
-              {false && <section className="known-place-public-map-card" aria-label="Public displacement map">
-                <div className="known-place-section-heading known-place-map-heading">
-                  <label>
-                    <span>Acquisition pair</span>
-                    <select
-                      value={selectedMapPair ? `${selectedMapPair.chain_id}|${selectedMapPair.reference_date}|${selectedMapPair.secondary_date}` : ''}
-                      onChange={(event) => setSelectedMapPairKey(event.target.value)}
-                      disabled={!mapPairs.length}
-                    >
-                      {allPairs.map((pair) => (
-                        <option
-                          value={`${pair.chain_id}|${pair.reference_date}|${pair.secondary_date}`}
-                          key={`${pair.chain_id}|${pair.reference_date}|${pair.secondary_date}`}
-                        >
-                          {pairTitle(pair)} · {trackLabel(pair)}{pair.map_preview ? '' : ' · no map preview'}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {selectedMapPair ? (
-                  <KnownPlaceGoogleMap pair={selectedMapPair} />
-                ) : (
-                  <p className="known-place-map-unavailable-note">No pair measurements are available to plot for this request.</p>
-                )}
-              </section>}
-
               <div className="known-place-deep-view known-place-public-map-copy">
                 <div className="known-place-section-heading known-place-map-heading">
                   <div>

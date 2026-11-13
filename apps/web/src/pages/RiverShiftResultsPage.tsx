@@ -481,7 +481,7 @@ export function ReportPanel({ report }: { report: RiverShiftReport }) {
           <span className="result-kicker">SCIENTIFIC LIMITATIONS</span>
           <ul>
             {warnings.map((warning, index) => (
-              <li key={index}>{warning.replace(/^[•\-\*]\s*/, '')}</li>
+              <li key={index}>{warning.replace(/^[•*-]\s*/, '')}</li>
             ))}
           </ul>
         </div>
@@ -593,9 +593,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
   const [report, setReport] = useState<RiverShiftReport | null>(null);
-  const [reportError, setReportError] = useState('');
   const [geoJSONFiles, setGeoJSONFiles] = useState<LoadedGeoJSON[]>([]);
-  const [geoJSONError, setGeoJSONError] = useState('');
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
   const [mapOverlayReady, setMapOverlayReady] = useState(false);
@@ -614,7 +612,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
   const [showMapLabels, setShowMapLabels] = useState(false);
   const [isMapDark, setIsMapDark] = useState(false);
-
 
   const resultMapElement = useRef<HTMLDivElement>(null);
   const resultMapInstance = useRef<google.maps.Map | null>(null);
@@ -667,13 +664,19 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       : [];
   }), [report, geoJSONFiles]);
 
-  const playbackFrames = report?.analysis_type === 'water_timeseries_screening'
-    && report.time_series?.length === timeSeriesFrames.length ? timeSeriesFrames : [];
+  const playbackFrames = useMemo(
+    () => report?.analysis_type === 'water_timeseries_screening'
+      && report.time_series?.length === timeSeriesFrames.length ? timeSeriesFrames : [],
+    [report, timeSeriesFrames],
+  );
   const currentTimeSeriesFrame = playbackFrames[timeSeriesIndex];
 
-  const jobTimeSeriesFrames: RiverShiftTimeSeriesFrame[] = jobPreview && riverJob && jobPreview.jobId === riverJob.id
-    && jobPreview.report?.analysis_type === 'water_timeseries_screening'
-    ? jobPreview.report.time_series || [] : [];
+  const jobTimeSeriesFrames = useMemo<RiverShiftTimeSeriesFrame[]>(
+    () => jobPreview && riverJob && jobPreview.jobId === riverJob.id
+      && jobPreview.report?.analysis_type === 'water_timeseries_screening'
+      ? jobPreview.report.time_series || [] : [],
+    [jobPreview, riverJob],
+  );
   const currentJobFrameMetadata = jobTimeSeriesFrames[jobTimeSeriesIndex];
   const riverJobId = riverJob?.id;
   const riverJobArtifactManifest = riverJob?.artifact_manifest;
@@ -691,8 +694,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
 
   const hasLiveJobResult = Boolean(riverJob?.state === 'succeeded' && activeJobPreview
     && (activeJobPreview.report || activeJobPreview.changeLayer));
-  const hasLiveJobResultPending = Boolean(riverJob?.state === 'succeeded' && riverJobArtifactManifest?.length
-    && !hasLiveJobResult);
   const explorerReport = report ?? activeJobPreview?.report ?? null;
 
   const verifiedGeoJSONFiles = useMemo(() => {
@@ -930,7 +931,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       const frameIndex = artifacts.findIndex((item) => item.name === frameName && item.bytes <= 4_000_000);
       if (frameIndex < 0) return;
       try {
-        const artifact = artifacts[frameIndex];
         const blob = await downloadRiverShiftArtifact(riverJobId, frameIndex, user);
         const bytes = await blob.arrayBuffer();
         const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -953,40 +953,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     return () => { cancelled = true; };
   }, [riverJobId, riverJobArtifactManifest, user, currentJobFrameDate, currentJobFrameGeoJSON, currentJobFrameSHA256, jobFrameJobId, jobFrameDate]);
 
-  const loadReport = async (file?: File) => {
-    if (!file) return;
-    setReportError('');
-    setReport(null);
-    setGeoJSONFiles([]);
-    setTimeSeriesIndex(0);
-    setTimeSeriesPlaying(false);
-    try {
-      const payload = JSON.parse(await file.text()) as unknown;
-      setReport(parseRiverShiftReport(payload));
-    } catch (error) {
-      setReportError(error instanceof Error ? error.message : 'Could not read the result JSON.');
-    }
-  };
-
-  const loadGeoJSONFiles = async (files?: FileList | File[]) => {
-    if (!files || !files.length) return;
-    setGeoJSONError('');
-    try {
-      const loaded = await Promise.all(Array.from(files).map(async (file) => {
-        const bytes = await file.arrayBuffer();
-        const digest = await crypto.subtle.digest('SHA-256', bytes);
-        const sha256 = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-        const payload = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
-        return { fileName: file.name, sha256, data: parseRiverShiftGeoJSON(payload) };
-      }));
-      setGeoJSONFiles(loaded);
-      setTimeSeriesIndex(0);
-      setTimeSeriesPlaying(false);
-    } catch (error) {
-      setGeoJSONError(error instanceof Error ? error.message : 'Could not read the GeoJSON.');
-    }
-  };
-
   useEffect(() => {
     if (!GOOGLE_MAPS_KEY) {
       setMapError('Google Maps API key is not configured.');
@@ -1003,7 +969,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       const mapOptions: google.maps.MapOptions = {
         center: { lat: 15, lng: 0 },
         zoom: 2,
-        mapTypeId: showMapLabels ? 'hybrid' : 'satellite',
+        mapTypeId: 'satellite',
         streetViewControl: false,
         mapTypeControl: true,
         mapTypeControlOptions: {
@@ -1199,6 +1165,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     isGeneralScanJob,
     riverJob?.aoi_wkt,
     report?.analysis_type,
+    riverJob?.state,
   ]);
 
   useEffect(() => {
@@ -1231,7 +1198,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     jobFrameDate,
   ]);
 
-  const resultType = explorerReport ? explorerReport.analysis_type.replace(/_/g, ' ') : 'No result loaded';
   const isPageFullyReady = Boolean(
     !jobLoading
     && !jobError
