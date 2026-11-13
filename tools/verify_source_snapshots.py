@@ -562,6 +562,31 @@ def main() -> int:
         "src/riverShift/manifest.test.ts": ("8f2201be952c82225ac335d40df32af3bbd23990", "44b2a04ea3f4bb6f5855f529915e31b295bff4ac"),
         "src/riverShift/manifest.ts": ("c969ca762cb9e84dccf4b8920599590116e4fee2", "a30797b499b356f6d713bada9eb4d6fdc71da09b"),
     }
+    nisar_science_destination_only = {
+        \"tests/test_elevation_regression.py\": "20d5e44346dba913a0452d8fcb7277b069aba720",
+        \"tests/test_gls_persistence.py\": "9f8d275d4a2c486a735594c5165f8c6d38a28e65",
+        \"tests/test_gnss_benchmark.py\": "d6da8acbbb28fd3d9e47274144b491d2a977b89a",
+        \"tests/test_injection.py\": "d4b68c8ad31e2b78aeb0a72db003a5a6691803bd",
+        \"tests/test_stable_datum.py\": "eb5c204b40e6ca2562b57a7e4ee90e38058af4bc",
+        \"tests/test_surrogates.py\": "c06c3267883b78714edc5d5e12b3332702d321bd",
+        \"tests/test_validation_receipt.py\": "eb540088ce8038c065f460c946296cf4ce382514",
+        \"tests/test_vector_decomposition.py\": "80a990e18956b3e21e02edf671c9d81749ae216c",
+        \"validation/__init__.py\": "6c23bc4d036c265e265611a1aa488e32005667d4",
+        \"validation/elevation_regression.py\": "de8bac65dad2300150ec2e1437c7343a42e6b3c1",
+        \"validation/froc.py\": "4807df2a6c30c8bb98670458bf6f6d6f109cff0c",
+        \"validation/gls_persistence.py\": "ee4407bcd40328afce2df1d760ed336a4ec1ec45",
+        \"validation/gnss_benchmark.py\": "74787722f227bd875c850536c6ca8d745f31f694",
+        \"validation/injection.py\": "846d7398e938391f6c2f314cdcff9d8a5fcb241c",
+        \"validation/run_injection_benchmark.py\": "ed0ca04c44f3f465341485bf84c144df71a6db00",
+        \"validation/stable_datum.py\": "6e576f50149f11d66dd4105bf4b025a4e289b34b",
+        \"validation/surrogates.py\": "9da5daebc8cc6e57b79c5628ba0e347372ed140b",
+        \"validation/validation_receipt.py\": "aa5898e4dcc2f351f7eb26da6f826757519dddf6",
+        \"validation/vector_decomposition.py\": "69bbffc5bfc6538869e125498c3faa25e4e0c1c2"
+    }
+    nisar_science_changed_blob_pins = {
+        "src/goff_reader.py": ("8a00a5ae51ee5d6d9c67c46ea64f202169621a1b", "37a0d312d37f837664601783d4c951adc5d85f49"),
+        "tests/conftest.py": ("f631634824553a111b2c08279cb8432b04466207", "570588d984297744969827a592e770c1b751e803"),
+    }
     river_shift_changed_blob_pins = {
         "tests/test_independent_reference_runner.py": (
             "f7c7a657076da3eaa2e9e8c99a7677106058d768",
@@ -596,6 +621,10 @@ def main() -> int:
                 label == "Dynamic frontend promotion"
                 and path[len(destination_prefix) :] in dynamic_frontend_destination_only
             )
+            and not (
+                label == "NISAR science promotion"
+                and path[len(destination_prefix) :] in nisar_science_destination_only
+            )
         }
         if label == "Dynamic active API promotion":
             for relative_path, expected_sha in dynamic_api_destination_only.items():
@@ -603,6 +632,12 @@ def main() -> int:
                 if actual_entry != ("100644", "blob", expected_sha):
                     raise RuntimeError(f"Reviewed API destination-only blob changed: {relative_path}")
                 print(f"PROMOTED_API_ADDITION_PASS apps/api/{relative_path}: {expected_sha}")
+        if label == "NISAR science promotion":
+            for relative_path, expected_sha in nisar_science_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed NISAR science destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_NISAR_ADDITION_PASS science/nisar-core/{relative_path}: {expected_sha}")
         if label == "Dynamic frontend promotion":
             for relative_path, expected_sha in dynamic_frontend_destination_only.items():
                 actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
@@ -620,6 +655,11 @@ def main() -> int:
         for relative_path in changed:
             override_key = f"{label}:{relative_path}"
             override = promotion_overrides.get(override_key)
+            if label == "NISAR science promotion" and relative_path in nisar_science_changed_blob_pins:
+                source_sha, destination_sha = nisar_science_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_NISAR_TRANSFORMATION_PASS science/nisar-core/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "Dynamic active API promotion" and relative_path in dynamic_api_changed_blob_pins:
                 source_sha, destination_sha = dynamic_api_changed_blob_pins[relative_path]
                 if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
@@ -678,6 +718,7 @@ def main() -> int:
             "Dynamic shared tools promotion",
             "Find Displacements tools promotion",
             "RiverShift GCOV engine promotion",
+            "NISAR science promotion",
         }:
             raise RuntimeError(f"{label}: promotion overrides are not permitted for this source.")
         print(f"PROMOTED_PATH_BLOB_INTEGRITY_PASS {label}: {len(source_view)} entries")

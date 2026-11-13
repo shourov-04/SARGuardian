@@ -80,6 +80,7 @@ def validate_known_place_active_pin() -> None:
     }
     if observed_fork_overlay_files != expected_fork_overlay_files:
         fail("Known Place fork overlay file inventory or SHA-256 pins changed")
+    overlay = overlay_rows[0]
     overlay_path = "engines/known-place/tools/know_place/aoi_runner.py"
     overlay_sha = expected_fork_overlay_files[overlay_path]
     implementation_commits = {
