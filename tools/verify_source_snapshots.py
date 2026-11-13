@@ -583,6 +583,10 @@ def main() -> int:
         "validation/validation_receipt.py": "aa5898e4dcc2f351f7eb26da6f826757519dddf6",
         "validation/vector_decomposition.py": "69bbffc5bfc6538869e125498c3faa25e4e0c1c2"
     }
+    find_dashboard_changed_blob_pins = {
+        "assets/prepare_web_assets.py": ("40408efe792927266ec4a864ded212b1a3c69cd4", "b301e0e60a188935066f96ce85101fc89540a584"),
+        "tests/test_prepare_web_assets.py": ("8310651f82b6e362c3a60c95c18936adc4652c62", "94de4492e0f06ca7774b673f2b0e457515cad8ec"),
+    }
     nisar_science_changed_blob_pins = {
         "src/goff_reader.py": ("8a00a5ae51ee5d6d9c67c46ea64f202169621a1b", "37a0d312d37f837664601783d4c951adc5d85f49"),
         "tests/conftest.py": ("f631634824553a111b2c08279cb8432b04466207", "570588d984297744969827a592e770c1b751e803"),
@@ -655,6 +659,11 @@ def main() -> int:
         for relative_path in changed:
             override_key = f"{label}:{relative_path}"
             override = promotion_overrides.get(override_key)
+            if label == "Find Displacements dashboard promotion" and relative_path in find_dashboard_changed_blob_pins:
+                source_sha, destination_sha = find_dashboard_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_FIND_DASHBOARD_TRANSFORMATION_PASS engines/find-displacements/dashboard/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "NISAR science promotion" and relative_path in nisar_science_changed_blob_pins:
                 source_sha, destination_sha = nisar_science_changed_blob_pins[relative_path]
                 if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
@@ -719,6 +728,7 @@ def main() -> int:
             "Find Displacements tools promotion",
             "RiverShift GCOV engine promotion",
             "NISAR science promotion",
+            "Find Displacements dashboard promotion",
         }:
             raise RuntimeError(f"{label}: promotion overrides are not permitted for this source.")
         print(f"PROMOTED_PATH_BLOB_INTEGRITY_PASS {label}: {len(source_view)} entries")
