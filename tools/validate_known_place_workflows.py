@@ -28,6 +28,7 @@ EXPECTED_API_INPUTS = {
     "direction",
     "coherence_neighbours",
     "allowed_release_ids",
+    "preferred_granules",
     "reference_wkt",
     "candidate_context_json",
     "geometry_height_m",

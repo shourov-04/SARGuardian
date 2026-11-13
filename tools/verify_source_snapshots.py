@@ -541,6 +541,12 @@ def main() -> int:
         "src/pages/DashboardPage.tsx": ("ab024025925e88299c6a09e961f57afdc3fcf450", "b5c64354cdea6dc9c610c1f6e28469584d6d75e0"),
         "src/pages/river-shift.css": ("1c9bc4f4868aced2978129518e62e12c9779a22b", "f58b10d5b22df2e7c9fe19a5df0eb87047e16017"),
     }
+    river_shift_changed_blob_pins = {
+        "tests/test_independent_reference_runner.py": (
+            "f7c7a657076da3eaa2e9e8c99a7677106058d768",
+            "0ca8093864dcd6e2b537f08ad0631b6de103001a",
+        ),
+    }
     dynamic_shared_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     find_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     for label, source_prefix, destination_prefix, excluded_prefixes in promoted_paths:
@@ -595,6 +601,11 @@ def main() -> int:
                 if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
                     print(f"PROMOTED_FRONTEND_TRANSFORMATION_PASS apps/web/{relative_path}: {source_sha} -> {destination_sha}")
                     continue
+            if label == "RiverShift GCOV engine promotion" and relative_path in river_shift_changed_blob_pins:
+                source_sha, destination_sha = river_shift_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_RIVERSHIFT_FIXTURE_PASS engines/river-shift/tools/river_shift/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "Dynamic active API promotion" and relative_path in dynamic_api_baseline_exceptions:
                 print(f"PROMOTED_API_BASELINE_PASS apps/api/{relative_path}")
                 continue
@@ -634,6 +645,7 @@ def main() -> int:
             "Dynamic frontend promotion",
             "Dynamic shared tools promotion",
             "Find Displacements tools promotion",
+            "RiverShift GCOV engine promotion",
         }:
             raise RuntimeError(f"{label}: promotion overrides are not permitted for this source.")
         print(f"PROMOTED_PATH_BLOB_INTEGRITY_PASS {label}: {len(source_view)} entries")
