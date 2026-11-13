@@ -19,7 +19,7 @@ This index is the navigation layer for human reviewers, developers, and AI-assis
 | Web application | [Web README](../apps/web/README.md) |
 | Web tests and live review | [Web validation guide](../apps/web/VALIDATION.md) |
 | API implementation | [API README](../apps/api/README.md) |
-| API operational workflow | [Active API runbook](operations/active-api-monorepo-runbook.md) |
+| API operational workflow | [Active API runbook](operations/api-and-processing-runbook.md) |
 | Secret handling | [Deployment and secret map](operations/deployment-and-secret-map.md) |
 | Secret scan result | [Secret scanning record](security/secret-scanning.md) |
 | Displacement science | [Find Displacements methods](scientific-validation/find-displacements/README.md) |
