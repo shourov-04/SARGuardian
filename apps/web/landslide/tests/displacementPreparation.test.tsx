@@ -20,7 +20,7 @@ describe('dashboard opens in a new same-origin tab', () => {
       },
     } as never;
     const html = renderToStaticMarkup(<ScientificResults job={job} user={{ getIdToken: vi.fn() } as never} />);
-    expect(html).toContain('How would you like to explore this result?');
+    expect(html).toContain('aria-label="Dashboard audience view"');
     expect(html).toContain('Public Discovery');
     expect(html).toContain('Explore the Evidence');
     expect(html).toContain('Scientific Evidence');
