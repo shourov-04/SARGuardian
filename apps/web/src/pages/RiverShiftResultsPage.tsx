@@ -1316,6 +1316,50 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                       <span><i className="rs-swatch rs-observed-water" /> Observed-date water extent</span>
                     </div>
                   </div>
+                  {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
+                    <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
+                      {hasCandidateOverlaySource && (
+                        <>
+                          <label className="rs-overlay-toggle rs-overlay-toggle-all">
+                            <input
+                              type="checkbox"
+                              checked={allCandidateLayersVisible}
+                              onChange={(event) => {
+                                setShowErosionOverlay(event.target.checked);
+                                setShowDepositionOverlay(event.target.checked);
+                                setShowNewWaterOverlay(event.target.checked);
+                              }}
+                            />
+                            <span><strong>All candidate overlays</strong><small>Show or hide all implemented change classes.</small></span>
+                          </label>
+                          <div className="rs-overlay-class-grid">
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showErosionOverlay} disabled={candidateOverlayCounts.erosion === 0}
+                                onChange={(event) => setShowErosionOverlay(event.target.checked)} />
+                              <span><strong>Erosion</strong><small>{candidateOverlayCounts.erosion} feature(s)</small></span>
+                            </label>
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showDepositionOverlay} disabled={candidateOverlayCounts.deposition === 0}
+                                onChange={(event) => setShowDepositionOverlay(event.target.checked)} />
+                              <span><strong>Deposition</strong><small>{candidateOverlayCounts.deposition} feature(s)</small></span>
+                            </label>
+                            <label className="rs-overlay-toggle">
+                              <input type="checkbox" checked={showNewWaterOverlay} disabled={candidateOverlayCounts.newWater === 0}
+                                onChange={(event) => setShowNewWaterOverlay(event.target.checked)} />
+                              <span><strong>New water</strong><small>{candidateOverlayCounts.newWater} feature(s)</small></span>
+                            </label>
+                          </div>
+                        </>
+                      )}
+                      {hasObservedWaterFrames && (
+                        <label className="rs-overlay-toggle rs-overlay-observed">
+                          <input type="checkbox" checked={showObservedWaterExtent}
+                            onChange={(event) => setShowObservedWaterExtent(event.target.checked)} />
+                          <span><strong>Observed-date open-water extent</strong><small>Current acquired-date water layer; separate from date-window change candidates.</small></span>
+                        </label>
+                      )}
+                    </div>
+                  )}
                   {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
                   {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
                   {riverJob?.result_summary && (
