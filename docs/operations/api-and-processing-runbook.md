@@ -47,6 +47,15 @@ Set the browser-safe Firebase and Maps configuration in `.env.local`. Use `VITE_
 | NISAR discovery and product handling | `.github/workflows/nisar-*`, relevant engine tools |
 | Repository regression and secret scan | `.github/workflows/snapshot-regression-tests.yml`, `.github/workflows/historical-secret-scan.yml` |
 
+## Immutable processing inputs
+
+- The Find Displacements dashboard aggregator is checked out from `moshiour0/SARGuardian-Monorepo` at the exact orchestration SHA recorded in the product manifest; the workflow verifies that SHA before aggregation.
+- NISAR GOFF/GUNW discovery and reader code is pinned to commit `006d4cd1485cf80e509eaf8717c12e9c6390ac09` and mirrored under `migration/source-snapshots/nisar-pins/006d4cd/`.
+- The author-exact Known Place P05023 replay uses the separate immutable backend and NISAR source snapshots under `migration/source-snapshots/backend-pins/b825df/` and `migration/source-snapshots/nisar-pins/10639a9/`.
+- RiverShift processing uses the exact dispatched repository revision and its own GCOV workflow.
+
+Record the public repository commit and any additional pinned source revision when diagnosing or reproducing a result.
+
 ## Processing lifecycle
 
 1. Validate the authenticated request and request fingerprint.

@@ -57,6 +57,19 @@ RiverShift is an independent GCOV-oriented workflow. It discovers eligible acqui
 - GitHub Actions workers use server-side credentials and return status through the configured callback contract.
 - Result artifacts and manifests retain product identity and processing provenance. Private storage credentials are never sent to the browser.
 
+## Pinned source dependencies and reproducibility
+
+The primary repository is the source of the dispatched application/API orchestration commit. Some processing stages deliberately consume additional immutable source pins; these are explicit dependencies, not hidden runtime assumptions:
+
+| Processing stage | Pinned source | How the workflow verifies it |
+|---|---|---|
+| Find Displacements dashboard aggregation | [moshiour0/SARGuardian-Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo), checked out at the exact `orchestration_sha` produced by manifest discovery | The workflow compares the checked-out `dashboard-source` commit with the manifest orchestration SHA before running the aggregator |
+| GOFF/GUNW discovery and reader methods | [moshiour0/SARGuardian](https://github.com/moshiour0/SARGuardian), commit `006d4cd1485cf80e509eaf8717c12e9c6390ac09`, also preserved under `migration/source-snapshots/nisar-pins/006d4cd/` | Discovery and product workers verify the immutable snapshot and record the science commit in processing provenance |
+| Author-exact Known Place P05023 replay | Backend source snapshot `migration/source-snapshots/backend-pins/b825df/` and NISAR science snapshot `migration/source-snapshots/nisar-pins/10639a9/` | The replay dispatcher carries the fixed backend commit and the worker checks the corresponding snapshot and the explicit consent gate |
+| RiverShift GCOV processing | Current dispatched repository commit and engine-local workflow source | Workers check out the caller's exact `github.sha`; GCOV processing remains a dedicated workflow |
+
+This arrangement keeps the public application repository as the primary entry point while retaining source-exact reproducibility for selected scientific components. Reviewers should record both the dispatched repository commit and any separately pinned source commit when interpreting a result.
+
 ## Root-level processing workflow map
 
 The active workflow entry points are stored in the repository-root `.github/workflows/` directory:

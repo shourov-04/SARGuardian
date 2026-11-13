@@ -73,7 +73,18 @@ For the account Find Displacements path, the API dispatches the declared input c
 | Supplementary NISAR detectability research | [Research README](../../science/nisar-core/README.md), [reproduction guide](../../science/nisar-core/REPRODUCE_RESULTS.md) — a separate research study, not a dependency of the four live workflows |
 | Automated processing and validation | [GitHub Actions workflows](../../.github/workflows/) |
 
-## E. Inspect automated processing
+## E. Understand the pinned source lineage
+
+The root-level workflow entry points run from the current public repository revision, but selected scientific steps use immutable source dependencies:
+
+- Find Displacements dashboard aggregation checks out [moshiour0/SARGuardian-Monorepo](https://github.com/moshiour0/SARGuardian-Monorepo) at the exact `orchestration_sha` that was recorded in the product manifest. The workflow verifies the checkout SHA before aggregation.
+- GOFF/GUNW discovery and product readers use the science pin `006d4cd1485cf80e509eaf8717c12e9c6390ac09`, mirrored under `migration/source-snapshots/nisar-pins/006d4cd/`. The workflow checks and records this pin.
+- The author-exact P05023 replay is intentionally separate. It uses the preserved backend snapshot `migration/source-snapshots/backend-pins/b825df/` and science snapshot `migration/source-snapshots/nisar-pins/10639a9/`, behind the explicit author-exact consent gate.
+- RiverShift uses the dispatched repository revision and its dedicated GCOV workflow; it is not folded into the GOFF/GUNW displacement chain.
+
+When reviewing a run, note the main repository commit and any pinned dependency commit shown in its workflow summary or manifest. The additional repositories/snapshots are source-lineage dependencies for specific stages, not alternative public submission repositories.
+
+## F. Inspect automated processing
 
 Open the [GitHub Actions history](https://github.com/shourov-04/SARGuardian/actions). Select the workflow relevant to the engine or request type, then inspect:
 
@@ -85,7 +96,7 @@ Open the [GitHub Actions history](https://github.com/shourov-04/SARGuardian/acti
 
 This lets a reviewer move from the public interface to the workflow implementation and its processing record. The Actions page contains the evolving workflow history; no single historical run is presented as the only evidence for a continuously developed application.
 
-## F. Read the supporting documents
+## G. Read the supporting documents
 
 - [Project overview](PROJECT_OVERVIEW.md)
 - [Datasets and references](DATASETS_AND_REFERENCES.md)
@@ -93,6 +104,6 @@ This lets a reviewer move from the public interface to the workflow implementati
 - [AI usage disclosure](AI_USAGE.md)
 - [Score-sheet evidence matrix](score-sheet-evidence-matrix.md)
 
-## G. Guidance for AI-assisted review
+## H. Guidance for AI-assisted review
 
 Use the current default branch of this repository as the implementation source. Start with the root README and this guide, then follow the exact file paths above. Distinguish catalogue metadata, test fixtures, illustrative walkthrough panels, real NISAR observations, processing outputs, and independent reference datasets. When citing a result, state its product family, acquisition dates, AOI, and workflow/run context. Do not infer a measurement or validation metric that is not present in the result record.
