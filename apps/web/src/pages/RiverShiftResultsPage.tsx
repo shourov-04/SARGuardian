@@ -599,6 +599,8 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
   const [mapOverlayReady, setMapOverlayReady] = useState(false);
+  const [mapTilesLoaded, setMapTilesLoaded] = useState(false);
+  const [loaderVisible, setLoaderVisible] = useState(true);
 
   const [timeSeriesIndex, setTimeSeriesIndex] = useState(0);
   const [timeSeriesPlaying, setTimeSeriesPlaying] = useState(false);
@@ -1016,6 +1018,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       if (resultMapElement.current && !resultMapInstance.current) {
         const instance = new maps.Map(resultMapElement.current, mapOptions);
         resultMapInstance.current = instance;
+        google.maps.event.addListenerOnce(instance, 'idle', () => {
+          setMapTilesLoaded(true);
+        });
         instance.addListener('maptypeid_changed', () => {
           const type = String(instance.getMapTypeId() || 'satellite');
           if (type !== 'roadmap' && type !== 'terrain') {
@@ -1037,6 +1042,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     const isImagery = currentType === 'satellite' || currentType === 'hybrid';
     resultMapInstance.current.setOptions({ styles: isImagery ? null : mapStyles(isMapDark, showMapLabels) });
   }, [mapReady, isMapDark, showMapLabels]);
+
+  useEffect(() => {
+    if (!mapReady || mapTilesLoaded) return undefined;
+    const timeout = window.setTimeout(() => setMapTilesLoaded(true), 8000);
+    return () => window.clearTimeout(timeout);
+  }, [mapReady, mapTilesLoaded]);
 
   useEffect(() => {
     const waitingForJobPreview = riverJob?.state === 'succeeded' && !activeJobPreview;
@@ -1221,7 +1232,14 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   ]);
 
   const resultType = explorerReport ? explorerReport.analysis_type.replace(/_/g, ' ') : 'No result loaded';
-  const resultReady = !jobLoading && !jobError && mapOverlayReady;
+  const isPageFullyReady = Boolean(
+    !jobLoading
+    && !jobError
+    && (report || jobPreview?.report)
+    && mapReady
+    && mapOverlayReady
+    && mapTilesLoaded,
+  );
   const resultLoadingMessage = jobLoading
     ? 'Loading result metadata…'
     : !mapReady
@@ -1231,6 +1249,15 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         : jobTimeSeriesFrames.length > 0 && !currentJobFrame
           ? 'Preparing the raster overlay…'
           : 'Finalizing the RiverShift result…';
+
+  useEffect(() => {
+    if (!isPageFullyReady) {
+      setLoaderVisible(true);
+      return undefined;
+    }
+    const timeout = window.setTimeout(() => setLoaderVisible(false), 400);
+    return () => window.clearTimeout(timeout);
+  }, [isPageFullyReady]);
 
   return (
     <div className="home-page claude-home claude-how-page known-place-results-shell river-shift-results-shell">
@@ -1246,10 +1273,11 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         pageTitle="River Shift Results"
       />
 
-      {!resultReady && !jobError && (
-        <div className="rs-result-loading-screen" role="status" aria-live="polite">
+      {loaderVisible && !jobError && (
+        <div className={`rs-result-loading-screen is-full-cover${isPageFullyReady ? ' is-dismissing' : ''}`} role="status" aria-live="polite">
           <div className="rs-result-loading-card">
-            <strong>Loading RiverShift result…</strong>
+            <div className="rs-result-loading-spinner" aria-hidden="true" />
+            <strong>Loading RiverShift Analysis</strong>
             <span>{resultLoadingMessage}</span>
             <div className="rs-result-loading-progress" role="progressbar" aria-label="Preparing RiverShift result">
               <i />
@@ -1258,7 +1286,14 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         </div>
       )}
 
-      <main className={`nisar-results-main displacement-preparation known-place-analysis known-place-results-page river-shift-results-page${!resultReady && !jobError ? ' is-preparing' : ''}`}>
+      <main
+        className={`nisar-results-main displacement-preparation known-place-analysis known-place-results-page river-shift-results-page ${isPageFullyReady ? 'is-page-ready' : 'is-page-hidden'}`}
+        style={{
+          opacity: isPageFullyReady ? 1 : 0,
+          transition: 'opacity 0.4s ease-in-out',
+          pointerEvents: isPageFullyReady ? 'auto' : 'none',
+        }}
+      >
         <section className={`known-place-results rs-unified-dashboard${jobLoading ? ' is-loading' : ''}`} aria-label="River Shift scientific results dashboard">
           {jobLoading && (
             <div className="known-place-results-loading" role="status" aria-live="polite">
