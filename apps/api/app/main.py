@@ -1940,15 +1940,36 @@ def _apply_dashboard_presentation(html: str) -> str:
     if 'name="referrer"' not in html:
         html = html.replace("</head>", '<meta name="referrer" content="strict-origin-when-cross-origin"></head>', 1)
 
+    # Older saved dashboard bundles contain the legacy audience heading and
+    # larger tab/header geometry. Normalize those bundles at response time so
+    # already-saved result ZIPs match the current Find Displacements shell.
+    html = re.sub(
+        r'<div class="view-switcher-label"><div class="kicker">.*?</div><strong>.*?</strong></div>',
+        '',
+        html,
+        count=1,
+        flags=re.DOTALL,
+    )
+    legacy_view_css = (
+        '.view-switcher-label{display:none!important}'
+        '.view-switcher-wrap{padding:0 0 14px;border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}'
+        '.view-switcher{gap:8px}'
+        '.view-option{min-height:72px;padding:12px 18px;border:1px solid rgba(255,255,255,.72);border-radius:18px;background:linear-gradient(180deg,#43b9ee,#0875c7);color:#000;box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 10px 24px rgba(8,104,190,.24)}'
+        '.view-option strong,.view-option small{color:#000}'
+        '.view-option[aria-selected=true]{border-color:rgba(255,255,255,.88);background:linear-gradient(135deg,#45cf9c,#129b67);box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 0 0 2px rgba(18,155,103,.26),0 12px 28px rgba(13,107,75,.24)}'
+        '.claude-nav-shell{width:min(980px,calc(100% - 24px))}'
+        '.claude-nav-inner{height:58px;padding:0 10px 0 16px}'
+    )
+
     native_mode_controls = all(
         f'data-sg-mode="{mode}"' in html for mode in ("public", "evidence", "science")
     )
     if "/* SARGuardian responsive science dashboard */" not in html:
         mode_css = "" if native_mode_controls else DASHBOARD_MODES_CSS + "\n"
         if "</style>" in html:
-            html = html.replace("</style>", "/* SARGuardian responsive science dashboard */\n" + DASHBOARD_PRESENTATION_CSS + "\n" + mode_css + "</style>", 1)
+            html = html.replace("</style>", "/* SARGuardian responsive science dashboard */\n" + DASHBOARD_PRESENTATION_CSS + "\n" + legacy_view_css + "\n" + mode_css + "</style>", 1)
         else:
-            html = html.replace("</head>", "<style>/* SARGuardian responsive science dashboard */\\n" + DASHBOARD_PRESENTATION_CSS + "\n" + mode_css + "</style></head>", 1)
+            html = html.replace("</head>", "<style>/* SARGuardian responsive science dashboard */\\n" + DASHBOARD_PRESENTATION_CSS + "\n" + legacy_view_css + "\n" + mode_css + "</style></head>", 1)
 
     if not native_mode_controls and "<main>" in html and 'id="sgDashboardModes"' not in html:
         html = html.replace("<main>", "<main>\n" + DASHBOARD_MODES_MARKUP, 1)
