@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. The home page loads without configuration.
+Open http://localhost:5173. The home page loads without configuration. 
 
 For Google login and the map, copy `.env.example` to `.env.local` and fill in
 your own Firebase and Google Maps project values. Set `VITE_SARGUARDIAN_API_URL`
