@@ -33,7 +33,7 @@ def test_initial_product_pool_is_bounded_and_retries_are_receipt_gated() -> None
     retry_products = _job_block(workflow, "retry-products")
     dashboard = _job_block(workflow, "dashboard")
 
-    assert re.search(r"(?m)^\\s{6}max-parallel:\\s*15\\s*$", block), "process-products"
+    assert re.search(r"(?m)^\s{6}max-parallel:\s*15\s*$", block), "process-products"
     assert "uses: ./.github/workflows/sarguardian-aoi-product-worker.yml" in block
     assert "sarguardian-aoi-retry-plan" in workflow
     assert "needs: [manifest, process-products]" in retry_plan
@@ -91,15 +91,15 @@ def test_drive_folder_preflight_serializes_shared_ancestors_and_unique_product_p
     drive = FakeDrive()
 
     count = prepare_drive_folders(
-        _manifest(products), drive, "parent-root", "job-123", "40792194644-1"
+        _manifest(products), drive, "parent-root", "40792194644-1"
     )
 
     assert count == 3
     assert len(drive.calls) == len(set(drive.calls))
-    assert sum(name == "job-123" for _parent, name in drive.calls) == 1
-    assert sum(name == "Products" for _parent, name in drive.calls) == 1
+    assert sum(name == "SARGuardian-DataArchive" for _parent, name in drive.calls) == 1
     assert sum(name == "GUNW" for _parent, name in drive.calls) == 1
     assert sum(name == "GOFF" for _parent, name in drive.calls) == 1
+    assert sum(name == "PROVISIONAL" for _parent, name in drive.calls) == 2
     # Product-specific folders are unique, so workers create these themselves;
     # preflight is intentionally limited to shared ancestors to avoid excess API calls.
     assert not any(name.startswith("NISAR_L2_") for _parent, name in drive.calls)
@@ -111,9 +111,9 @@ def test_duplicate_manifest_product_is_rejected_before_any_drive_folder_mutation
     duplicate = _product("GUNW", "NISAR_L2_PR_GUNW_PAIR_A", "GUNW-001")
     drive = FakeDrive()
 
-    with pytest.raises(ValueError, match="DUPLICATE_OR_INCOMPLETE_PRODUCT"):
+    with pytest.raises(ValueError, match="AOI_MANIFEST_DUPLICATE_OR_INCOMPLETE_PRODUCT"):
         prepare_drive_folders(
-            _manifest([duplicate, duplicate]), drive, "parent-root", "job-123", "40792194644-1"
+            _manifest([duplicate, duplicate]), drive, "parent-root", "40792194644-1"
         )
 
     assert drive.calls == []
