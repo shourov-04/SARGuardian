@@ -1223,6 +1223,17 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                   )}
                   {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
                   {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
+                  {riverJob?.result_summary && (
+                    <>
+                      <OverlapAuditPanel summary={riverJob.result_summary} />
+                      <ScientificReadinessPanel
+                        summary={riverJob.result_summary}
+                        report={jobPreview?.report || null}
+                        jobState={riverJob.state}
+                        artifactCount={riverJob.artifact_manifest?.length || 0}
+                      />
+                    </>
+                  )}
                 </section>
               </div>
 
@@ -1230,13 +1241,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
               <div className="rs-view-panel" style={{ display: activeView === 'qa' ? 'block' : 'none' }}>
                 {riverJob?.result_summary ? (
                   <>
-                    <OverlapAuditPanel summary={riverJob.result_summary} />
-                    <ScientificReadinessPanel
-                      summary={riverJob.result_summary}
-                      report={jobPreview?.report || null}
-                      jobState={riverJob.state}
-                      artifactCount={riverJob.artifact_manifest?.length || 0}
-                    />
                     <GranuleProvenancePanel
                       source={asRecord(riverJob.result_summary.source) || (jobPreview?.report || explorerReport)?.source}
                       report={jobPreview?.report || explorerReport}
