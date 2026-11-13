@@ -66,6 +66,8 @@ GitHub Actions is a central part of the Scientific Core Engine implementation an
 
 Reviewers are invited to explore the live application with their own area of interest and observation window. GitHub Actions coordinates SARGuardian's Scientific Core Engine workflows and processing jobs; the scientific processing code is available in the public repository. Each new request can generate a fresh execution record, so the demonstration is not limited to a single historical run.
 
+**AI-assisted media disclosure:** Google AI Studio was used to prepare the voice-over, Google Flow generated illustrative video clips, and CapCut was used for final editing and synchronization. The application recordings and scientific results shown are real project material; generated clips are illustrative only.
+
 ## AI-assisted media disclosure
 
 AI-assisted tools were used for supporting presentation media: Google AI Studio was used to prepare the voice-over, Google Flow generated illustrative video clips, and CapCut was used to assemble, synchronize and finalize the edit. The website recordings, NISAR workflow screens, maps and analysis outputs shown in the demonstration come from the SARGuardian application and its project processing; generated clips are illustrative context, not scientific evidence.
