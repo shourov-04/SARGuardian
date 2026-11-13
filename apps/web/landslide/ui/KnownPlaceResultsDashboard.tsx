@@ -417,7 +417,6 @@ export function KnownPlaceResultsDashboard({
               */}
 
               <div className="known-place-generated-report">
-                <span className="result-kicker">ADVANCED SCIENCE REPORT</span>
                 <a
                   className="known-place-science-report-button"
                   href={reportUrl || undefined}
@@ -425,7 +424,7 @@ export function KnownPlaceResultsDashboard({
                   rel="noopener noreferrer"
                   aria-disabled={!reportUrl}
                 >
-                  Open Advanced Science Report ↗
+                  Advanced Science Report
                 </a>
               </div>
 

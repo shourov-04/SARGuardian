@@ -202,6 +202,14 @@
   background: linear-gradient(180deg, #5bc5f4, #1689df);
   transform: translateY(-1px);
 }
+.known-place-generated-report {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.known-place-generated-report .known-place-science-report-button {
+  margin-inline: auto;
+}
 @media (max-width: 900px) {
   .known-place-results-heading { flex-direction: column; }
   .known-place-result-actions { justify-content: flex-start; }
