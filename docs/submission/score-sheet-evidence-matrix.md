@@ -36,7 +36,7 @@ This matrix follows the supplied local judging score sheet. The five headline cr
 |---|---|
 | [API CI](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | API imports, 242 tests and Google Maps adapter contract passed |
 | [Web CI](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Production build, lint and 182 tests across 22 files passed |
-| [Latest full-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43448237561) | Exact main commit `a5c184d9307d307b8f99d89804e8569b9bc2a416`; 2,879 commits scanned, zero findings |
+| [Latest full-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43461622251) | Main commit `50d3e08eae17a68c680ced970a55bcb6a0b330c8`; 2,892 commits scanned, zero findings |
 | [Find Displacements example](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | 16/16 selected products validated; 697 spatial candidate features and 27 AOI-wide screening candidates. Neither movement nor hazard was confirmed; common GUNW temporal inversion was withheld by its science gates. |
 | [Known Place example](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Generic two-polygon workflow completed successfully |
 | [RiverShift example](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | 10 selected GCOV dates; 72 result artifacts; verified private publication; PROVISIONAL release status |
