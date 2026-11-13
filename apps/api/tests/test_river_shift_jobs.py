@@ -205,7 +205,7 @@ def test_refresh_workflow_state_does_not_patch_identical_run_metadata(monkeypatc
         "stage": "processing",
         "callback_sequence": 2,
         "github_run_id": "123456789",
-        "github_run_url": "https://github.com/moshiour0/SARGuardian-backend/actions/runs/123456789",
+        "github_run_url": "https://github.com/shourov-04/SARGuardian/actions/runs/123456789",
         "updated_at": datetime(2026, 1, 1, tzinfo=UTC),
     })
     run = {

@@ -144,51 +144,34 @@ class GitHubCancellationError(RuntimeError):
 def _configured_dispatch_inputs(
     settings: RuntimeSettings, job_id: UUID, request: CreateDisplacementJobRequest,
 ) -> dict[str, str]:
-    """Build the exact input schema required by the configured workflow file.
+    """Build the declared inputs for this repository's account dashboard workflow.
 
-    Production has two supported entry points:
-    - SARGuardian-backend's AOI dashboard workflow uses date_filter_mode,
-      run_profile, retention_profile, and requires the account fingerprint.
-    - The Dynamic wrapper uses the account-facing product_type,
-      acquisition_window, retention_mode, and processing_profile names.
-    GitHub rejects any undeclared workflow_dispatch input with HTTP 422, so
-    never send one workflow's field names to the other.
+    The primary public application dispatches to the root-level
+    sarguardian-aoi-wkt-dashboard.yml workflow in shourov-04/SARGuardian.
+    Keep this payload aligned with that workflow_dispatch schema.
     """
     workflow_name = settings.github_actions_workflow.rsplit("/", 1)[-1]
-    shared: dict[str, str] = {
+    if workflow_name != "sarguardian-aoi-wkt-dashboard.yml":
+        raise GitHubDispatchError(
+            "The configured displacement workflow must be sarguardian-aoi-wkt-dashboard.yml."
+        )
+
+    return {
         "job_id": str(job_id),
         "aoi_wkt": request.aoi_wkt,
         "start_date": request.start_date.isoformat(),
         "end_date": request.end_date.isoformat(),
         "callback_url": settings.public_api_url,
+        "request_fingerprint": request_fingerprint(request.model_dump()),
+        "date_filter_mode": request.acquisition_window,
+        "run_profile": "full-aoi-baseline" if request.processing_profile == "full-aoi" else "validation-pilot",
+        "retention_profile": request.retention_mode,
         "place_name": request.place_name or "",
         "place_latitude": "" if request.place_latitude is None else str(request.place_latitude),
         "place_longitude": "" if request.place_longitude is None else str(request.place_longitude),
         "target_latitude": "" if request.target_latitude is None else str(request.target_latitude),
         "target_longitude": "" if request.target_longitude is None else str(request.target_longitude),
     }
-    if workflow_name == "sarguardian-aoi-wkt-dashboard.yml":
-        # The stable backend dashboard workflow processes both supported
-        # product families; account requests are validated to product_type=BOTH.
-        return shared | {
-            "request_fingerprint": request_fingerprint(request.model_dump()),
-            "date_filter_mode": request.acquisition_window,
-            "run_profile": "full-aoi-baseline" if request.processing_profile == "full-aoi" else "validation-pilot",
-            "retention_profile": request.retention_mode,
-        }
-    if workflow_name == "sarguardian-displacement.yml":
-        return shared | {
-            "product_type": request.product_type,
-            "acquisition_window": request.acquisition_window,
-            "retention_mode": request.retention_mode,
-            "processing_profile": request.processing_profile,
-        }
-    raise GitHubDispatchError(
-        "The configured GitHub workflow does not match a supported account-processing contract. "
-        "Use sarguardian-aoi-wkt-dashboard.yml for the backend dashboard workflow or "
-        "sarguardian-displacement.yml for the Dynamic wrapper."
-    )
-
 
 def dispatch_workflow(settings: RuntimeSettings, job_id: UUID, request: CreateDisplacementJobRequest) -> None:
     if not settings.displacement_actions_enabled:

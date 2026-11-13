@@ -79,7 +79,7 @@ def test_known_place_dry_run_summary_preserves_release_ids_without_motion_dynami
     "repository,workflow",
     [
         ("shourov-04/SARGuardian", "know-place-aoi-dispatcher.yml"),
-        ("moshiour0/SARGuardian-backend", "know-place-paper-reproduction-dispatcher.yml"),
+        ("shourov-04/SARGuardian", "know-place-paper-reproduction-dispatcher.yml"),
     ],
 )
 def test_github_dispatch_403_explains_target_repository_permission(
@@ -667,15 +667,15 @@ def test_known_place_feature_join_keeps_same_date_pairs_in_separate_orbit_chains
 
 
 def test_generic_and_author_exact_workflows_use_independent_configured_targets(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings_with_monorepo_targets = SimpleNamespace(
+    settings_with_current_repository_targets = SimpleNamespace(
         displacement_actions_enabled=True,
         github_actions_token="test-token",
-        known_place_github_actions_repository="moshiour0/SARGuardian-Monorepo",
+        known_place_github_actions_repository="shourov-04/SARGuardian",
         known_place_github_actions_workflow="know-place-aoi-dispatcher.yml",
         known_place_github_actions_ref="main",
         known_place_paper_github_actions_repository="moshiour0/SARGuardian-Monorepo",
-        known_place_paper_github_actions_workflow="known-place-author-exact.yml",
-        known_place_paper_github_actions_ref="migration/author-exact",
+        known_place_paper_github_actions_workflow="know-place-paper-reproduction-dispatcher.yml",
+        known_place_paper_github_actions_ref="main",
     )
     requests: list[dict] = []
 
@@ -685,7 +685,7 @@ def test_generic_and_author_exact_workflows_use_independent_configured_targets(m
 
     monkeypatch.setattr(known_place, "_github_request", fake_request)
     generic = known_place.dispatch_known_place_analysis(
-        settings_with_monorepo_targets,
+        settings_with_current_repository_targets,
         known_place.KnownPlaceAnalysisRequest(**REQUEST),
     )
     paper = known_place.dispatch_known_place_paper_reproduction(
