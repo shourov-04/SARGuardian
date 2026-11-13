@@ -19,7 +19,12 @@ from .raster_io import (
     write_mask,
     write_mask_geojson,
 )
-from .water_detection import classify_open_water, otsu_threshold_db, valid_backscatter_mask
+from .water_detection import (
+    classify_open_water,
+    otsu_threshold_db,
+    otsu_threshold_diagnostics,
+    valid_backscatter_mask,
+)
 
 
 def run_water_timeseries_analysis(
@@ -72,14 +77,22 @@ def run_water_timeseries_analysis(
     if not common_valid.any():
         raise ValueError("The selected acquisitions have no common valid pixels; a comparable time series cannot be measured.")
     db_arrays = [power_to_db(array, units) for array in arrays]
+    threshold_diagnostics: dict[str, object]
     if threshold_db is None:
         if not use_otsu:
             raise ValueError("Provide threshold_db or enable Otsu.")
         values = np.concatenate([db[common_valid & np.isfinite(db)] for db in db_arrays])
         threshold_db = otsu_threshold_db(values.reshape(1, -1), np.isfinite(values).reshape(1, -1))
         threshold_method = "otsu_combined_all_observed_dates_exploratory"
+        threshold_diagnostics = otsu_threshold_diagnostics(
+            values.reshape(1, -1), np.isfinite(values).reshape(1, -1),
+        ).as_dict()
     else:
         threshold_method = "fixed_user_supplied_db_threshold"
+        threshold_diagnostics = {
+            "status": "NOT_APPLICABLE_MANUAL_THRESHOLD",
+            "interpretation": "Manual threshold supplied by caller; independent validation is still required.",
+        }
 
     min_pixels = int(np.ceil(minimum_patch_hectares * 10_000.0 / pixel_area_m2))
     out = Path(output_dir)
@@ -91,6 +104,7 @@ def run_water_timeseries_analysis(
     for index, (row, array, source_valid) in enumerate(zip(ordered, arrays, valids)):
         water = classify_open_water(
             array, common_valid, units=units, threshold_db=threshold_db, minimum_pixels=min_pixels,
+            minimum_mapping_unit_ha=minimum_patch_hectares, pixel_area_m2=pixel_area_m2,
         )
         water_area = float(water.sum() * pixel_area_m2 / 1_000_000.0)
         mask_path = out / f"water_{row['date']}_mask.tif"
@@ -122,6 +136,7 @@ def run_water_timeseries_analysis(
         for row, array in zip(ordered, arrays):
             scenario_water = classify_open_water(
                 array, common_valid, units=units, threshold_db=scenario_threshold, minimum_pixels=min_pixels,
+                minimum_mapping_unit_ha=minimum_patch_hectares, pixel_area_m2=pixel_area_m2,
             )
             scenario_frames.append({
                 "date": row["date"],
@@ -163,6 +178,7 @@ def run_water_timeseries_analysis(
             "classification": "low_backscatter_open_water_candidate_per_acquisition",
             "threshold_db": safe_float(threshold_db),
             "threshold_method": threshold_method,
+            "threshold_diagnostics": threshold_diagnostics,
             "minimum_patch_hectares": float(minimum_patch_hectares),
             "playback_semantics": "discrete observed acquisition dates; no temporal interpolation",
         },
@@ -197,5 +213,8 @@ def run_water_timeseries_analysis(
             },
         },
     }
+    from .release_status import add_release_metadata
+    result["classes"] = {"canonical_ids": ["new_water_candidate"], "legacy_output_keys": ["open_water_candidate"]}
+    add_release_metadata(result, score_available=False)
     save_json(out / "river_shift_timeseries.json", result)
     return result

@@ -298,6 +298,16 @@ def measure_bankline_migration(
         encoding="utf-8",
     )
     summary["outputs"]["bankline_geojson_sha256"] = file_sha256(geojson_path)
+    from .release_status import add_release_metadata
+    summary["classes"] = {
+        "canonical_ids": ["bankline_migration_candidate"],
+        "legacy_output_keys": ["signed_displacement_m", "mean_net_rate_m_per_year"],
+    }
+    add_release_metadata(
+        summary,
+        score_available=False,
+        validation_scope="bankline_change",
+    )
     (out / "bankline_migration_summary.json").write_text(
         json.dumps(summary, indent=2, allow_nan=False),
         encoding="utf-8",

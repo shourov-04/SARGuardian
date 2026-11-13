@@ -19,7 +19,14 @@ from .raster_io import (
     validate_gcov_series,
     gcov_source_provenance,
 )
-from .water_detection import classify_open_water, otsu_threshold_db, valid_backscatter_mask
+from .water_detection import (
+    classify_open_water,
+    otsu_threshold_db,
+    otsu_threshold_diagnostics,
+    valid_backscatter_mask,
+)
+from .calibration import check_profile_applicability, load_calibration_profile
+from .stage_context import load_stage_context
 
 
 def run_flood_analysis(
@@ -31,7 +38,11 @@ def run_flood_analysis(
     units: str,
     threshold_db: float | None,
     use_otsu: bool,
+    calibration_profile_path: str | None = None,
     permanent_water_path: str | None = None,
+    exclusion_mask_path: str | None = None,
+    stage_context_path: str | None = None,
+    stage_comparable_range: float | None = None,
     minimum_patch_hectares: float = 0.0,
     dates: dict[str, str] | None = None,
     maturity: str = "UNSPECIFIED",
@@ -52,9 +63,19 @@ def run_flood_analysis(
 
     if permanent_water_path:
         arrays["permanent"], valids["permanent"], profiles["permanent"] = read_band(permanent_water_path)
+    if exclusion_mask_path:
+        arrays["exclusion"], valids["exclusion"], profiles["exclusion"] = read_band(exclusion_mask_path)
     for key in ("before", "during", "after"):
         valids[key] = valid_backscatter_mask(arrays[key], valids[key], units=units)
     assert_same_grid(profiles)
+    exclusion_applied = False
+    exclusion_pixel_count = 0
+    if exclusion_mask_path:
+        exclusion = valids["exclusion"] & (arrays["exclusion"] > 0)
+        exclusion_pixel_count = int(exclusion.sum())
+        for key in ("before", "during", "after"):
+            valids[key] &= ~exclusion
+        exclusion_applied = True
     series_metadata, provenance_complete = validate_gcov_series(
         {"before": before_path, "during": during_path, "after": after_path},
         maturity=maturity, frequency=frequency, term=polarization_term,
@@ -68,8 +89,19 @@ def run_flood_analysis(
         ordered_dates = [date.fromisoformat(dates[key]) for key in ("before", "during", "after")]
         if not ordered_dates[0] < ordered_dates[1] < ordered_dates[2]:
             raise ValueError("Flood observations must be ordered before < during < after.")
+    stage_context = None
+    if stage_context_path:
+        if not dates:
+            raise ValueError("dates are required when stage_context_path is supplied.")
+        stage_context = load_stage_context(
+            stage_context_path,
+            dates,
+            comparable_range=stage_comparable_range,
+        )
     if threshold_db is not None and not np.isfinite(threshold_db):
         raise ValueError("threshold_db must be finite.")
+    if threshold_db is not None and calibration_profile_path:
+        raise ValueError("Provide either threshold_db or calibration_profile_path, not both.")
     if not np.isfinite(minimum_patch_hectares) or minimum_patch_hectares < 0:
         raise ValueError("minimum_patch_hectares must be finite and non-negative.")
     if not np.isfinite(sensitivity_delta_db) or sensitivity_delta_db <= 0:
@@ -83,16 +115,42 @@ def run_flood_analysis(
         [db_arrays[key][valid_common] for key in ("before", "during", "after")]
     )
     combined_valid = np.isfinite(combined)
+    threshold_diagnostics: dict[str, object]
     if threshold_db is None:
-        if not use_otsu:
-            raise ValueError("Provide threshold_db or enable Otsu.")
-        threshold_db = otsu_threshold_db(
-            combined.reshape(1, -1),
-            combined_valid.reshape(1, -1),
-        )
-        threshold_method = "otsu_combined_three_dates_exploratory"
+        if calibration_profile_path:
+            profile = load_calibration_profile(calibration_profile_path)
+            applicability = check_profile_applicability(profile, {
+                "maturity": maturity.upper(),
+                "frequency": frequency,
+                "term": polarization_term,
+                "units": units,
+            })
+            if not applicability["applicable"]:
+                raise ValueError("Calibration profile is not applicable: " + "; ".join(applicability["reasons"]))
+            threshold_db = profile.threshold_db
+            threshold_method = "pinned_reference_calibration_profile"
+            threshold_diagnostics = {
+                "status": "CALIBRATION_ONLY_NOT_VALIDATION",
+                "profile": profile.as_dict(),
+                "applicability": applicability,
+            }
+        else:
+            if not use_otsu:
+                raise ValueError("Provide threshold_db, a calibration profile, or enable Otsu.")
+            threshold_db = otsu_threshold_db(
+                combined.reshape(1, -1),
+                combined_valid.reshape(1, -1),
+            )
+            threshold_method = "otsu_combined_three_dates_exploratory"
+            threshold_diagnostics = otsu_threshold_diagnostics(
+                combined.reshape(1, -1), combined_valid.reshape(1, -1),
+            ).as_dict()
     else:
         threshold_method = "fixed_user_supplied_db_threshold"
+        threshold_diagnostics = {
+            "status": "NOT_APPLICABLE_MANUAL_THRESHOLD",
+            "interpretation": "Manual threshold supplied by caller; independent validation is still required.",
+        }
 
     min_pixels = int(np.ceil((minimum_patch_hectares * 10_000.0) / pixel_area_m2))
     water = {
@@ -102,6 +160,8 @@ def run_flood_analysis(
             units=units,
             threshold_db=threshold_db,
             minimum_pixels=min_pixels,
+            minimum_mapping_unit_ha=minimum_patch_hectares,
+            pixel_area_m2=pixel_area_m2,
         )
         for key in ("before", "during", "after")
     }
@@ -134,6 +194,7 @@ def run_flood_analysis(
             key: classify_open_water(
                 arrays[key], valids[key], units=units, threshold_db=candidate_threshold,
                 minimum_pixels=min_pixels,
+                minimum_mapping_unit_ha=minimum_patch_hectares, pixel_area_m2=pixel_area_m2,
             )
             for key in ("before", "during", "after")
         }
@@ -182,22 +243,32 @@ def run_flood_analysis(
             "event_proximal_observation": dates.get("during") if dates else None,
             "after": str(after_path),
             "permanent_water_mask": str(permanent_water_path) if permanent_water_path else None,
+            "exclusion_mask": str(exclusion_mask_path) if exclusion_mask_path else None,
             "dates": dates or {},
             "input_units": units,
+            "calibration_profile": str(calibration_profile_path) if calibration_profile_path else None,
+            "stage_context": str(stage_context_path) if stage_context_path else None,
             "input_sha256": {
                 key: sha256_file(path)
                 for key, path in {"before": before_path, "during": during_path, "after": after_path}.items()
             },
             "permanent_water_mask_sha256": sha256_file(permanent_water_path) if permanent_water_path else None,
+            "calibration_profile_sha256": sha256_file(calibration_profile_path) if calibration_profile_path else None,
+            "stage_context_sha256": sha256_file(stage_context_path) if stage_context_path else None,
+            "exclusion_mask_sha256": sha256_file(exclusion_mask_path) if exclusion_mask_path else None,
         },
         "method": {
             "classification": "low_backscatter_open_water_candidate",
             "threshold_db": safe_float(threshold_db),
             "threshold_method": threshold_method,
+            "threshold_diagnostics": threshold_diagnostics,
             "threshold_sensitivity_delta_db": float(sensitivity_delta_db),
             "threshold_sensitivity_is_statistical_confidence_interval": False,
             "minimum_patch_hectares": float(minimum_patch_hectares),
             "permanent_water_excluded": permanent_excluded,
+            "exclusion_mask_applied": exclusion_applied,
+            "exclusion_mask_pixel_count": exclusion_pixel_count,
+            "stage_context": stage_context,
         },
         "metrics": {
             "baseline_water_area_km2": baseline_area,
@@ -221,6 +292,8 @@ def run_flood_analysis(
                 "New water coverage relative to the pre-event observation is not automatically proof of floodplain inundation.",
                 "All area comparisons use only the intersection of valid positive-power pixels across the three observations.",
                 "Use comparable orbit geometry, acquisition mode, frequency, polarization, maturity and hydrological conditions.",
+                "An exclusion mask removes pixels from analysis support; it is not a terrain, layover or shadow correction unless its provenance documents that meaning.",
+                "Gauge/stage context is observational metadata only; missing or non-comparable stage does not become zero and does not establish flood peak timing.",
                 "Low-backscatter screening may miss inundated vegetation because double-bounce scattering can be bright.",
                 "Validate the water mask against independent reference data before reporting accuracy or impact claims.",
                 "Threshold sensitivity is a deterministic method-robustness check, not a statistical confidence interval or total error budget.",
@@ -247,5 +320,8 @@ def run_flood_analysis(
             "new_water_geojson_sha256": sha256_file(out / "newly_water_covered.geojson"),
         },
     }
+    from .release_status import add_release_metadata
+    result["classes"] = {"canonical_ids": ["new_water_candidate"], "legacy_output_keys": ["new_water_mask", "new_water_geojson"]}
+    add_release_metadata(result, score_available=False)
     save_json(out / "river_shift_result.json", result)
     return result

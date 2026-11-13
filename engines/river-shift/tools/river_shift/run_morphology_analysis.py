@@ -23,6 +23,7 @@ def main() -> int:
     parser.add_argument("--maturity", choices=("BETA", "PROVISIONAL"), required=True)
     parser.add_argument("--frequency", choices=("frequencyA", "frequencyB"), default="frequencyA")
     parser.add_argument("--term", choices=("HHHH", "HVHV", "VVVV", "VHVH", "RHRH", "RVRV"), required=True)
+    parser.add_argument("--minimum-patch-hectares", type=float, default=0.0, help="Optional physical minimum mapping unit; not a validation guarantee.")
     parser.add_argument("--sensitivity-delta-db", type=float, default=2.0, help="Threshold robustness range; not a confidence interval.")
     parser.add_argument("--out-dir", required=True)
     args = parser.parse_args()
@@ -44,6 +45,7 @@ def main() -> int:
             maturity=args.maturity,
             frequency=args.frequency,
             polarization_term=args.term,
+            minimum_mapping_unit_ha=args.minimum_patch_hectares,
             sensitivity_delta_db=args.sensitivity_delta_db,
         )
         metrics = result["metrics"]

@@ -21,7 +21,12 @@ from .raster_io import (
     validate_gcov_series,
     gcov_source_provenance,
 )
-from .water_detection import classify_open_water, otsu_threshold_db, valid_backscatter_mask
+from .water_detection import (
+    classify_open_water,
+    otsu_threshold_db,
+    otsu_threshold_diagnostics,
+    valid_backscatter_mask,
+)
 
 
 def _boundary(mask: np.ndarray, valid: np.ndarray | None = None) -> np.ndarray:
@@ -124,6 +129,7 @@ def run_morphology_analysis(
     frequency: str = "frequencyA",
     polarization_term: str = "HHHH",
     sensitivity_delta_db: float = 2.0,
+    minimum_mapping_unit_ha: float = 0.0,
 ) -> dict[str, Any]:
     """Screen persistent post-event water/land transitions for erosion/deposition candidates."""
     paths = {
@@ -154,6 +160,8 @@ def run_morphology_analysis(
         raise ValueError("threshold_db must be finite.")
     if not np.isfinite(sensitivity_delta_db) or sensitivity_delta_db <= 0:
         raise ValueError("sensitivity_delta_db must be finite and greater than zero.")
+    if not np.isfinite(minimum_mapping_unit_ha) or minimum_mapping_unit_ha < 0:
+        raise ValueError("minimum_mapping_unit_ha must be finite and non-negative.")
 
     pixel_area_m2 = require_projected_metre_grid(profiles["before"])
     valid = valids["before"] & valids["post_one"] & valids["post_two"]
@@ -162,17 +170,30 @@ def run_morphology_analysis(
     db_arrays = {key: power_to_db(arrays[key], units) for key in paths}
     combined = np.concatenate([db_arrays[key][valid] for key in paths])
     combined_valid = np.isfinite(combined)
+    threshold_diagnostics: dict[str, object]
     if threshold_db is None:
         if not use_otsu:
             raise ValueError("Provide threshold_db or enable Otsu.")
         threshold_db = otsu_threshold_db(combined.reshape(1, -1), combined_valid.reshape(1, -1))
         threshold_method = "otsu_combined_three_dates_exploratory"
+        threshold_diagnostics = otsu_threshold_diagnostics(
+            combined.reshape(1, -1), combined_valid.reshape(1, -1),
+        ).as_dict()
     else:
         threshold_method = "fixed_user_supplied_db_threshold"
+        threshold_diagnostics = {
+            "status": "NOT_APPLICABLE_MANUAL_THRESHOLD",
+            "interpretation": "Manual threshold supplied by caller; independent validation is still required.",
+        }
 
     water = {
         key: classify_open_water(
-            arrays[key], valids[key], units=units, threshold_db=threshold_db
+            arrays[key],
+            valids[key],
+            units=units,
+            threshold_db=threshold_db,
+            minimum_mapping_unit_ha=minimum_mapping_unit_ha,
+            pixel_area_m2=pixel_area_m2,
         )
         for key in paths
     }
@@ -201,7 +222,14 @@ def run_morphology_analysis(
     for offset_db in (-sensitivity_delta_db, -sensitivity_delta_db / 2, 0.0, sensitivity_delta_db / 2, sensitivity_delta_db):
         candidate_threshold = float(threshold_db + offset_db)
         scenario_water = {
-            key: classify_open_water(arrays[key], valids[key], units=units, threshold_db=candidate_threshold)
+            key: classify_open_water(
+                arrays[key],
+                valids[key],
+                units=units,
+                threshold_db=candidate_threshold,
+                minimum_mapping_unit_ha=minimum_mapping_unit_ha,
+                pixel_area_m2=pixel_area_m2,
+            )
             for key in paths
         }
         scenario_stable_water = scenario_water["post_one"] & scenario_water["post_two"] & valid
@@ -258,6 +286,8 @@ def run_morphology_analysis(
             "classification": "persistent_two_post_observation_water_land_transition",
             "threshold_db": safe_float(threshold_db),
             "threshold_method": threshold_method,
+            "threshold_diagnostics": threshold_diagnostics,
+            "minimum_mapping_unit_ha": float(minimum_mapping_unit_ha),
             "threshold_sensitivity_delta_db": float(sensitivity_delta_db),
             "threshold_sensitivity_is_statistical_confidence_interval": False,
             "post_observations_required": 2,
@@ -308,5 +338,14 @@ def run_morphology_analysis(
             "deposition_geojson_sha256": sha256_file(out / "deposition_candidates.geojson"),
         },
     }
+    from .release_status import add_release_metadata
+    result["classes"] = {
+        "canonical_ids": [
+            "persistent_land_to_water_transition_candidate",
+            "persistent_water_to_land_transition_candidate",
+        ],
+        "legacy_output_keys": ["erosion_mask", "deposition_mask", "erosion_geojson", "deposition_geojson"],
+    }
+    add_release_metadata(result, score_available=False, validation_scope="bankline_change")
     save_json(out / "river_shift_result.json", result)
     return result

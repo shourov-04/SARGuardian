@@ -19,8 +19,12 @@ def main() -> int:
     threshold = parser.add_mutually_exclusive_group(required=True)
     threshold.add_argument("--threshold-db", type=float, help="User-selected common threshold in dB.")
     threshold.add_argument("--otsu", action="store_true", help="Exploratory common Otsu threshold over all three dates.")
+    threshold.add_argument("--calibration-profile", help="Pinned reference-calibration JSON profile; applicability is checked fail-closed.")
     parser.add_argument("--input-units", choices=("linear", "db"), default="linear")
     parser.add_argument("--permanent-water-mask", help="Optional aligned binary mask: 1=permanent water.")
+    parser.add_argument("--exclusion-mask", help="Optional aligned binary mask: non-zero pixels are excluded from analysis support.")
+    parser.add_argument("--stage-context", help="Optional CSV/JSON gauge context with date and stage fields; no interpolation is performed.")
+    parser.add_argument("--stage-comparable-range", type=float, help="Optional declared maximum stage range for comparability reporting.")
     parser.add_argument("--minimum-patch-hectares", type=float, default=0.0)
     parser.add_argument("--maturity", choices=("BETA", "PROVISIONAL"), required=True)
     parser.add_argument("--frequency", choices=("frequencyA", "frequencyB"), default="frequencyA")
@@ -40,7 +44,11 @@ def main() -> int:
             units=args.input_units,
             threshold_db=args.threshold_db,
             use_otsu=args.otsu,
+            calibration_profile_path=args.calibration_profile,
             permanent_water_path=args.permanent_water_mask,
+            exclusion_mask_path=args.exclusion_mask,
+            stage_context_path=args.stage_context,
+            stage_comparable_range=args.stage_comparable_range,
             minimum_patch_hectares=args.minimum_patch_hectares,
             dates={
                 "before": args.before_date,

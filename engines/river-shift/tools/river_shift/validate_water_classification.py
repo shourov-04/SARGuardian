@@ -32,8 +32,10 @@ def main() -> int:
             random_seed=args.random_seed,
         )
         save_validation_report(result, args.out)
-        print(f"F1_SCORE={result['metrics']['f1_score']:.4f}")
-        print(f"IOU={result['metrics']['intersection_over_union']:.4f}")
+        for label, name in (("F1_SCORE", "f1_score"), ("IOU", "intersection_over_union")):
+            value = result["metrics"].get(name)
+            print(f"{label}={value if value is None else f'{value:.4f}'}")
+        print(f"RIVERSHIFT_RELEASE_STATUS={result['release_status']}")
         print(f"VALIDATION_REPORT={args.out}")
         return 0
     except Exception as exc:

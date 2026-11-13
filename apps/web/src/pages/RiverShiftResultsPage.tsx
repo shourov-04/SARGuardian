@@ -4,7 +4,9 @@ import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import { downloadRiverShiftArtifact, getRiverShiftJob, listRiverShiftJobs, type RiverShiftJob } from '../api/catalog';
 import type { RiverShiftGeoJSON, RiverShiftReport, RiverShiftTimeSeriesFrame } from '../riverShift/manifest';
 import { countRiverShiftCandidateLayers, filterRiverShiftCandidateGeoJSON, getRiverShiftOverlapAuditAvailability, isRiverShiftGeoJSONApproved, isRiverShiftReportVerified, isRiverShiftTimeSeriesGeoJSONApproved, limitRiverShiftDisplayGeoJSON, parseRiverShiftGeoJSON, parseRiverShiftReport } from '../riverShift/manifest';
-import { parseWktPolygon } from '../riverShift/aoi';
+import { parseWktPolygon, type Wgs84Point } from '../riverShift/aoi';
+import { deriveGeneralChangeMarkers } from '../riverShift/generalChangeMarkers';
+import { deriveImpactMapPoints, parseImpactExposureGeoJSON, parseOpenStreetMapImpactResponse, summarizeImpactExposure, type ImpactExposurePointCollection } from '../riverShift/impactContext';
 import { Header } from '../components/Header';
 import './river-shift.css';
 
@@ -22,143 +24,6 @@ type LoadedJobFrame = { jobId: string; date: string; data: RiverShiftGeoJSON };
 
 const GOOGLE_MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 let mapsConfigured = false;
-
-const RIVER_SHIFT_RASTER_SIZE = 1200;
-
-const RIVER_SHIFT_DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: '#182b38' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#b9d4df' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#182b38' }] },
-  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#3b5a68' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#203944' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304957' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#192c38' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0b2534' }] },
-];
-
-type CoordinatePair = [number, number];
-type RasterBounds = { north: number; south: number; east: number; west: number };
-
-function collectRiverShiftCoordinates(value: unknown, output: CoordinatePair[]): void {
-  if (!Array.isArray(value)) return;
-  if (value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
-    if (Number.isFinite(value[0]) && Number.isFinite(value[1])) output.push([value[0], value[1]]);
-    return;
-  }
-  value.forEach((child) => collectRiverShiftCoordinates(child, output));
-}
-
-function riverShiftRasterColour(properties?: Record<string, unknown>): string {
-  const labels = [properties?.river_shift_layer, properties?.class, properties?.change_class,
-    properties?.change_type, properties?.candidate_type]
-    .filter((value): value is string => typeof value === 'string')
-    .map((value) => value.toLowerCase().replace(/[\s-]+/g, '_')).join('_');
-  if (labels.includes('erosion')) return '#f06a6a';
-  if (labels.includes('deposition') || labels.includes('accretion')) return '#48c774';
-  if (labels.includes('new_water') || labels.includes('newly_water') || labels.includes('water_covered')) return '#4ea8de';
-  if (labels.includes('open_water') || labels.includes('water')) return '#73b3df';
-  return '#9aafbb';
-}
-
-function riverShiftRasterAlpha(properties?: Record<string, unknown>): number {
-  return properties?.preview_sparse_marker === true ? 0.98 : 0.5;
-}
-
-function drawRiverShiftRasterGeometry(
-  context: CanvasRenderingContext2D,
-  geometry: RiverShiftGeoJSON['features'][number]['geometry'],
-  properties: Record<string, unknown> | undefined,
-  project: (pair: CoordinatePair) => [number, number],
-): void {
-  const colour = riverShiftRasterColour(properties);
-  const alpha = riverShiftRasterAlpha(properties);
-  const drawPoint = (pair: CoordinatePair, radius = 4) => {
-    const [x, y] = project(pair);
-    context.beginPath();
-    context.arc(x, y, radius, 0, Math.PI * 2);
-    context.fillStyle = colour;
-    context.globalAlpha = alpha;
-    context.fill();
-    context.strokeStyle = 'rgba(255, 255, 255, 0.82)';
-    context.lineWidth = 0.8;
-    context.stroke();
-  };
-  const drawRing = (ring: unknown, fill: boolean) => {
-    if (!Array.isArray(ring)) return;
-    const pairs: CoordinatePair[] = [];
-    ring.forEach((pair) => {
-      if (Array.isArray(pair) && typeof pair[0] === 'number' && typeof pair[1] === 'number') {
-        pairs.push([pair[0], pair[1]]);
-      }
-    });
-    if (pairs.length < 2) return;
-    context.beginPath();
-    pairs.forEach((pair, index) => {
-      const [x, y] = project(pair);
-      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
-    });
-    context.closePath();
-    context.globalAlpha = fill ? alpha * 0.65 : alpha;
-    context.fillStyle = colour;
-    context.strokeStyle = colour;
-    context.lineWidth = 1.2;
-    if (fill) context.fill();
-    context.stroke();
-  };
-
-  context.globalAlpha = 1;
-  if (geometry.type === 'Point') {
-    const points: CoordinatePair[] = [];
-    collectRiverShiftCoordinates(geometry.coordinates, points);
-    points.forEach((pair) => drawPoint(pair, 5));
-  } else if (geometry.type === 'MultiPoint') {
-    const points: CoordinatePair[] = [];
-    collectRiverShiftCoordinates(geometry.coordinates, points);
-    points.forEach((pair) => drawPoint(pair));
-  } else if (geometry.type === 'Polygon') {
-    (Array.isArray(geometry.coordinates) ? geometry.coordinates : []).forEach((ring) => drawRing(ring, true));
-  } else if (geometry.type === 'MultiPolygon') {
-    (Array.isArray(geometry.coordinates) ? geometry.coordinates : []).forEach((polygon) => {
-      if (Array.isArray(polygon)) polygon.forEach((ring) => drawRing(ring, true));
-    });
-  } else if (geometry.type === 'LineString' || geometry.type === 'MultiLineString') {
-    const lines = geometry.type === 'LineString' ? [geometry.coordinates] : geometry.coordinates;
-    (Array.isArray(lines) ? lines : []).forEach((line) => drawRing(line, false));
-  }
-  context.globalAlpha = 1;
-}
-
-function renderRiverShiftRaster(layers: RiverShiftGeoJSON[]): {
-  url: string;
-  bounds: RasterBounds;
-} | null {
-  const coordinates: CoordinatePair[] = [];
-  layers.forEach((layer) => layer.features.forEach((feature) => collectRiverShiftCoordinates(feature.geometry.coordinates, coordinates)));
-  if (!coordinates.length) return null;
-  const west = Math.min(...coordinates.map(([longitude]) => longitude));
-  const east = Math.max(...coordinates.map(([longitude]) => longitude));
-  const south = Math.min(...coordinates.map(([, latitude]) => latitude));
-  const north = Math.max(...coordinates.map(([, latitude]) => latitude));
-  const longitudeSpan = Math.max(east - west, 0.000001);
-  const latitudeSpan = Math.max(north - south, 0.000001);
-  const rasterScale = RIVER_SHIFT_RASTER_SIZE / Math.max(longitudeSpan, latitudeSpan);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.ceil(longitudeSpan * rasterScale));
-  canvas.height = Math.max(1, Math.ceil(latitudeSpan * rasterScale));
-  const context = canvas.getContext('2d');
-  if (!context) return null;
-  const project = ([longitude, latitude]: CoordinatePair): [number, number] => [
-    ((longitude - west) / longitudeSpan) * canvas.width,
-    ((north - latitude) / latitudeSpan) * canvas.height,
-  ];
-  layers.forEach((layer) => layer.features.forEach((feature) => {
-    drawRiverShiftRasterGeometry(context, feature.geometry, feature.properties, project);
-  }));
-  return {
-    url: canvas.toDataURL('image/png'),
-    bounds: { north, south, east, west },
-  };
-}
 
 function metricLabel(key: string): string {
   const names: Record<string, string> = {
@@ -306,6 +171,7 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
   const verificationRecord = verification && typeof verification === 'object'
     ? verification as Record<string, unknown>
     : null;
+  const warnings = report.quality.warnings || [];
   const title = report.analysis_type === 'river_change_scan'
     ? 'General river change scan'
     : report.analysis_type === 'flood_inundation_screening'
@@ -319,9 +185,21 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
         : 'Bankline migration measurement';
   const source = report.source;
   return (
-    <section className="rs-panel">
+    <section className="rs-report-panel">
       <div className="rs-section-heading">
         <div><p className="rs-kicker">RIVER SHIFT SCIENTIFIC RESULT</p><h2>{title}</h2></div>
+        <span className="rs-quality">{report.quality.status.replace(/_/g, ' ')}</span>
+      </div>
+      <div className="rs-provenance">
+        <span>Mission: <strong>{String(source.mission || 'Not stated')}</strong></span>
+        <span>Product: <strong>{String(source.product || 'Not stated')}</strong></span>
+        <span>Maturity: <strong>{String(source.maturity || 'Not stated')}</strong></span>
+        <span>Frequency: <strong>{String(source.frequency || 'Not stated')}</strong></span>
+        <span>Term: <strong>{String(source.covariance_term || 'Not stated')}</strong></span>
+      </div>
+      <div className="rs-warning-inline" role="status">
+        Release status: <strong>{String(report.quality.release_status || 'PROVISIONAL')}</strong>
+        {!verified && <span> · The metrics and map are provisional evidence, not independently validated findings.</span>}
       </div>
       <div className="rs-metric-grid">
         {Object.entries(report.metrics).map(([key, value]) => (
@@ -338,11 +216,29 @@ function ReportPanel({ report }: { report: RiverShiftReport }) {
           <p>Evidence: {String(verificationRecord.evidence_reference)}</p>
         </div>
       )}
+      <div className="rs-warning-list">
+        <strong>Input provenance</strong>
+        <p>Granules: {Array.isArray(source.granule_names) && source.granule_names.length ? source.granule_names.join(', ') : 'No NISAR granule IDs recorded'}</p>
+        <p>Source checksums: {Array.isArray(source.source_granule_sha256) && source.source_granule_sha256.length ? source.source_granule_sha256.join(', ') : 'No source product checksums recorded'}</p>
+        {report.inputs && <p>Input checksums: {JSON.stringify(report.inputs.input_sha256 || 'Not recorded')}</p>}
+      </div>
       {report.reference && (
         <div className="rs-reference">
           Reference: <strong>{String(report.reference.source || 'Not stated')}</strong>
           <span>{String(report.reference.date || 'Date not stated')}</span>
           <p>{String(report.reference.method || 'Reference method not stated')}</p>
+        </div>
+      )}
+      {report.uncertainty && (
+        <details className="rs-reference">
+          <summary>Uncertainty and sensitivity details</summary>
+          <pre>{JSON.stringify(report.uncertainty, null, 2)}</pre>
+        </details>
+      )}
+      {warnings.length > 0 && (
+        <div className="rs-warning-list">
+          <strong>Scientific interpretation and limitations</strong>
+          {warnings.map((warning, index) => <p key={index}>• {warning}</p>)}
         </div>
       )}
     </section>
@@ -400,11 +296,11 @@ function ScientificReadinessPanel({
     },
   ];
   return (
-    <details className="rs-readiness-panel" aria-label="Scientific validation readiness">
-      <summary className="rs-section-heading">
+    <section className="rs-readiness-panel" aria-label="Scientific validation readiness">
+      <div className="rs-section-heading">
         <div><p className="rs-kicker">VALIDATION READINESS</p><h3>What has passed — and what has not</h3></div>
         <span className="rs-chip">{releaseStatus}</span>
-      </summary>
+      </div>
       <div className="rs-readiness-list">
         {rows.map((row) => (
           <div className="rs-readiness-row" key={row.label}>
@@ -414,7 +310,7 @@ function ScientificReadinessPanel({
         ))}
       </div>
       <p className="rs-overlay-note">A processing PASS and an overlap-audit PASS do not establish physical change or model accuracy. VERIFIED requires an eligible independent reference, complete provenance and a signed review record.</p>
-    </details>
+    </section>
   );
 }
 
@@ -423,7 +319,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [jobLoading, setJobLoading] = useState(true);
   const [jobError, setJobError] = useState('');
   const [report, setReport] = useState<RiverShiftReport | null>(null);
+  const [reportError, setReportError] = useState('');
   const [geoJSONFiles, setGeoJSONFiles] = useState<LoadedGeoJSON[]>([]);
+  const [geoJSONError, setGeoJSONError] = useState('');
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
 
@@ -433,20 +331,27 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [jobFrame, setJobFrame] = useState<LoadedJobFrame | null>(null);
   const [jobTimeSeriesIndex, setJobTimeSeriesIndex] = useState(0);
   const [jobTimeSeriesPlaying, setJobTimeSeriesPlaying] = useState(false);
+  const [showGeneralChangeMarkers, setShowGeneralChangeMarkers] = useState(false);
   const [showErosionOverlay, setShowErosionOverlay] = useState(true);
   const [showDepositionOverlay, setShowDepositionOverlay] = useState(true);
   const [showNewWaterOverlay, setShowNewWaterOverlay] = useState(true);
   const [showObservedWaterExtent, setShowObservedWaterExtent] = useState(true);
-  const [mapDarkMode, setMapDarkMode] = useState(false);
-  const [mapLabelsVisible, setMapLabelsVisible] = useState(false);
-  const [mapType, setMapType] = useState('satellite');
 
+  const [impactExposure, setImpactExposure] = useState<{ fileName: string; data: ImpactExposurePointCollection } | null>(null);
+  const [impactExposureError, setImpactExposureError] = useState('');
+  const [impactFetchBusy, setImpactFetchBusy] = useState(false);
+  const [impactFetchError, setImpactFetchError] = useState('');
+  const [impactFetchNotice, setImpactFetchNotice] = useState('');
+  const [impactSourceName, setImpactSourceName] = useState('');
+  const [impactSourceUrl, setImpactSourceUrl] = useState('');
+  const [impactSourceVintage, setImpactSourceVintage] = useState('');
+  const [impactValueField, setImpactValueField] = useState('');
+  const [showImpactMapMarkers, setShowImpactMapMarkers] = useState(true);
 
   const resultMapElement = useRef<HTMLDivElement>(null);
   const resultMapInstance = useRef<google.maps.Map | null>(null);
   const resultMapFitKey = useRef('');
   const resultAoiPolygon = useRef<google.maps.Polygon | null>(null);
-  const resultRasterOverlay = useRef<google.maps.GroundOverlay | null>(null);
 
   // Restore or load the latest job
   useEffect(() => {
@@ -514,6 +419,11 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     && (jobPreview.changeLayer || currentJobFrame));
   const activeJobPreview = jobPreview && riverJobId && jobPreview.jobId === riverJobId ? jobPreview : null;
   const isGeneralScanJob = Boolean(riverJob?.state === 'succeeded' && riverJob.analysis_mode === 'general_scan');
+  const generalChangeMarkers = useMemo(() => (
+    isGeneralScanJob && showGeneralChangeMarkers && activeJobPreview?.changeLayer
+      ? deriveGeneralChangeMarkers(activeJobPreview.changeLayer.data)
+      : []
+  ), [isGeneralScanJob, showGeneralChangeMarkers, activeJobPreview?.changeLayer]);
 
   const hasLiveJobResult = Boolean(riverJob?.state === 'succeeded' && activeJobPreview
     && (activeJobPreview.report || activeJobPreview.changeLayer));
@@ -556,6 +466,41 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     || (jobPreview?.report?.analysis_type === 'water_timeseries_screening' && jobTimeSeriesFrames.length > 0),
   );
   const hasVerifiedOverlay = verifiedGeoJSONFiles.length > 0;
+
+  const safeImpactSourceUrl = useMemo(() => {
+    const raw = impactSourceUrl.trim();
+    if (!raw) return '';
+    try {
+      const parsed = new URL(raw);
+      return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? parsed.toString() : '';
+    } catch {
+      return '';
+    }
+  }, [impactSourceUrl]);
+
+  const impactCandidateLayers = useMemo(() => {
+    if (activeJobPreview?.changeLayer) return [activeJobPreview.changeLayer.data];
+    if (verifiedGeoJSONFiles.length) return verifiedGeoJSONFiles.map((file) => file.data);
+    return [];
+  }, [activeJobPreview?.changeLayer, verifiedGeoJSONFiles]);
+
+  const impactMapPoints = useMemo(() => (
+    impactExposure && safeImpactSourceUrl
+      ? deriveImpactMapPoints(impactExposure.data)
+      : []
+  ), [impactExposure, safeImpactSourceUrl]);
+
+  const impactMapOmittedPoints = impactExposure
+    ? Math.max(0, impactExposure.data.features.reduce((total, feature) => (
+      total + (feature.geometry.type === 'Point' ? 1 : feature.geometry.coordinates.length)
+    ), 0) - impactMapPoints.length)
+    : 0;
+
+  const impactSummary = useMemo(() => (
+    impactExposure && impactSourceName.trim() && safeImpactSourceUrl
+      ? summarizeImpactExposure(impactCandidateLayers, impactExposure.data, impactValueField)
+      : null
+  ), [impactExposure, impactSourceName, safeImpactSourceUrl, impactCandidateLayers, impactValueField]);
 
   useEffect(() => {
     if (!user || riverJob?.state !== 'succeeded' || !riverJob.artifact_manifest?.length) {
@@ -652,7 +597,86 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     return () => { cancelled = true; };
   }, [riverJobId, riverJobArtifactManifest, user, currentJobFrameDate, currentJobFrameGeoJSON, currentJobFrameSHA256, jobFrameJobId, jobFrameDate]);
 
-  /*
+  const saveRiverArtifact = async (artifactIndex: number, fileName: string) => {
+    if (!riverJob || !user) return;
+    setJobError('');
+    try {
+      const blob = await downloadRiverShiftArtifact(riverJob.id, artifactIndex, user);
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      setJobError(error instanceof Error ? error.message : 'Could not download this private result.');
+    }
+  };
+
+  const loadReport = async (file?: File) => {
+    if (!file) return;
+    setReportError('');
+    setReport(null);
+    setGeoJSONFiles([]);
+    resetImpactContext();
+    setTimeSeriesIndex(0);
+    setTimeSeriesPlaying(false);
+    try {
+      const payload = JSON.parse(await file.text()) as unknown;
+      setReport(parseRiverShiftReport(payload));
+    } catch (error) {
+      setReportError(error instanceof Error ? error.message : 'Could not read the result JSON.');
+    }
+  };
+
+  const loadGeoJSONFiles = async (files?: FileList | File[]) => {
+    if (!files || !files.length) return;
+    setGeoJSONError('');
+    resetImpactContext();
+    try {
+      const loaded = await Promise.all(Array.from(files).map(async (file) => {
+        const bytes = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        const sha256 = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+        const payload = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+        return { fileName: file.name, sha256, data: parseRiverShiftGeoJSON(payload) };
+      }));
+      setGeoJSONFiles(loaded);
+      setTimeSeriesIndex(0);
+      setTimeSeriesPlaying(false);
+    } catch (error) {
+      setGeoJSONError(error instanceof Error ? error.message : 'Could not read the GeoJSON.');
+    }
+  };
+
+  const resetImpactContext = () => {
+    setImpactExposure(null);
+    setImpactExposureError('');
+    setImpactFetchError('');
+    setImpactFetchNotice('');
+    setImpactSourceName('');
+    setImpactSourceUrl('');
+    setImpactSourceVintage('');
+    setImpactValueField('');
+    setShowImpactMapMarkers(true);
+  };
+
+  const loadImpactExposure = async (file?: File) => {
+    if (!file) return;
+    setImpactExposureError('');
+    if (file.size > 20 * 1024 * 1024) {
+      setImpactExposureError('Impact context GeoJSON must be 20 MB or smaller.');
+      return;
+    }
+    try {
+      const parsed = parseImpactExposureGeoJSON(JSON.parse(await file.text()) as unknown);
+      setImpactExposure({ fileName: file.name, data: parsed });
+    } catch (error) {
+      setImpactExposure(null);
+      setImpactExposureError(error instanceof Error ? error.message : 'Could not read the exposure GeoJSON.');
+    }
+  };
+
   const fetchOpenStreetMapImpactContext = async () => {
     setImpactFetchError('');
     setImpactFetchNotice('');
@@ -715,7 +739,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       setImpactFetchBusy(false);
     }
   };
-  */
 
   useEffect(() => {
     if (!GOOGLE_MAPS_KEY) {
@@ -736,12 +759,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         mapTypeId: 'satellite',
         streetViewControl: false,
         mapTypeControl: true,
-        mapTypeControlOptions: {
-          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-          mapTypeIds: ['roadmap', 'terrain', 'satellite'],
-        },
         fullscreenControl: true,
-        gestureHandling: 'greedy',
       };
       if (resultMapElement.current && !resultMapInstance.current) {
         resultMapInstance.current = new maps.Map(resultMapElement.current, mapOptions);
@@ -752,31 +770,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     });
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    if (!mapReady) return;
-    const map = resultMapInstance.current;
-    if (!map) return;
-    const syncMapType = () => {
-      const nextType = String(map.getMapTypeId() || 'satellite');
-      setMapType(nextType);
-      if (nextType === 'satellite') setMapLabelsVisible(false);
-      if (nextType === 'hybrid') setMapLabelsVisible(true);
-    };
-    syncMapType();
-    const listener = map.addListener('maptypeid_changed', syncMapType);
-    return () => listener.remove();
-  }, [mapReady]);
-
-  useEffect(() => {
-    if (!mapReady) return;
-    const map = resultMapInstance.current;
-    if (!map) return;
-    const isImagery = mapType === 'satellite' || mapType === 'hybrid';
-    const styles = mapDarkMode ? [...RIVER_SHIFT_DARK_MAP_STYLES] : [];
-    if (!mapLabelsVisible) styles.push({ elementType: 'labels', stylers: [{ visibility: 'off' }] });
-    map.setOptions({ styles: isImagery ? null : styles });
-  }, [mapReady, mapDarkMode, mapLabelsVisible, mapType]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -807,8 +800,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     if (!mapReady) return;
     const map = resultMapInstance.current;
     if (!map) return;
-    resultRasterOverlay.current?.setMap(null);
-    resultRasterOverlay.current = null;
+    map.data.forEach((feature) => map.data.remove(feature));
     const displayLayers = hasJobPreviewOverlay && jobPreview && riverJobId && jobPreview.jobId === riverJobId
       ? [
         jobPreview.changeLayer
@@ -819,18 +811,107 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       : currentTimeSeriesFrame
         ? (showObservedWaterExtent ? [currentTimeSeriesFrame.data] : [])
         : verifiedGeoJSONFiles.map((file) => filterRiverShiftCandidateGeoJSON(file.data, candidateOverlayVisibility));
-    const rasterLayers = displayLayers.map((layer) => limitRiverShiftDisplayGeoJSON(layer));
-    const raster = renderRiverShiftRaster(rasterLayers);
-    const bounds = new google.maps.LatLngBounds();
-    if (raster) {
-      resultRasterOverlay.current = new google.maps.GroundOverlay(raster.url, raster.bounds, {
-        clickable: false,
-        opacity: 1,
-      });
-      resultRasterOverlay.current.setMap(map);
-      bounds.extend({ lat: raster.bounds.south, lng: raster.bounds.west });
-      bounds.extend({ lat: raster.bounds.north, lng: raster.bounds.east });
+    displayLayers.forEach((layer) => map.data.addGeoJson(limitRiverShiftDisplayGeoJSON(layer) as unknown as object));
+    if (isGeneralScanJob && showGeneralChangeMarkers && generalChangeMarkers.length > 0) {
+      map.data.addGeoJson({
+        type: 'FeatureCollection',
+        features: generalChangeMarkers.map((marker) => ({
+          type: 'Feature',
+          properties: {
+            general_change_marker: true,
+            marker_change_type: marker.changeType,
+            marker_id: marker.id,
+          },
+          geometry: { type: 'Point', coordinates: [marker.longitude, marker.latitude] },
+        })),
+      } as unknown as object);
     }
+    if (impactExposure && showImpactMapMarkers && impactMapPoints.length > 0 && safeImpactSourceUrl) {
+      map.data.addGeoJson({
+        type: 'FeatureCollection',
+        features: impactMapPoints.map((point) => ({
+          type: 'Feature',
+          properties: {
+            impact_context_marker: true,
+            impact_point_id: point.id,
+          },
+          geometry: { type: 'Point', coordinates: [point.longitude, point.latitude] },
+        })),
+      } as unknown as object);
+    }
+    map.data.setStyle((feature) => {
+      const geometryType = feature.getGeometry()?.getType();
+      const rawName = String(feature.getProperty('layer_name') || feature.getProperty('name') || '');
+      const name = rawName.toLowerCase();
+      const isObservedOpenWater = feature.getProperty('observed_open_water') === true
+        || feature.getProperty('water_body') === true
+        || /water_\d{4}-\d{2}-\d{2}/.test(name)
+        || name.includes('open_water');
+      const changeClass = String(feature.getProperty('change_class') || feature.getProperty('class') || '').toLowerCase();
+      const markerType = String(feature.getProperty('marker_change_type') || '');
+      const colour = markerType === 'erosion' ? '#ff6b6b'
+        : markerType === 'deposition' ? '#51cf66'
+        : markerType === 'new_water' ? '#339af0'
+        : changeClass === 'erosion' ? '#f06a6a'
+        : changeClass === 'deposition' ? '#48c774'
+        : changeClass === 'new_water' ? '#4ea8de'
+        : name.includes('erosion') ? '#e76f51'
+        : name.includes('deposition') ? '#2a9d8f'
+        : name.includes('new_water') || name.includes('newly_water') || name.includes('water_covered') ? '#53b9f4'
+        : isObservedOpenWater ? '#73b3df' : '#9aafbb';
+      if (geometryType === 'Point' && feature.getProperty('impact_context_marker') === true) {
+        return {
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 4.2,
+            fillColor: '#ffd166',
+            fillOpacity: 1,
+            strokeColor: '#263238',
+            strokeWeight: 1.2,
+          },
+          zIndex: 1100,
+        };
+      }
+      if ((geometryType === 'Point' || geometryType === 'MultiPoint')
+        && feature.getProperty('preview_sparse_marker') === true) {
+        return {
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 3.5,
+            fillColor: colour,
+            fillOpacity: 0.95,
+            strokeColor: '#ffffff',
+            strokeWeight: 0.8,
+          },
+          zIndex: 900,
+        };
+      }
+      if (geometryType === 'Point' && feature.getProperty('general_change_marker') === true) {
+        return {
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 7.5,
+            fillColor: colour,
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 1.5,
+          },
+          zIndex: 1000,
+        };
+      }
+      return {
+        fillColor: colour,
+        strokeColor: colour,
+        fillOpacity: isObservedOpenWater ? 0.14 : isGeneralScanJob ? 0.42 : 0.34,
+        strokeOpacity: isObservedOpenWater ? 0.72 : 0.95,
+        strokeWeight: isObservedOpenWater ? 1.2 : isGeneralScanJob ? 2.4 : 2,
+      };
+    });
+    const bounds = new google.maps.LatLngBounds();
+    map.data.forEach((feature) => {
+      const geometry = feature.getGeometry();
+      if (geometry) geometry.forEachLatLng((point) => bounds.extend(point));
+    });
     if (isGeneralScanJob && riverJob?.aoi_wkt) {
       try {
         parseWktPolygon(riverJob.aoi_wkt).slice(0, -1)
@@ -846,10 +927,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       map.fitBounds(bounds);
       resultMapFitKey.current = overlayFitKey;
     }
-    return () => {
-      resultRasterOverlay.current?.setMap(null);
-      resultRasterOverlay.current = null;
-    };
   }, [
     mapReady,
     hasJobPreviewOverlay,
@@ -861,6 +938,12 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     currentTimeSeriesFrame,
     verifiedGeoJSONFiles,
     isGeneralScanJob,
+    showGeneralChangeMarkers,
+    generalChangeMarkers,
+    impactExposure,
+    showImpactMapMarkers,
+    impactMapPoints,
+    safeImpactSourceUrl,
     riverJob?.aoi_wkt,
     report?.analysis_type,
   ]);
@@ -906,10 +989,21 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         onSignIn={onSignIn}
         onSignOut={onSignOut}
         isArchivePage
-        hideProfile
+        hideProfile={false}
         showPageTitle
         pageTitle="River Shift Results"
       />
+
+      <div style={{ maxWidth: 1440, margin: '20px auto 0', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button type="button" className="rs-secondary-button" onClick={onBack} style={{ cursor: 'pointer' }}>
+          ← Back to processing
+        </button>
+        {riverJob && (
+          <span className="rs-chip">
+            JOB: {riverJob.id.slice(0, 8)}… · {riverJob.state.toUpperCase()}
+          </span>
+        )}
+      </div>
 
       <main className="rs-workspace-grid" style={{ marginTop: '16px' }}>
         {jobLoading && (
@@ -922,10 +1016,6 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           <section className="rs-panel" role="alert">
             <p className="rs-error">{jobError}</p>
           </section>
-        )}
-
-        {explorerReport && (
-          <ReportPanel report={explorerReport} />
         )}
 
         {riverJob?.state === 'succeeded' && (
@@ -958,24 +1048,75 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                       onChange={(event) => { setJobTimeSeriesPlaying(false); setJobTimeSeriesIndex(Number(event.target.value)); }} />
                   </label>
                 </div>
+                {riverJob.analysis_mode === 'general_scan' && (
+                  <div className="rs-marker-control">
+                    <label className="rs-marker-toggle">
+                      <input
+                        type="checkbox"
+                        checked={showGeneralChangeMarkers}
+                        disabled={generalChangeMarkers.length === 0}
+                        onChange={(event) => setShowGeneralChangeMarkers(event.target.checked)}
+                      />
+                      <span>
+                        <strong>Show change-candidate markers during playback</strong>
+                        <small>Markers use the retained erosion, deposition and new-water candidate footprints.</small>
+                      </span>
+                    </label>
+                    <p className="rs-marker-note">{generalChangeMarkers.length > 0
+                      ? `${generalChangeMarkers.length} representative marker(s) shown (up to 24 per class). They remain visible across observed-date steps; they are window-level candidates, not date-specific measurements.`
+                      : 'No erosion, deposition or new-water candidate footprints are available for markers in this result.'}</p>
+                  </div>
+                )}
+                {riverJob.analysis_mode === 'general_scan' && (
+                  <>
+                    <div className="rs-change-legend" aria-label="General Scan candidate map legend">
+                      <span><i className="rs-change-swatch rs-change-swatch-erosion" aria-hidden="true" />Erosion candidate</span>
+                      <span><i className="rs-change-swatch rs-change-swatch-deposition" aria-hidden="true" />Deposition candidate</span>
+                      <span><i className="rs-change-swatch rs-change-swatch-new-water" aria-hidden="true" />New-water candidate</span>
+                    </div>
+                    <p className="rs-change-legend-note">Translucent areas show the retained date-window candidate footprints. The AOI remains outline-only; candidate colours do not imply field confirmation.</p>
+                  </>
+                )}
+                {currentJobFrameMetadata && <p className="rs-info-banner">NISAR observation {currentJobFrameMetadata.date} · frame {jobTimeSeriesIndex + 1}/{jobTimeSeriesFrames.length} · open-water candidate area {currentJobFrameMetadata.water_area_km2.toFixed(3)} km² · valid common-support pixels {(currentJobFrameMetadata.valid_pixel_fraction * 100).toFixed(1)}% · source {currentJobFrameMetadata.granule_name || 'granule ID recorded in source report'}{!currentJobFrame ? ' · loading checksum-verified map layer…' : ''}</p>}
               </section>
             )}
 
             {jobPreview?.jobId === riverJob.id && jobPreview.error && <p className="rs-warning-inline" role="status">{jobPreview.error}</p>}
 
-            {/*
+            {!!riverJob.artifact_manifest?.length && (
               <div className="rs-artifact-list">
                 <strong>Private result files · upload checksum verified</strong>
                 <p className="rs-muted">Upload receipts preserve the original size and checksum. In-app downloads and previews are checked again before use.</p>
-                {riverJob?.artifact_manifest?.map((artifact, index) => artifact.bytes <= 4_000_000
+                {riverJob.artifact_manifest.map((artifact, index) => artifact.bytes <= 4_000_000
                   ? <button className="rs-secondary-button" key={`${artifact.path}-${index}`} type="button" onClick={() => void saveRiverArtifact(index, artifact.name)}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB</button>
                   : <span className="rs-muted" key={`${artifact.path}-${index}`}>{artifact.name} · {(artifact.bytes / 1_000_000).toFixed(2)} MB · stored privately; too large for in-app download</span>)}
               </div>
-            */}
+            )}
           </section>
         )}
 
         <section className="rs-panel rs-results-panel">
+          <div className="rs-section-heading">
+            <div><p className="rs-kicker">03 · RESULTS EXPLORER</p><h2>Inspect reproducible outputs</h2></div>
+            <span className="rs-chip">NO SYNTHETIC METRICS</span>
+          </div>
+          <p className="rs-muted">
+            Live RiverShift jobs load their checksum-checked report and map previews here automatically.
+            The import controls below are optional and are intended for external or offline research results.
+            Catalogue rows are never presented as measured flood or erosion results.
+          </p>
+          <p className="rs-kicker">OPTIONAL MANUAL / RESEARCH IMPORT</p>
+          <div className="rs-upload-grid">
+            <label className="rs-upload"><span>Import result JSON</span><small>Flood, morphology or validation report</small>
+              <input type="file" accept=".json,application/json" onChange={(event) => void loadReport(event.target.files?.[0])} />
+            </label>
+            <label className="rs-upload"><span>Import change GeoJSON layer(s)</span><small>For playback, select every `water_YYYY-MM-DD.geojson` named in the report</small>
+              <input type="file" multiple accept=".geojson,.json,application/geo+json,application/json" onChange={(event) => void loadGeoJSONFiles(event.target.files || undefined)} />
+            </label>
+          </div>
+          {reportError && <p className="rs-error" role="alert">{reportError}</p>}
+          {geoJSONError && <p className="rs-error" role="alert">{geoJSONError}</p>}
+          {explorerReport && <ReportPanel report={explorerReport} />}
           {report?.analysis_type === 'water_timeseries_screening' && (
             <section className="rs-timeseries" aria-label="Observed acquisition playback">
               <div className="rs-section-heading"><div><p className="rs-kicker">OBSERVED ACQUISITIONS</p><h3>Water change playback</h3></div>
@@ -1002,42 +1143,10 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           )}
 
           <section className="rs-map-section">
+            <div className="rs-section-heading"><div><p className="rs-kicker">GEOSPATIAL OUTPUT</p><h3>Change map</h3></div></div>
             {mapError && <p className="rs-warning-inline">{mapError}</p>}
-            <div className={`rs-map-shell${mapDarkMode ? ' is-dark' : ''}`}>
-              <div className={`rs-map-toolbar${mapDarkMode ? ' is-dark' : ''}`}>
-                <div>
-                  <strong>River Shift spatial output</strong>
-                  <span>Satellite context · display-only preview overlays</span>
-                </div>
-                <div className="rs-map-toolbar-actions">
-                  <button
-                    type="button"
-                    className={`rs-map-label-toggle${mapLabelsVisible ? ' is-on' : ''}`}
-                    role="switch"
-                    aria-checked={mapLabelsVisible}
-                    onClick={() => {
-                      if (mapType === 'satellite') resultMapInstance.current?.setMapTypeId('hybrid');
-                      else if (mapType === 'hybrid') resultMapInstance.current?.setMapTypeId('satellite');
-                      else setMapLabelsVisible((value) => !value);
-                    }}
-                  >
-                    <span>Labels</span><span className="rs-map-mini-switch" aria-hidden="true"><i /></span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`rs-map-theme-toggle${mapDarkMode ? ' is-dark' : ''}`}
-                    role="switch"
-                    aria-checked={mapDarkMode}
-                    onClick={() => setMapDarkMode((value) => !value)}
-                  >
-                    <span>{mapDarkMode ? 'Dark' : 'Light'}</span>
-                    <span className="rs-map-theme-track" aria-hidden="true"><i>☼</i></span>
-                  </button>
-                </div>
-              </div>
-              <div className={`rs-map${mapDarkMode ? ' is-imagery-dark' : ''}`} ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
-            </div>
-            <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span></div>
+            <div className="rs-map" ref={resultMapElement} role="application" aria-label="Interactive Google satellite map. Use the candidate layer controls below to show or hide each RiverShift overlay." />
+            <div className="rs-legend"><span><i className="rs-swatch rs-erosion" />Erosion candidate</span><span><i className="rs-swatch rs-deposition" />Deposition candidate</span><span><i className="rs-swatch rs-water" />New-water candidate</span><span><i className="rs-swatch rs-observed-water" />Observed-date water extent</span>{impactExposure && safeImpactSourceUrl && <span><i className="rs-swatch rs-impact-point" />Mapped exposure point</span>}</div>
             {(hasCandidateOverlaySource || hasObservedWaterFrames) && (
               <div className="rs-overlay-controls" aria-label="RiverShift map overlay visibility">
                 {hasCandidateOverlaySource && (
@@ -1084,28 +1193,21 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
                     <span><strong>Observed-date open-water extent</strong><small>{candidateOverlayCounts.observedWater > 0 ? `${candidateOverlayCounts.observedWater} feature(s) in the result layer; ` : ''}Current acquired-date water layer; separate from date-window change candidates.</small></span>
                   </label>
                 )}
+                <p className="rs-overlay-note">Visibility controls affect the map only. Full-resolution masks and scientific metrics are unchanged. Preview polygons require more than 50% sub-cell occupancy; sparser candidates are approximate point markers, not area fills. Different classes may share a coarse preview cell.</p>
               </div>
             )}
-            {/*
+            <div className="rs-data-sources" aria-label="RiverShift data sources and roles">
               <div><strong>NASA measurement data</strong><span>NASA–ISRO NISAR Level-2 GCOV radar observations drive the water and land-transition screening.</span></div>
               <div><strong>NASA data access</strong><span>NASA Earthdata and ASF DAAC provide the exact NISAR granules; product identities and checksums are retained with the result.</span></div>
               <div><strong>Third-party map context only</strong><span>Google Maps Satellite imagery helps orient the result geographically. Basemap imagery is not used by the analysis and is not an independent validation layer.</span></div>
               <div><strong>Optional independent agency comparison</strong><span>Copernicus Sentinel-2 L2A can be compared with a supplied NISAR water mask using clear-sky SCL and B03/B11 MNDWI. This optional screen is not run for this result unless a comparison report is attached, and it is not ground truth.</span></div>
-            */}
+            </div>
             {hasVerifiedOverlay && <p className="rs-muted">Verified layer(s) are drawn; each GeoJSON SHA-256 matches the loaded report. Candidate classes require scientific interpretation and are not field-confirmed land change.</p>}
+            {hasJobPreviewOverlay && !hasVerifiedOverlay && <p className="rs-warning-inline">Provisional map preview uses majority-occupancy polygons plus small markers for sparse sub-cell candidates. Sparse marker centres are approximate and may coincide when different classes occupy separate parts of one coarse cell. The map is for visual orientation only; full-resolution masks and measurements remain authoritative and PROVISIONAL.</p>}
             {report && geoJSONFiles.length > 0 && !hasVerifiedOverlay && <p className="rs-warning-inline" role="status">Loaded GeoJSON is not drawn: the report is not VERIFIED, the checksum does not match, or the complete time-series layer set is missing.</p>}
           </section>
 
-          {explorerReport && (
-            <div className="rs-warning-list">
-              <strong>Input provenance</strong>
-              <p>Granules: {Array.isArray(explorerReport.source.granule_names) && explorerReport.source.granule_names.length ? explorerReport.source.granule_names.join(', ') : 'No NISAR granule IDs recorded'}</p>
-              <p>Source checksums: {Array.isArray(explorerReport.source.source_granule_sha256) && explorerReport.source.source_granule_sha256.length ? explorerReport.source.source_granule_sha256.join(', ') : 'No source product checksums recorded'}</p>
-              {explorerReport.inputs && <p>Input checksums: {JSON.stringify(explorerReport.inputs.input_sha256 || 'Not recorded')}</p>}
-            </div>
-          )}
-
-          {/*
+          <section className="rs-impact-panel" aria-label="Impact context screening">
             <div className="rs-section-heading">
               <div><p className="rs-kicker">04 · LOCAL EXPOSURE CONTEXT</p><h3>Put candidate zones in context</h3></div>
               <span className="rs-chip">OPTIONAL · SOURCE-ATTRIBUTED</span>
@@ -1159,7 +1261,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
             {!impactExposure && <p className="rs-impact-help">Useful inputs: building or facility centroids, settlement points, or population-grid centroids with a numeric population property. Record the provider and data vintage. No source data is bundled or assumed.</p>}
             {impactSourceName.startsWith('OpenStreetMap') && <p className="rs-impact-caveat">Open data attribution: © OpenStreetMap contributors · ODbL. This is a mapped-feature inventory, not an authoritative building census or damage assessment.</p>}
             {impactExposure && impactSummary && <p className="rs-impact-caveat">{impactSummary.sparseMarkerFeaturesExcluded.toLocaleString()} sparse marker feature(s) excluded from the polygon intersection. Multi-class matches: {impactSummary.featuresMatchingMultipleClasses.toLocaleString()} point feature(s).</p>}
-          */}
+          </section>
 
           {!report && !hasLiveJobResult && (
             <div className="rs-empty-state">
@@ -1171,17 +1273,11 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
           )}
           {hasLiveJobResult && !report && (
             <p className="rs-info-banner" role="status">
+              Live NISAR result loaded automatically from the completed job. No CLI run or manual file import is needed. The preview remains PROVISIONAL until independent validation is attached.
             </p>
           )}
         </section>
       </main>
-
-      {explorerReport && explorerReport.quality.warnings && explorerReport.quality.warnings.length > 0 && (
-        <div className="rs-warning-list rs-limitations-bottom">
-          <strong>Scientific interpretation and limitations</strong>
-          {explorerReport.quality.warnings.map((warning, index) => <p key={index}>â€¢ {warning}</p>)}
-        </div>
-      )}
 
       <footer className="rs-footer" style={{ marginTop: '40px' }}>
         <span>SARGuardian · RiverShift</span>

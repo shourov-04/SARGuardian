@@ -18,19 +18,31 @@ from .raster_io import (
 )
 
 
-def _metric_values(counts: np.ndarray) -> dict[str, float]:
+def _metric_values(counts: np.ndarray) -> tuple[dict[str, float | None], dict[str, str]]:
     tp, tn, fp, fn = (int(value) for value in counts)
     total = tp + tn + fp + fn
-    precision = tp / (tp + fp) if tp + fp else 0.0
-    recall = tp / (tp + fn) if tp + fn else 0.0
-    return {
-        "accuracy": (tp + tn) / total if total else 0.0,
+    precision = tp / (tp + fp) if tp + fp else None
+    recall = tp / (tp + fn) if tp + fn else None
+    f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else None
+    iou = tp / (tp + fp + fn) if tp + fp + fn else None
+    area_bias = ((tp + fp) - (tp + fn)) / (tp + fn) * 100 if tp + fn else None
+    metrics: dict[str, float | None] = {
+        "accuracy": (tp + tn) / total if total else None,
         "precision_user_accuracy": precision,
         "recall_producer_accuracy": recall,
-        "f1_score": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
-        "intersection_over_union": tp / (tp + fp + fn) if tp + fp + fn else 0.0,
-        "area_bias_percent": ((tp + fp) - (tp + fn)) / (tp + fn) * 100 if tp + fn else float("nan"),
+        "f1_score": f1,
+        "intersection_over_union": iou,
+        "area_bias_percent": area_bias,
     }
+    reasons = {}
+    if total == 0: reasons["accuracy"] = "NO_VALID_PIXELS"
+    if tp + fp == 0: reasons["precision_user_accuracy"] = "NO_PREDICTED_POSITIVES"
+    if tp + fn == 0:
+        reasons["recall_producer_accuracy"] = "NO_REFERENCE_POSITIVES"
+        reasons["area_bias_percent"] = "NO_REFERENCE_POSITIVES"
+    if f1 is None: reasons["f1_score"] = "NO_PRECISION_OR_RECALL_DENOMINATOR"
+    if iou is None: reasons["intersection_over_union"] = "NO_UNION_PIXELS"
+    return metrics, reasons
 
 
 def _block_confusion_counts(
@@ -71,8 +83,9 @@ def _block_bootstrap(
     for _ in range(replicates):
         chosen = rng.integers(0, block_count, size=block_count)
         aggregate = blocks[chosen].sum(axis=0)
-        for name, value in _metric_values(aggregate).items():
-            if np.isfinite(value):
+        block_metrics, _ = _metric_values(aggregate)
+        for name, value in block_metrics.items():
+            if value is not None and np.isfinite(value):
                 metric_draws.setdefault(name, []).append(float(value))
     intervals = {
         name: {
@@ -82,7 +95,7 @@ def _block_bootstrap(
         }
         for name, values in metric_draws.items()
     }
-    return {
+    result = {
         "status": "ESTIMATED_SPATIAL_BLOCK_BOOTSTRAP",
         "block_count": int(block_count),
         "minimum_blocks": minimum_blocks,
@@ -92,6 +105,7 @@ def _block_bootstrap(
         "random_seed": random_seed,
         "intervals": intervals,
     }
+    return result
 
 
 def _prediction_parent_provenance(prediction_path: str | Path) -> dict[str, Any] | None:
@@ -213,8 +227,8 @@ def validate_binary_classification(
     fn = int(np.sum(~pred & ref))
     total = tp + tn + fp + fn
     counts = np.asarray([tp, tn, fp, fn], dtype=np.int64)
-    point_metrics = _metric_values(counts)
-    specificity = tn / (tn + fp) if tn + fp else 0.0
+    point_metrics, undefined_reasons = _metric_values(counts)
+    specificity = tn / (tn + fp) if tn + fp else None
     expected = (((tp + fp) * (tp + fn) + (fn + tn) * (fp + tn)) / (total * total))
     kappa = (point_metrics["accuracy"] - expected) / (1 - expected) if expected < 1 else None
 
@@ -226,7 +240,7 @@ def validate_binary_classification(
         "reference-label error, sensor/calibration error, geolocation error, temporal mismatch or model uncertainty."
     )
 
-    return {
+    result = {
         "schema_version": 1,
         "engine": "RiverShift",
         "analysis_type": "classification_validation",
@@ -253,6 +267,7 @@ def validate_binary_classification(
             "prediction_water_area_km2": float(pred.sum() * pixel_area_m2 / 1_000_000),
             "reference_water_area_km2": float(ref.sum() * pixel_area_m2 / 1_000_000),
         },
+        "undefined_reasons": undefined_reasons,
         "uncertainty": {"spatial_block_bootstrap": uncertainty},
         "quality": {
             "status": "VALIDATION_METRICS_COMPUTED_REVIEW_REQUIRED",
@@ -267,6 +282,20 @@ def validate_binary_classification(
             ],
         },
     }
+    from .release_status import add_release_metadata
+    add_release_metadata(
+        result,
+        score_available=total > 0,
+        criteria_passed=None,
+        evidence={"independent_reference": False},
+    )
+    result["score_status"] = "SCORE_COMPUTED" if total > 0 else "NO_SCORE"
+    result["reasons"].extend(
+        reason for reason in ("METRIC_UNDEFINED",) if undefined_reasons and reason not in result["reasons"]
+    )
+    result["reasons"] = list(dict.fromkeys(result["reasons"]))
+    result["metrics"]["undefined_reasons"] = undefined_reasons
+    return result
 
 
 def save_validation_report(result: dict[str, Any], output_path: str | Path) -> None:
