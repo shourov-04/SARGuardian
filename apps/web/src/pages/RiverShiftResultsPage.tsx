@@ -598,6 +598,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   const [geoJSONError, setGeoJSONError] = useState('');
   const [mapError, setMapError] = useState('');
   const [mapReady, setMapReady] = useState(false);
+  const [mapOverlayReady, setMapOverlayReady] = useState(false);
 
   const [timeSeriesIndex, setTimeSeriesIndex] = useState(0);
   const [timeSeriesPlaying, setTimeSeriesPlaying] = useState(false);
@@ -1038,7 +1039,14 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   }, [mapReady, isMapDark, showMapLabels]);
 
   useEffect(() => {
-    if (!mapReady) return;
+    const waitingForJobPreview = riverJob?.state === 'succeeded' && !activeJobPreview;
+    const waitingForObservedFrame = riverJob?.state === 'succeeded'
+      && jobTimeSeriesFrames.length > 0
+      && !currentJobFrame;
+    if (!mapReady || jobLoading || waitingForJobPreview || waitingForObservedFrame) {
+      setMapOverlayReady(false);
+      return;
+    }
     const map = resultMapInstance.current;
     if (!map) return;
     if (resultAoiPolygon.current) resultAoiPolygon.current.setMap(null);
@@ -1159,6 +1167,7 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
       map.fitBounds(bounds);
       resultMapFitKey.current = overlayFitKey;
     }
+    setMapOverlayReady(true);
     return () => {
       resultRasterOverlay.current?.setMap(null);
       resultRasterOverlay.current = null;
@@ -1172,6 +1181,9 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
     showObservedWaterExtent,
     currentJobFrame,
     currentTimeSeriesFrame,
+    jobLoading,
+    jobTimeSeriesFrames.length,
+    activeJobPreview,
     verifiedGeoJSONFiles,
     isGeneralScanJob,
     riverJob?.aoi_wkt,
@@ -1209,6 +1221,16 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
   ]);
 
   const resultType = explorerReport ? explorerReport.analysis_type.replace(/_/g, ' ') : 'No result loaded';
+  const resultReady = !jobLoading && !jobError && mapOverlayReady;
+  const resultLoadingMessage = jobLoading
+    ? 'Loading result metadata…'
+    : !mapReady
+      ? 'Preparing the interactive map…'
+      : riverJob?.state === 'succeeded' && !activeJobPreview
+        ? 'Loading verified result layers…'
+        : jobTimeSeriesFrames.length > 0 && !currentJobFrame
+          ? 'Preparing the raster overlay…'
+          : 'Finalizing the RiverShift result…';
 
   return (
     <div className="home-page claude-home claude-how-page known-place-results-shell river-shift-results-shell">
@@ -1224,7 +1246,19 @@ export function RiverShiftResultsPage({ user, authState, onSignIn, onSignOut, on
         pageTitle="River Shift Results"
       />
 
-      <main className="nisar-results-main displacement-preparation known-place-analysis known-place-results-page river-shift-results-page">
+      {!resultReady && !jobError && (
+        <div className="rs-result-loading-screen" role="status" aria-live="polite">
+          <div className="rs-result-loading-card">
+            <strong>Loading RiverShift result…</strong>
+            <span>{resultLoadingMessage}</span>
+            <div className="rs-result-loading-progress" role="progressbar" aria-label="Preparing RiverShift result">
+              <i />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className={`nisar-results-main displacement-preparation known-place-analysis known-place-results-page river-shift-results-page${!resultReady && !jobError ? ' is-preparing' : ''}`}>
         <section className={`known-place-results rs-unified-dashboard${jobLoading ? ' is-loading' : ''}`} aria-label="River Shift scientific results dashboard">
           {jobLoading && (
             <div className="known-place-results-loading" role="status" aria-live="polite">
