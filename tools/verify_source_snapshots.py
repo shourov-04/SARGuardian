@@ -521,7 +521,7 @@ def main() -> int:
         # Monorepo-owned RiverShift routes are additional to the Dynamic snapshot.
         "src/pages/RiverShiftProcessingPage.tsx": "50e257de9ab8a0f0cbf25d023d6cc4fe620b70d7",
         "src/pages/RiverShiftProcessingPage.test.tsx": "38704de03b1e6b5033155fed06083944351dddf0",
-        "src/pages/RiverShiftResultsPage.tsx": "c263ae282399a8c3d01a46c591110310bc58affe",
+        "src/pages/RiverShiftResultsPage.tsx": "40233f2de7d394e2189c6c92e812802b1cde4f34",
         "src/pages/RiverShiftResultsPage.test.tsx": "098b25d02bedf58a7e2dd2dbae6445d080fdb090",
     }
     dynamic_frontend_changed_blob_pins = {
