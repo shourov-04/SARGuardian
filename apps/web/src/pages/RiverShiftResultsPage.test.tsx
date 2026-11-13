@@ -23,7 +23,7 @@ describe('RiverShiftResultsPage', () => {
     expect(html).toContain('River Shift Results');
     expect(html).toContain('Back to processing');
     expect(html).toContain('GEOSPATIAL OUTPUT');
-    expect(html).toContain('Interactive Map &amp; Playback');
+    expect(html).toContain('Change map');
   });
 
   it('renders granule provenance with toggle details, sha-256 and size data matching Known Place style', () => {
