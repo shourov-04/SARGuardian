@@ -436,6 +436,11 @@ def main() -> int:
                 "tools/know_place/geometry.py",
                 "tools/know_place/series.py",
                 "tools/know_place/upload_bundle_to_drive.py",
+                # Current-fork test/validation overlays are pinned separately.
+                "tools/tests/test_know_place_generic_magnitude_rejection.py",
+                "tools/tests/test_know_place_noise_floor.py",
+                "tools/tests/test_know_place_reference_stationarity.py",
+                "tools/validation/valkit.py",
                 "tools/tests/test_know_place_aoi_runner.py",
                 "tools/tests/test_know_place_geometry.py",
                 "tools/tests/test_know_place_series.py",
@@ -497,7 +502,7 @@ def main() -> int:
         "landslide/tests/investigationModes.test.tsx", "landslide/ui/knownPlacePreflight.test.ts",
         "landslide/ui/sessionState.test.ts", "landslide/ui/sessionState.ts",
         "landslide/ui/workspace.css", "src/App.tsx", "src/api/catalog.ts",
-        "src/api/knownPlace.ts", "src/components/ArchiveSection.tsx",
+        "src/api/knownPlace.ts",
         "src/components/Footer.tsx", "src/components/Header.tsx",
         "src/components/Hero.tsx", "src/components/ProfileControl.tsx",
         "src/data/engineData.test.ts", "src/data/engineData.ts", "src/index.css",
@@ -509,18 +514,119 @@ def main() -> int:
         "app/persistence.py", "tests/test_config.py", "tests/test_displacements.py",
         "tests/test_known_place.py",
     }
-    dynamic_api_destination_only = {"supabase/migrations/20261107120000_displacement_job_retention.sql"}
+    dynamic_api_destination_only = {
+        # Retention migration and retry feature are reviewed Monorepo-owned additions.
+        "supabase/migrations/20261107120000_displacement_job_retention.sql": "682fe1f67f1de10705010a1be0d9d45abecd9f3d",
+        "app/river_shift_retry.py": "0606f27361bc7b75195db892ac9f3bc107ce8f33",
+        "tests/test_river_shift_retry.py": "4afe5c809b688acdbe7b5d27115eca15b24dd6a8",
+    }
+    dynamic_api_changed_blob_pins = {
+        # Exact source/destination Git blob identities for the reviewed retry integration.
+        "app/river_shift_jobs.py": ("e3c702c854e8381d84d09a0db8b85fcaaa89328a", "9e2d21b6d74be563fe957e2088f64bfa895a3aef"),
+        "pytest.ini": ("3da0c0f7caa2b0bc0f2a0130542c0698a829f991", "f1fea8142b67d84e264e68a9a022990c378ca172"),
+        "tests/test_main.py": ("2bc956c3a4a5c2a347677b38772955283da70ea2", "64f19019ee750af10dddf97305424b14aebbe7b7"),
+        "tests/test_river_shift_jobs.py": ("fe9916362b343d14b9add6cb480c23496c10924c", "7bc621b17fce217a1f24946b49d0e0d8205ad689"),
+    }
     # Reviewed destination-only Known Place result route and the exact CSS
     # transformation already introduced by commits 72cc1dde and 978862c0.
     # Blob pins keep later edits visible to this provenance gate.
     dynamic_frontend_destination_only = {
         "landslide/ui/KnownPlaceResultsPage.tsx": "9aaa674bf3a028aa86018e189687132a6695316b",
+        # Monorepo-owned RiverShift routes are additional to the Dynamic snapshot.
+        "src/pages/RiverShiftProcessingPage.tsx": "50e257de9ab8a0f0cbf25d023d6cc4fe620b70d7",
+        "src/pages/RiverShiftProcessingPage.test.tsx": "38704de03b1e6b5033155fed06083944351dddf0",
+        "src/pages/RiverShiftResultsPage.tsx": "40233f2de7d394e2189c6c92e812802b1cde4f34",
+        "src/pages/RiverShiftResultsPage.test.tsx": "098b25d02bedf58a7e2dd2dbae6445d080fdb090",
     }
     dynamic_frontend_changed_blob_pins = {
         "landslide/ui/landslide.css": (
             "554b975bff72abde25fa268d5e85b94c6110dc66",
             "4891a2529405a4fbf95d924da666fa4bf5d59794",
         ),
+        # Exact Git blob pins for reviewed frontend design/product adaptations.
+        "README.md": ("cda57b87c8815a1fc82771e5622fca79313ca352", "70e458613f5f7847f733cdb0b4d8b23ff2119509"),
+        "landslide/tests/validation.test.ts": ("6f7f988aee0e16f952bb8b0f172131a435ad833b", "d3627c09f7d7e31976626bbc96056c15f98a7e13"),
+        "landslide/ui/KnownPlaceGoogleMap.tsx": ("fe37553f5a6a51a068b1cbabe1e1f15df86a8534", "d82eac32f179199368817865f5b41dc3328338e1"),
+        "landslide/ui/KnownPlaceResultsDashboard.tsx": ("1502f365a96d672615d7e50a30e707084323d5ad", "e36ceaf2c67aaf23ce0d7cd3d5031e99fe7122c3"),
+        "landslide/ui/knownPlaceResults.css": ("0fb85bab47ebd062672dffebb07f03c652485359", "2c62de74b3ad71e7f3d78c6ca75e9ba77465d6f6"),
+        "src/api/catalog.test.ts": ("c6290e0ebb585213ffab4b58f74a9f5d4850808c", "d2ae34db4ec1dce5c4c0b8a23ab4eebdc60c1a9a"),
+        "src/dashboardDocument.ts": ("681950427d67455c38ecf83e2962faee45ba2316", "d632b0cf53282aa8985d1db65220636d86b91239"),
+        "src/pages/DashboardPage.test.tsx": ("1e3fc95825eea1fd9df9583d664825e725a44d5f", "42166590f50249220bf1a3ed159faac87b619105"),
+        "src/pages/DashboardPage.tsx": ("ab024025925e88299c6a09e961f57afdc3fcf450", "b5c64354cdea6dc9c610c1f6e28469584d6d75e0"),
+        "src/pages/river-shift.css": ("1c9bc4f4868aced2978129518e62e12c9779a22b", "f58b10d5b22df2e7c9fe19a5df0eb87047e16017"),
+        # RiverShift's current frontend map/impact contracts have five reviewed
+        # destination adaptations; exact source/destination blobs prevent drift.
+        "src/riverShift/generalChangeMarkers.ts": ("762a5f9b860ffb9ed0dfac861a458cf70b3cd78b", "596c2f0fce37437fdec811f4841b5102cea6cc00"),
+        "src/riverShift/impactContext.test.ts": ("9bbae28e8b0c4f707ab8991ed8a97e7b614ad4a3", "5be8d51fb173646a42043eb3684d5f73adf5c7cc"),
+        "src/riverShift/impactContext.ts": ("ea1d7e6ebca311186dbcf916e6c27c85c83cfb68", "35a05a94f94f45333f16191db0ba0d819cdfc077"),
+        "src/riverShift/manifest.test.ts": ("8f2201be952c82225ac335d40df32af3bbd23990", "44b2a04ea3f4bb6f5855f529915e31b295bff4ac"),
+        "src/riverShift/manifest.ts": ("c969ca762cb9e84dccf4b8920599590116e4fee2", "a30797b499b356f6d713bada9eb4d6fdc71da09b"),
+    }
+    nisar_science_destination_only = {
+        "tests/test_elevation_regression.py": "20d5e44346dba913a0452d8fcb7277b069aba720",
+        "tests/test_gls_persistence.py": "9f8d275d4a2c486a735594c5165f8c6d38a28e65",
+        "tests/test_gnss_benchmark.py": "d6da8acbbb28fd3d9e47274144b491d2a977b89a",
+        "tests/test_injection.py": "d4b68c8ad31e2b78aeb0a72db003a5a6691803bd",
+        "tests/test_stable_datum.py": "eb5c204b40e6ca2562b57a7e4ee90e38058af4bc",
+        "tests/test_surrogates.py": "c06c3267883b78714edc5d5e12b3332702d321bd",
+        "tests/test_validation_receipt.py": "eb540088ce8038c065f460c946296cf4ce382514",
+        "tests/test_vector_decomposition.py": "80a990e18956b3e21e02edf671c9d81749ae216c",
+        "validation/__init__.py": "6c23bc4d036c265e265611a1aa488e32005667d4",
+        "validation/elevation_regression.py": "de8bac65dad2300150ec2e1437c7343a42e6b3c1",
+        "validation/froc.py": "4807df2a6c30c8bb98670458bf6f6d6f109cff0c",
+        "validation/gls_persistence.py": "ee4407bcd40328afce2df1d760ed336a4ec1ec45",
+        "validation/gnss_benchmark.py": "74787722f227bd875c850536c6ca8d745f31f694",
+        "validation/injection.py": "846d7398e938391f6c2f314cdcff9d8a5fcb241c",
+        "validation/run_injection_benchmark.py": "ed0ca04c44f3f465341485bf84c144df71a6db00",
+        "validation/stable_datum.py": "6e576f50149f11d66dd4105bf4b025a4e289b34b",
+        "validation/surrogates.py": "9da5daebc8cc6e57b79c5628ba0e347372ed140b",
+        "validation/validation_receipt.py": "aa5898e4dcc2f351f7eb26da6f826757519dddf6",
+        "validation/vector_decomposition.py": "69bbffc5bfc6538869e125498c3faa25e4e0c1c2"
+    }
+    find_tools_changed_blob_pins = {
+        "aoi_wide_displacement_screen.py": ("cea9a8bd7f95a3107f3aec0bbc66f9bdce253141", "b66a7642ca8ebcbeba105ff215cc2b62c2b1d0fd"),
+        "tests/test_aoi_wide_displacement_screen.py": ("5a3666c0b430758f7f21c00f75d1a791a9cee545", "d0d8277a40f6277e6f5179f766b161acfb685b72"),
+    }
+    find_dashboard_changed_blob_pins = {
+        "assets/prepare_web_assets.py": ("40408efe792927266ec4a864ded212b1a3c69cd4", "b301e0e60a188935066f96ce85101fc89540a584"),
+        "tests/test_prepare_web_assets.py": ("8310651f82b6e362c3a60c95c18936adc4652c62", "94de4492e0f06ca7774b673f2b0e457515cad8ec"),
+    }
+    nisar_science_changed_blob_pins = {
+        "src/goff_reader.py": ("8a00a5ae51ee5d6d9c67c46ea64f202169621a1b", "37a0d312d37f837664601783d4c951adc5d85f49"),
+        "tests/conftest.py": ("f631634824553a111b2c08279cb8432b04466207", "570588d984297744969827a592e770c1b751e803"),
+    }
+    river_shift_destination_only = {
+    "river_shift/calibration.py": "643c905810ec1fa34ca13852f8f47cbcc128cc87",
+    "river_shift/classes.py": "8218ca7df710ebe8861aa73469d4298e46bfebc0",
+    "river_shift/exclusion_masks.py": "865737c0f27db49390a1317f87c10e7cc360343d",
+    "river_shift/release_status.py": "0372313b7cacf19956f3d3f6f765c4ef115ff776",
+    "river_shift/speckle.py": "bcac77a4d5a6373d3487daebf8f5338b105f5e13",
+    "river_shift/stage_context.py": "0d7bf439ba8f3257a53521c3f466a1f621d16013",
+    "river_shift/verification.py": "4874589e2eb7b7807aa18d84a4b5bd15bdcd003a",
+    "tests/test_calibration.py": "30f8508d932553621fe9a314772be5ddd2aecbe8",
+    "tests/test_phase2_classifier_foundations.py": "596e9a4107c9eaf0b8f2b5c67f88c81276e1b855",
+    "tests/test_release_status_phase1.py": "cf1f7ce971076ba68ea882ef7e0e3f467d714266",
+    "tests/test_stage_context.py": "9e4d304d8480d6128d267712b27558f40bf6429f",
+    "tests/test_verification.py": "6db7d1d6181aa9f51fa7c55452804010a6d6a815",
+    "verify_rivershift_evidence.py": "5c4e438962f8e2a6d020d89b714ce215a44e1b0e"
+}
+    river_shift_changed_blob_pins = {
+        "tests/test_independent_reference_runner.py": ("f7c7a657076da3eaa2e9e8c99a7677106058d768", "0ca8093864dcd6e2b537f08ad0631b6de103001a"),
+        "batched_gcov_job.py": ("7e34e1b762c8d0ac3257ba5e98637a738ff4176c", "3223c72d011d990cd3be7102b9196df921ebd33a"),
+        "download_gcov_product.py": ("80d21e13a5cd90b3f4f20d5095e6c27a79bef980", "2c643aa18dc7326331919684bb1fb8f944f5be82"),
+        "process_gcov_job.py": ("7e57dc2cb053128aa70833c98af036031b923ff0", "a4f79c527c5c2d35d1deaf772eed01940f38141c"),
+        "river_shift/flood.py": ("05471d5e1649110ffc9412e7863785ab71bf7370", "a4375489e4b347a986dd05689f88f9133d162fd3"),
+        "river_shift/morphology.py": ("61c608090af1681b0a80624c8b3bc5142fc4212b", "a6db1111fc07284c1d1805e86f1dade822eb1bdc"),
+        "river_shift/timeseries.py": ("3ea07daca9276a6fc000b616483192c8bc091fc6", "2e0590bea20be6147a565ff0a84597e1525bf6ad"),
+        "river_shift/transects.py": ("ad3fa4b3a26ac63d6e5b630fa76a7d8102fe4659", "df69bc3b82470c302596857d44717b71ef7bc1f6"),
+        "river_shift/validation.py": ("a05cbdcfe08872cf6d52606234ebedbeae3acd3c", "a01cd23664983cf9f507695b9d3716ed245ba63e"),
+        "river_shift/water_detection.py": ("5406e58b68ace47e0c6487279195a4542a6e05da", "db63c817fd5b2aacb74922757b524255bf6828f5"),
+        "run_flood_analysis.py": ("3ec3cdba3b724e331f1012d8033a5adf1bae6aed", "abcf3bf28d7004f4a201720bd028f6e7562bb712"),
+        "run_morphology_analysis.py": ("1a547156da430e74749a887307e9310246f414ed", "68c18a515120d46183be8c3a020bcd579919c4a2"),
+        "tests/test_download_gcov_product.py": ("41fbcf781c54027900e2577db37a52f29793e843", "df48ed68c013cbd432977d4718ad9eea2e35f42c"),
+        "tests/test_process_gcov_job.py": ("fb9de2cb775733caad99294276d9311377f27456", "ec8813eb14271ef6768d99eea54183757f95cac8"),
+        "tests/test_raster_first_previews.py": ("e5b19cd43cfc96b29359a6169903f9ed2ce9e7f7", "9a61e41b47afff23d67f8a468bbef12f6e01a8d8"),
+        "validate_water_classification.py": ("c792b76fa80b8fa0d7a4f474ba2c4c48f90931cf", "dd0d1b8ab10550b74c47a1adcbf4c9b6345ca90e"),
     }
     dynamic_shared_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
     find_tools_baseline_exceptions = {"run_export_science_diagnostics.py"}
@@ -550,7 +656,33 @@ def main() -> int:
                 label == "Dynamic frontend promotion"
                 and path[len(destination_prefix) :] in dynamic_frontend_destination_only
             )
+            and not (
+                label == "NISAR science promotion"
+                and path[len(destination_prefix) :] in nisar_science_destination_only
+            )
+            and not (
+                label == "RiverShift GCOV engine promotion"
+                and path[len(destination_prefix) :] in river_shift_destination_only
+            )
         }
+        if label == "Dynamic active API promotion":
+            for relative_path, expected_sha in dynamic_api_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed API destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_API_ADDITION_PASS apps/api/{relative_path}: {expected_sha}")
+        if label == "RiverShift GCOV engine promotion":
+            for relative_path, expected_sha in river_shift_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed RiverShift destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_RIVERSHIFT_ADDITION_PASS engines/river-shift/tools/river_shift/{relative_path}: {expected_sha}")
+        if label == "NISAR science promotion":
+            for relative_path, expected_sha in nisar_science_destination_only.items():
+                actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
+                if actual_entry != ("100644", "blob", expected_sha):
+                    raise RuntimeError(f"Reviewed NISAR science destination-only blob changed: {relative_path}")
+                print(f"PROMOTED_NISAR_ADDITION_PASS science/nisar-core/{relative_path}: {expected_sha}")
         if label == "Dynamic frontend promotion":
             for relative_path, expected_sha in dynamic_frontend_destination_only.items():
                 actual_entry = target_entries.get(f"{destination_prefix}{relative_path}")
@@ -568,6 +700,26 @@ def main() -> int:
         for relative_path in changed:
             override_key = f"{label}:{relative_path}"
             override = promotion_overrides.get(override_key)
+            if label == "Find Displacements tools promotion" and relative_path in find_tools_changed_blob_pins:
+                source_sha, destination_sha = find_tools_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_FIND_TOOLS_TRANSFORMATION_PASS engines/find-displacements/tools/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
+            if label == "Find Displacements dashboard promotion" and relative_path in find_dashboard_changed_blob_pins:
+                source_sha, destination_sha = find_dashboard_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_FIND_DASHBOARD_TRANSFORMATION_PASS engines/find-displacements/dashboard/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
+            if label == "NISAR science promotion" and relative_path in nisar_science_changed_blob_pins:
+                source_sha, destination_sha = nisar_science_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_NISAR_TRANSFORMATION_PASS science/nisar-core/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
+            if label == "Dynamic active API promotion" and relative_path in dynamic_api_changed_blob_pins:
+                source_sha, destination_sha = dynamic_api_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_API_TRANSFORMATION_PASS apps/api/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
             if label == "Dynamic frontend promotion" and relative_path in dynamic_frontend_baseline_exceptions:
                 print(f"PROMOTED_FRONTEND_BASELINE_PASS apps/web/{relative_path}")
                 continue
@@ -575,6 +727,11 @@ def main() -> int:
                 source_sha, destination_sha = dynamic_frontend_changed_blob_pins[relative_path]
                 if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
                     print(f"PROMOTED_FRONTEND_TRANSFORMATION_PASS apps/web/{relative_path}: {source_sha} -> {destination_sha}")
+                    continue
+            if label == "RiverShift GCOV engine promotion" and relative_path in river_shift_changed_blob_pins:
+                source_sha, destination_sha = river_shift_changed_blob_pins[relative_path]
+                if source_view[relative_path] == ("100644", "blob", source_sha) and destination_view[relative_path] == ("100644", "blob", destination_sha):
+                    print(f"PROMOTED_RIVERSHIFT_FIXTURE_PASS engines/river-shift/tools/river_shift/{relative_path}: {source_sha} -> {destination_sha}")
                     continue
             if label == "Dynamic active API promotion" and relative_path in dynamic_api_baseline_exceptions:
                 print(f"PROMOTED_API_BASELINE_PASS apps/api/{relative_path}")
@@ -615,6 +772,9 @@ def main() -> int:
             "Dynamic frontend promotion",
             "Dynamic shared tools promotion",
             "Find Displacements tools promotion",
+            "RiverShift GCOV engine promotion",
+            "NISAR science promotion",
+            "Find Displacements dashboard promotion",
         }:
             raise RuntimeError(f"{label}: promotion overrides are not permitted for this source.")
         print(f"PROMOTED_PATH_BLOB_INTEGRITY_PASS {label}: {len(source_view)} entries")

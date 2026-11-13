@@ -237,7 +237,10 @@ def test_validate_runs_end_to_end_and_keeps_release_provisional(monkeypatch, tmp
     report_path = source_dir / "river_shift_result.json"
     report_path.write_text(json.dumps(result_report), encoding="utf-8")
 
-    reference_values = prediction_values[::2, ::2].copy()
+    # Build a categorical reference at its own 20 m resolution. Slicing the
+    # 10 m checkerboard prediction every two pixels would select only even
+    # parity cells and accidentally remove the positive class entirely.
+    reference_values = (np.indices((10, 10)).sum(axis=0) % 2).astype(np.uint8)
     reference_values[0, 0] = 255
     reference_path = tmp_path / "reference-original.tif"
     _write_mask(
@@ -317,6 +320,8 @@ def test_validate_runs_end_to_end_and_keeps_release_provisional(monkeypatch, tmp
     assert result["source"]["prediction_analysis"]["mission"] == "NISAR"
     assert result["metrics"]["valid_pixel_count"] > 0
     assert result["metrics"]["f1_score"] is not None
+    assert result["confusion_matrix"]["true_positive"] + result["confusion_matrix"]["false_negative"] > 0
+    assert "f1_score" not in result["metrics"]["undefined_reasons"]
 
 
 def test_independent_validation_workflow_defaults_to_production_api_origin() -> None:
