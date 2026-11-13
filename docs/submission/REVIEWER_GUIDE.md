@@ -96,7 +96,22 @@ Open the [GitHub Actions history](https://github.com/shourov-04/SARGuardian/acti
 
 This lets a reviewer move from the public interface to the workflow implementation and its processing record. The Actions page contains the evolving workflow history; no single historical run is presented as the only evidence for a continuously developed application.
 
-## G. Read the supporting documents
+## G. Verified CI and example workflow runs
+
+The links below are direct inspection points, not claims of independent scientific validation. They help reviewers reproduce the software and processing audit trail.
+
+| Evidence | Verified result |
+|---|---|
+| [API CI — import, 242 tests and Google Maps adapter contract](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | Passed on the API/test update commit |
+| [Web CI — TypeScript/build, lint and 182 tests across 22 files](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Passed |
+| [Full Git-history secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43446585245) | Passed on the current documentation commit |
+| [Find Displacements example run](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | Completed; 16/16 selected GOFF/GUNW products validated. The AOI-wide output remains candidate screening, not movement/hazard confirmation; common GUNW time-series gates were withheld. |
+| [Known Place generic AOI run](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Completed successfully |
+| [RiverShift GCOV example run](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | Completed; 10 selected acquisition dates, 72 result artifacts, private storage verification passed; release status PROVISIONAL |
+
+These examples are intended for workflow inspection. Reviewers should still run the live application with their own AOI and date window. A successful workflow records the checks performed for that request; it does not prove that the same result generalises to all locations or dates.
+
+## H. Read the supporting documents
 
 - [Project overview](PROJECT_OVERVIEW.md)
 - [Datasets and references](DATASETS_AND_REFERENCES.md)
@@ -104,6 +119,6 @@ This lets a reviewer move from the public interface to the workflow implementati
 - [AI usage disclosure](AI_USAGE.md)
 - [Score-sheet evidence matrix](score-sheet-evidence-matrix.md)
 
-## H. Guidance for AI-assisted review
+## I. Guidance for AI-assisted review
 
 Use the current default branch of this repository as the implementation source. Start with the root README and this guide, then follow the exact file paths above. Distinguish catalogue metadata, test fixtures, illustrative walkthrough panels, real NISAR observations, processing outputs, and independent reference datasets. When citing a result, state its product family, acquisition dates, AOI, and workflow/run context. Do not infer a measurement or validation metric that is not present in the result record.

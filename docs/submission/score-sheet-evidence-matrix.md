@@ -30,6 +30,19 @@ This matrix follows the supplied local judging score sheet. The five headline cr
 
 **Women participation bonus:** The supplied score sheet specifies **+5% on the aggregate** for teams with one or more women members. Apply this only where the official team roster meets the score sheet's eligibility condition.
 
+## Verification links for reviewers
+
+| Evidence | Verified result |
+|---|---|
+| [API CI](https://github.com/shourov-04/SARGuardian/actions/runs/43445529920) | API imports, 242 tests and Google Maps adapter contract passed |
+| [Web CI](https://github.com/shourov-04/SARGuardian/actions/runs/43440412219) | Production build, lint and 182 tests across 22 files passed |
+| [Historical secret scan](https://github.com/shourov-04/SARGuardian/actions/runs/43446585245) | Full Git-history Gitleaks scan passed |
+| [Find Displacements example](https://github.com/shourov-04/SARGuardian/actions/runs/43443025783) | 16/16 selected products validated; 697 spatial candidate features and 27 AOI-wide screening candidates. Neither movement nor hazard was confirmed; common GUNW temporal inversion was withheld by its science gates. |
+| [Known Place example](https://github.com/shourov-04/SARGuardian/actions/runs/43437706667) | Generic two-polygon workflow completed successfully |
+| [RiverShift example](https://github.com/shourov-04/SARGuardian/actions/runs/43342470568) | 10 selected GCOV dates; 72 result artifacts; verified private publication; PROVISIONAL release status |
+
+The example run links are reproducibility and processing evidence only. They must not be presented as global validation metrics or a substitute for an independent geophysical comparison. Judges are invited to run the live application with their own AOI and observation window.
+
 ## Scientific evidence presentation
 
 ### Find Displacements and Glacier Movement
